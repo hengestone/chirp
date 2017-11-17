@@ -53,6 +53,7 @@ static int   upstream_port;
 static void
 sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
 {
+    (void) (chirp);
     (void) (status);
     ch_chirp_release_message(msg);
 }
