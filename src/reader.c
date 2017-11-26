@@ -10,6 +10,7 @@
 //
 #include "reader.h"
 #include "chirp.h"
+#include "common.h"
 #include "connection.h"
 #include "remote.h"
 #include "util.h"
@@ -159,7 +160,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
     if (conn->flags & CH_CN_INCOMING) {
         A(ch_cn_delete(&protocol->handshake_conns, conn, &tmp_conn) == 0,
           "Handshake should be tracked");
-        assert(conn == tmp_conn);
+        A(conn == tmp_conn, "Deleted wrong connection");
     }
     if (read < CH_SR_HANDSHAKE_SIZE) {
         EC(chirp,
@@ -198,7 +199,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
             ch_cn_old_push(&protocol->old_connections, old_conn);
         }
     }
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
     {
         ch_text_address_t addr;
         uint8_t*          identity = conn->remote_identity;
@@ -230,7 +231,7 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
 {
     ch_chirp_t*     chirp  = conn->chirp;
     ch_chirp_int_t* ichirp = chirp->_;
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
     {
         ch_text_address_t addr;
         uint8_t*          identity = conn->remote_identity;

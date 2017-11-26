@@ -50,14 +50,6 @@ ch_at_cleanup(void);
 
 // .. c:function::
 void
-ch_free(void* buf);
-//
-//    Free a memory handle.
-//
-//    :param void* buf: The handle to free.
-
-// .. c:function::
-void
 ch_bytes_to_hex(uint8_t* bytes, size_t bytes_size, char* str, size_t str_size);
 //
 //    Convert a bytes array to a hex string.
@@ -66,6 +58,14 @@ ch_bytes_to_hex(uint8_t* bytes, size_t bytes_size, char* str, size_t str_size);
 //    :param size_t bytes_size:  Length of the bytes to convert.
 //    :param char* str:          Destination string.
 //    :param size_t str_size:    Length of the buffer to write the string to.
+
+// .. c:function::
+void
+ch_free(void* buf);
+//
+//    Free a memory handle.
+//
+//    :param void* buf: The handle to free.
 
 // .. c:function::
 int

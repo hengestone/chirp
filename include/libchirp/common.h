@@ -111,8 +111,7 @@ typedef struct ch_message_s ch_message_t;
 #define CH_NO_ARG 1
 
 // .. c:function::
-CH_EXPORT
-void
+CH_EXPORT void
 ch_write_log(
         ch_chirp_t* chirp,
         char*       file,

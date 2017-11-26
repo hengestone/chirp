@@ -7,20 +7,11 @@
 //
 #define CH_VERSION "XVERSIONX"
 
-// Disable SIGINT and SIGTERM to close chirp. Used for compatibility with
-// existing applications: When you use chirp in an existing application that
-// uses SIGINT and SIGTERM signals and the handlers added by chirp somehow
-// conflict. Can be overridden in :c:type:`ch_config_t`.
-//
-// .. code-block:: cpp
-//
-////#define CH_DISABLE_SIGNALS
-//
 // Buffer-size when allocating communication buffers, can be overridden in
 // :c:type:`ch_config_t`.
 //
 // .. code-block:: cpp
-//
+
 /* 64k */
 #define CH_BUFFER_SIZE 65536
 
@@ -64,13 +55,36 @@
 
 #define CH_MAX_MSG_SIZE 1024 * 1024 * 100 // 100M
 
-#ifndef CH_REMOVE_DEBUGDEFS
+// Logging is done via a macro which is disabled by default. You can enable it
+// here for debug purposes.
+//
+// .. code-block:: cpp
+
+/* #define CH_ENABLE_LOGGING */
+
+// Chirp asserts a lot of conditions. Asserting is done via a macro which is
+// disabled by default. You can enable it here for debug purposes.
+//
+// .. code-block:: cpp
+
+/* #define CH_ENABLE_ASSERTS */
 
 // Log available ciphers. Used to debug connections failures.
 //
 // .. code-block:: cpp
 
-////#define CH_CN_PRINT_CIPHERS
+/* #define CH_CN_PRINT_CIPHERS */
+
+// Disable SIGINT and SIGTERM to close chirp. Used for compatibility with
+// existing applications: When you use chirp in an existing application that
+// uses SIGINT and SIGTERM signals and the handlers added by chirp somehow
+// conflict. Can be overridden in :c:type:`ch_config_t`.
+//
+// .. code-block:: cpp
+
+/* #define CH_DISABLE_SIGNALS */
+
+#ifndef CH_REMOVE_DEBUGDEFS
 
 // Only used for testing, ignore if you only build the library
 
@@ -86,6 +100,6 @@
 #define s_realloc realloc
 #define s_free free
 
-#endif //CH_REMOVE_DEBUGDEFS
+#endif // CH_REMOVE_DEBUGDEFS
 
-#endif //ch_global_config_h
+#endif // ch_global_config_h

@@ -8,6 +8,7 @@
 // .. code-block:: cpp
 //
 #include "chirp.h"
+#include "common.h"
 #include "remote.h"
 #include "util.h"
 
@@ -717,7 +718,7 @@ ch_chirp_init(
         ch_en_init(chirp, enc);
         tmp_err = ch_en_start(enc);
         if (tmp_err != CH_SUCCESS) {
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
             ERR_print_errors_fp(stderr);
 #endif
             E(chirp, "Could not start encryption: %d", tmp_err);
@@ -727,7 +728,7 @@ ch_chirp_init(
             return tmp_err;
         }
     }
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
     char id_str[CH_ID_SIZE * 2 + 1];
     ch_bytes_to_hex(
             ichirp->identity, sizeof(ichirp->identity), id_str, sizeof(id_str));
@@ -757,7 +758,7 @@ ch_chirp_finish_message(
     char flags = msg->_flags;
     if (flags & CH_MSG_ACK_RECEIVED && flags & CH_MSG_WRITE_DONE) {
         msg->_flags &= ~(CH_MSG_ACK_RECEIVED | CH_MSG_WRITE_DONE);
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
         {
             char  id[CH_ID_SIZE * 2 + 1];
             char* action = "Success";
@@ -1000,7 +1001,7 @@ ch_loop_close(uv_loop_t* loop)
 {
     int tmp_err;
     tmp_err = uv_loop_close(loop);
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
     if (tmp_err != CH_SUCCESS) {
         fprintf(stderr,
                 "%s:%d WARNING: Closing loop exitcode:%d. uv_loop_t:%p\n",

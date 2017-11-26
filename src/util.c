@@ -53,16 +53,14 @@ static char* const _ch_lg_colors[8] = {
         "\x1B[1;33m",
 };
 
+#ifndef NDEBUG
+
 // Debug alloc tracking
 // ====================
 //
 // Since we can't use valgrind and rr at the same time and I needed to debug a
 // leak with rr, I added this memory leak debugging code. Since we use rr, the
 // pointer to the allocation is enough, we don't need any meta information.
-//
-// .. code-block:: cpp
-
-#ifndef NDEBUG
 
 // .. c:var:: uv_mutex_t _ch_at_lock
 //
@@ -227,8 +225,9 @@ ch_alloc(size_t size)
 //
 {
     void* buf = _ch_alloc_cb(size);
-    assert(buf); /* Assert memory (do not rely on this, implement it
-                    robust: be graceful and return error to user) */
+    /* Assert memory (do not rely on this, implement it robust: be graceful and
+     * return error to user) */
+    A(buf, "Allocation failure");
 #ifndef NDEBUG
     return _ch_at_alloc(buf);
 #else
@@ -357,8 +356,9 @@ ch_realloc(void* buf, size_t size)
 //
 {
     void* rbuf = _ch_realloc_cb(buf, size);
-    assert(rbuf); /* Assert memory (do not rely on this, implement it
-                    robust: be graceful and return error to user) */
+    /* Assert memory (do not rely on this, implement it robust: be graceful and
+     * return error to user) */
+    A(rbuf, "Reallocation failure");
 #ifndef NDEBUG
     return _ch_at_realloc(buf, rbuf);
 #else

@@ -10,6 +10,7 @@
 //
 #include "protocol.h"
 #include "chirp.h"
+#include "common.h"
 #include "remote.h"
 #include "util.h"
 
@@ -193,7 +194,7 @@ _ch_pr_do_handshake(ch_connection_t* conn)
                "ch_connection_t:%p",
                (void*) conn);
         } else {
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
             ERR_print_errors_fp(stderr);
 #endif
             EC(chirp,
@@ -440,7 +441,7 @@ ch_pr_decrypt_read(ch_connection_t* conn, int* stop)
     tmp_err = SSL_get_error(conn->ssl, tmp_err);
     if (tmp_err != SSL_ERROR_WANT_READ) {
         if (tmp_err < 0) {
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
             ERR_print_errors_fp(stderr);
 #endif
             EC(chirp,
@@ -528,7 +529,7 @@ _ch_pr_read_data_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
     ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
     ssize_t bytes_handled = 0;
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     conn->flags &= ~CH_CN_BUF_UV_USED;
 #endif
     if (nread == UV_EOF) {

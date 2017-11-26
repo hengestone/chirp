@@ -10,6 +10,7 @@
 //
 #include "connection.h"
 #include "chirp.h"
+#include "common.h"
 #include "remote.h"
 #include "util.h"
 
@@ -232,7 +233,7 @@ _ch_cn_partial_write(ch_connection_t* conn)
     ch_chirp_check_m(chirp);
     A(!(conn->flags & CH_CN_BUF_WTLS_USED), "The wtls buffer is still used");
     A(!(conn->flags & CH_CN_WRITE_PENDING), "Another uv write is pending");
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     conn->flags |= CH_CN_WRITE_PENDING;
     conn->flags |= CH_CN_BUF_WTLS_USED;
 #endif
@@ -307,7 +308,7 @@ _ch_cn_send_pending_cb(uv_write_t* req, int status)
     ch_connection_t* conn  = req->data;
     ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     conn->flags &= ~CH_CN_WRITE_PENDING;
     conn->flags &= ~CH_CN_BUF_WTLS_USED;
 #endif
@@ -389,7 +390,7 @@ _ch_cn_write_cb(uv_write_t* req, int status)
     ch_connection_t* conn  = req->data;
     ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     conn->flags &= ~CH_CN_WRITE_PENDING;
     conn->flags &= ~CH_CN_BUF_WTLS_USED;
 #endif
@@ -415,9 +416,7 @@ _ch_cn_write_cb(uv_write_t* req, int status)
            (int) conn->write_size,
            (void*) conn);
     } else {
-#ifndef NDEBUG
         A(pending == 0, "Unexpected pending data on TLS write");
-#endif
         LC(chirp,
            "Completely sent %d bytes (unenc). ",
            "ch_connection_t:%p",
@@ -471,11 +470,11 @@ ch_cn_close_cb(uv_handle_t* handle)
                (void*) handle);
         }
         if (conn->flags & CH_CN_INIT_BUFFERS) {
-            assert(conn->buffer_uv);
+            A(conn->buffer_uv, "Initialized buffers inconsistent");
             ch_free(conn->buffer_uv);
             if (conn->flags & CH_CN_ENCRYPTED) {
-                assert(conn->buffer_wtls);
-                assert(conn->buffer_rtls);
+                A(conn->buffer_wtls, "Initialized buffers inconsistent");
+                A(conn->buffer_rtls, "Initialized buffers inconsistent");
                 ch_free(conn->buffer_wtls);
                 ch_free(conn->buffer_rtls);
             }
@@ -485,8 +484,8 @@ ch_cn_close_cb(uv_handle_t* handle)
             /* The doc says this frees conn->bio_ssl I tested it. let's
              * hope they never change that. */
             if (conn->flags & CH_CN_INIT_ENCRYPTION) {
-                assert(conn->ssl);
-                assert(conn->bio_app);
+                A(conn->ssl, "Initialized ssl handles inconsistent");
+                A(conn->bio_app, "Initialized ssl handles inconsistent");
                 SSL_free(conn->ssl);
                 BIO_free(conn->bio_app);
             }
@@ -568,14 +567,14 @@ ch_cn_init_enc(ch_chirp_t* chirp, ch_connection_t* conn)
     ch_chirp_int_t* ichirp = chirp->_;
     conn->ssl              = SSL_new(ichirp->encryption.ssl_ctx);
     if (conn->ssl == NULL) {
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
         ERR_print_errors_fp(stderr);
 #endif
         EC(chirp, "Could not create SSL. ", "ch_connection_t:%p", (void*) conn);
         return CH_TLS_ERROR;
     }
     if (BIO_new_bio_pair(&(conn->bio_ssl), 0, &(conn->bio_app), 0) != 1) {
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
         ERR_print_errors_fp(stderr);
 #endif
         EC(chirp,
@@ -616,7 +615,7 @@ ch_cn_read_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
     ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
     A(!(conn->flags & CH_CN_BUF_UV_USED), "UV buffer still used");
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     conn->flags |= CH_CN_BUF_UV_USED;
 #endif
     buf->base = conn->buffer_uv;
@@ -646,7 +645,7 @@ ch_cn_send_if_pending(ch_connection_t* conn)
         return;
     }
     A(!(conn->flags & CH_CN_BUF_WTLS_USED), "The wtls buffer is still used");
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     conn->flags |= CH_CN_BUF_WTLS_USED;
     conn->flags |= CH_CN_WRITE_PENDING;
 #endif
@@ -713,7 +712,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     if (msg == NULL) {
         msg = wam;
     }
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     else {
         A(wam == NULL || wam == msg,
           "Wait ack message should be the same as writer msg");
@@ -797,7 +796,7 @@ ch_cn_write(ch_connection_t* conn, void* buf, size_t size, uv_write_cb callback)
         conn->write_buffer   = buf;
         conn->write_size     = size;
         conn->write_written  = 0;
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
         int pending = BIO_pending(conn->bio_app);
         A(pending == 0, "There is still pending data in SSL BIO");
 #endif

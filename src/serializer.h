@@ -50,7 +50,7 @@ typedef struct ch_sr_handshake_s {
 
 #define CH_SR_WIRE_MESSAGE_SIZE 27
 
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
 #define CH_SR_WIRE_MESSAGE_CHECK                                               \
     pos += 4;                                                                  \
     A(pos == CH_SR_WIRE_MESSAGE_SIZE, "Bad message serialization size");
@@ -101,7 +101,7 @@ ch_sr_msg_to_buf(ch_message_t* msg, ch_buf* buf);
 
 #define CH_SR_HANDSHAKE_SIZE 18
 
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
 #define CH_SR_HANDSHAKE_CHECK                                                  \
     pos += CH_ID_SIZE;                                                         \
     A(pos == CH_SR_HANDSHAKE_SIZE, "Bad handshake serialization size");

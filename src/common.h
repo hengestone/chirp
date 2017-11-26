@@ -78,6 +78,15 @@ typedef struct ch_protocol_s ch_protocol_t;
 // Definitions
 // ===========
 
+#ifndef NDEBUG
+#ifndef CH_ENABLE_LOGGING
+#define CH_ENABLE_LOGGING
+#endif
+#ifndef CH_ENABLE_ASSERTS
+#define CH_ENABLE_ASSERTS
+#endif
+#endif
+
 // .. c:macro:: EC
 //
 //    Reports an error.
@@ -117,14 +126,21 @@ typedef struct ch_protocol_s ch_protocol_t;
 //
 // .. code-block:: cpp
 //
+#ifndef NDEBUG
 #define V(chirp, condition, message, ...)                                      \
     if (!(condition)) {                                                        \
-        ch_write_log(chirp, __FILE__, __LINE__, message, "", 0, __VA_ARGS__);  \
-        assert(0);                                                             \
+        ch_write_log(chirp, __FILE__, __LINE__, message, "", 1, __VA_ARGS__);  \
+        exit(1);                                                               \
+    }
+#else
+#define V(chirp, condition, message, ...)                                      \
+    if (!(condition)) {                                                        \
+        ch_write_log(chirp, __FILE__, __LINE__, message, "", 1, __VA_ARGS__);  \
         return CH_VALUE_ERROR;                                                 \
     }
+#endif
 
-#ifndef NDEBUG
+#ifdef CH_ENABLE_LOGGING
 
 // .. c:macro:: LC
 //
@@ -148,6 +164,25 @@ typedef struct ch_protocol_s ch_protocol_t;
 #define LC(chirp, message, clear, ...)                                         \
     CH_WRITE_LOGC(chirp, message, clear, __VA_ARGS__)
 #define L(chirp, message, ...) CH_WRITE_LOG(chirp, message, __VA_ARGS__)
+
+#else // CH_ENABLE_LOGGING
+
+// .. c:macro:: L
+//
+//    See :c:macro:`L`. Does nothing in release-mode.
+// .. code-block:: cpp
+//
+#define L(chirp, message, ...)                                                 \
+    (void) (chirp);                                                            \
+    (void) (message)
+#define LC(chirp, message, clear, ...)                                         \
+    (void) (chirp);                                                            \
+    (void) (message);                                                          \
+    (void) (clear)
+#endif
+
+#ifdef CH_ENABLE_ASSERTS
+
 // .. c:macro:: A
 //
 //    Validates the given condition and reports arbitrary arguments when the
@@ -159,15 +194,18 @@ typedef struct ch_protocol_s ch_protocol_t;
 //    print a arbitrary arguments when the given assertion fails.
 //
 //    :param condition: A boolean condition to check.
-//    :param ...: Variadic arguments for xprintf
+//    :param message:   Message to display
 //
 // .. code-block:: cpp
 //
-#define A(condition, ...)                                                      \
+#define A(condition, message)                                                  \
     if (!(condition)) {                                                        \
-        fprintf(stderr, __VA_ARGS__);                                          \
-        fprintf(stderr, "\n");                                                 \
-        assert(0);                                                             \
+        fprintf(stderr,                                                        \
+                "%s:%d: Assert failed: %s\n",                                  \
+                __FILE__,                                                      \
+                __LINE__,                                                      \
+                message);                                                      \
+        exit(1);                                                               \
     }
 
 // .. c:macro:: ch_chirp_check_m()
@@ -185,20 +223,7 @@ typedef struct ch_protocol_s ch_protocol_t;
           "Call on the wrong thread");                                         \
     }
 
-#else // NDEBUG
-
-// .. c:macro:: L
-//
-//    See :c:macro:`L`. Does nothing in release-mode.
-// .. code-block:: cpp
-//
-#define L(chirp, message, ...)                                                 \
-    (void) (chirp);                                                            \
-    (void) (message)
-#define LC(chirp, message, clear, ...)                                         \
-    (void) (chirp);                                                            \
-    (void) (message);                                                          \
-    (void) (clear)
+#else // CH_ENABLE_ASSERTS
 
 //.. c:macro:: A
 //
@@ -208,7 +233,9 @@ typedef struct ch_protocol_s ch_protocol_t;
 //
 // .. code-block:: cpp
 //
-#define A(condition, ...) (void) (condition)
+#define A(condition, message)                                                  \
+    (void) (condition);                                                        \
+    (void) (message)
 #define ch_chirp_check_m(chirp) (void) (chirp)
 
 #endif
