@@ -215,7 +215,7 @@ service_update(mon_service_t* msg_svc)
 static void
 new_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 {
-    (void)(chirp);
+    (void) (chirp);
     /* Note: This makes some very naive assumptions regarding the peer.  Any
      * respectable network code should NEVER EVER do this! But it keeps the
      * tutorial short, as we don't need code to serialize/unserialize. */
@@ -370,7 +370,7 @@ static uv_timer_t poll_timer;
 static void
 poll_and_print_status_cb(uv_timer_t* timer)
 {
-    (void)(timer);
+    (void) (timer);
 
     time_t now = time(NULL);
     for (size_t i = 0; i < _services_size; i++) {
@@ -410,8 +410,8 @@ static uv_signal_t sighandler;
 static void
 sig_handler_cb(uv_signal_t* handle, int signum)
 {
-    (void)(handle);
-    (void)(signum);
+    (void) (handle);
+    (void) (signum);
 
     /* First, we stop the sanity check timer. It's not needed anymore */
     uv_timer_stop(&poll_timer);
