@@ -300,21 +300,6 @@ _ch_pr_read_resume(ch_connection_t* conn, ch_resume_state_t* resume)
 }
 
 // .. c:function::
-void
-ch_pr_init(ch_chirp_t* chirp, ch_protocol_t* protocol)
-//    :noindex:
-//
-//    see: :c:func:`ch_pr_init`
-//
-// .. code-block:: cpp
-//
-{
-    memset(protocol, 0, sizeof(*protocol));
-    protocol->chirp = chirp;
-    ch_cn_tree_init(&protocol->handshake_conns);
-}
-
-// .. c:function::
 ch_error_t
 ch_pr_conn_start(
         ch_chirp_t* chirp, ch_connection_t* conn, uv_tcp_t* client, int accept)
@@ -360,6 +345,21 @@ ch_pr_conn_start(
         ch_rd_read(conn, NULL, 0, &stop); /* Start reader */
     }
     return CH_SUCCESS;
+}
+
+// .. c:function::
+void
+ch_pr_init(ch_chirp_t* chirp, ch_protocol_t* protocol)
+//    :noindex:
+//
+//    see: :c:func:`ch_pr_init`
+//
+// .. code-block:: cpp
+//
+{
+    memset(protocol, 0, sizeof(*protocol));
+    protocol->chirp = chirp;
+    ch_cn_tree_init(&protocol->handshake_conns);
 }
 
 // .. c:function::
