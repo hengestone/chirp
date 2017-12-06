@@ -45,7 +45,7 @@ _ch_tst_start(ch_chirp_t* chirp)
 }
 
 static void
-_ch_tst_sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
+_ch_tst_sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (chirp);
     (void) (status);

@@ -46,7 +46,7 @@ _ch_tst_close_cb(uv_timer_t* handle)
 }
 
 static void
-ch_tst_sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
+ch_tst_sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (status);
     (void) (msg);

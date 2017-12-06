@@ -82,9 +82,9 @@ struct ch_tst_msg_stack_s {
     ch_tst_msg_stack_t* next;
 };
 
-qs_stack_bind_m(ch_tst_msg, ch_tst_msg_stack_t)
+qs_stack_bind_m(ch_tst_msg, ch_tst_msg_stack_t) CH_ALLOW_NL;
 
-        static int _ch_tst_msg_send_count = 0;
+static int                 _ch_tst_msg_send_count = 0;
 static ch_message_t        _ch_tst_msg;
 static int                 _ch_tst_msg_echo_count = 0;
 static char                _ch_tst_data[]         = "hello";
@@ -121,7 +121,7 @@ _ch_tst_delay_release(uv_timer_t* handle)
 }
 
 static void
-_ch_tst_echo_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
+_ch_tst_echo_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (chirp);
     (void) (status);
@@ -153,7 +153,7 @@ _ch_tst_echo_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
 }
 
 static void
-_ch_tst_sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
+_ch_tst_sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (status);
     (void) (msg);

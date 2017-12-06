@@ -54,7 +54,7 @@ static int shutting_down;
 static void
 notify_status(int svc_status, int agent_status);
 static void
-sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status);
+sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status);
 static void
 connection_timeout_cb(uv_timer_t* timer);
 static void
@@ -280,7 +280,7 @@ new_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 // .. code-block:: cpp
 
 static void
-sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
+sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (status);
     (void) (msg);

@@ -51,7 +51,7 @@ static int   upstream_port;
 // .. code-block:: cpp
 
 static void
-sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
+sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (chirp);
     (void) (status);

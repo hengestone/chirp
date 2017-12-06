@@ -80,7 +80,7 @@ _ch_tst_close_cb1(uv_handle_t* handle)
 }
 
 static void
-_ch_tst_send_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
+_ch_tst_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (chirp);
     ch_tst_msg_tree_t* entry = msg->user_data;

@@ -18,6 +18,14 @@
 // ============
 
 // .. c:function::
+static void
+_ch_wr_abort_one_message(ch_remote_t* remote, ch_error_t error);
+//
+//    Connects to a remote peer.
+//
+//    :param ch_remote_t* remote: Remote to connect to.
+
+// .. c:function::
 static int
 _ch_wr_check_write_error(
         ch_chirp_t*      chirp,
@@ -584,7 +592,6 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
         }
         return CH_SHUTDOWN;
     }
-    int          tmp_err;
     ch_remote_t  search_remote;
     ch_remote_t* remote;
     msg->_send_cb = send_cb;
@@ -604,8 +611,8 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
             }
             return CH_ENOMEM;
         }
-        *remote = search_remote;
-        tmp_err = ch_rm_insert(&protocol->remotes, remote);
+        *remote     = search_remote;
+        int tmp_err = ch_rm_insert(&protocol->remotes, remote);
         A(tmp_err == 0, "Inserting remote failed");
     }
     remote->serial += 1;

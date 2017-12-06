@@ -94,7 +94,8 @@ typedef void (*ch_log_cb_t)(char msg[], char error);
 //
 // .. code-block:: cpp
 //
-typedef void (*ch_send_cb_t)(ch_chirp_t* chirp, ch_message_t* msg, int status);
+typedef void (*ch_send_cb_t)(
+        ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status);
 
 // .. c:type:: ch_recv_cb_t
 //
