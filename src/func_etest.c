@@ -37,9 +37,9 @@ struct ch_tst_msg_tree_s {
 #define _ch_tst_msg_cmp_m(x, y)                                                \
     memcmp(ch_tst_identity_m(x), ch_tst_identity_m(y), CH_ID_SIZE)
 
-rb_bind_m(_ch_tst_msg, ch_tst_msg_tree_t)
+rb_bind_m(_ch_tst_msg, ch_tst_msg_tree_t) CH_ALLOW_NL;
 
-        static int _ch_tst_always_encrypt = 0;
+static int                _ch_tst_always_encrypt = 0;
 static ch_chirp_t*        _ch_tst_chirp;
 static mpack_node_t       _ch_tst_cur_mpack_data;
 static mpack_writer_t*    _ch_tst_cur_mpack_writer;

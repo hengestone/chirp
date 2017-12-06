@@ -42,7 +42,7 @@
 //    connection is not valid: close it if needed and cleanup ch_remote_t.
 //
 // wait = wait
-//    Reconnect after waiting for TIMEOUT / 2 seconds.
+//    Reconnect after waiting for 1 seconds.
 //
 // clen = cleanup
 //    Cleanup data-structures and buffers, remove pointer to connection from
@@ -481,13 +481,14 @@ struct ch_connection_s {
 //
 // .. code-block:: cpp
 
-qs_stack_bind_decl_m(ch_cn_old, ch_connection_t)
+qs_stack_bind_decl_m(ch_cn_old, ch_connection_t) CH_ALLOW_NL;
 
 #define ch_cn_cmp_m(x, y) rb_pointer_cmp_m(x, y)
-        rb_bind_decl_m(ch_cn, ch_connection_t)
+rb_bind_decl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
 
-        // .. c:function::
-        void ch_cn_close_cb(uv_handle_t* handle);
+// .. c:function::
+void
+ch_cn_close_cb(uv_handle_t* handle);
 //
 //    Called by libuv after closing a connection handle.
 //

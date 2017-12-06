@@ -180,7 +180,7 @@ static void
 _ch_chirp_check_closing_cb(uv_prepare_t* handle)
 //    :noindex:
 //
-//    see: :c:func:`ch_chirp_close_cb`
+//    see: :c:func:`_ch_chirp_check_closing_cb`
 //
 // .. code-block:: cpp
 //

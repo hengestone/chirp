@@ -749,7 +749,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     }
     if (ichirp->flags & CH_CHIRP_CLOSING) {
         conn->flags |= CH_CN_DO_CLOSE_ACCOUTING;
-        chirp->_->closing_tasks += 1;
+        ichirp->closing_tasks += 1;
     }
     if (conn->flags & CH_CN_CONNECTED) {
         tmp_err = uv_timer_start(

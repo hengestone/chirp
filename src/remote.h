@@ -105,7 +105,7 @@ struct ch_remote_s {
 
 // .. code-block:: cpp
 //
-rb_bind_decl_m(ch_rm, ch_remote_t)
+rb_bind_decl_m(ch_rm, ch_remote_t) CH_ALLOW_NL;
 
         // .. c:function::
         void ch_rm_init_from_msg(

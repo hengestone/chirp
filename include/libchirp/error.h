@@ -106,6 +106,10 @@
 //
 //       Indicates that queues are empty and no message has been sent.
 //
+//    .. c:member:: CH_INIT_FAIL
+//
+//       Initializing some resource failed.
+//
 // .. code-block:: cpp
 //
 typedef enum {
@@ -128,6 +132,7 @@ typedef enum {
     CH_BUSY           = 16,
     CH_EMPTY          = 17,
     CH_WRITE_ERROR    = 18,
+    CH_INIT_FAIL      = 19,
 } ch_error_t;
 
 #endif // ch_libchirp_error_h

@@ -1,5 +1,5 @@
 // ======
-// Writer
+// Remote
 // ======
 //
 
@@ -9,6 +9,7 @@
 // .. code-block:: cpp
 //
 #include "remote.h"
+#include "chirp.h"
 #include "util.h"
 
 // rbtree Prototypes
