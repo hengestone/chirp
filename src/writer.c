@@ -323,6 +323,7 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
                     1000,
                     0);
         }
+        conn->remote->flags |= CH_RM_CONN_BLOCKED;
         ch_rm_st_push(&protocol->reconnect_remotes, conn->remote);
     }
 }
@@ -591,7 +592,11 @@ ch_wr_process_queues(ch_remote_t* remote)
     ch_connection_t* conn = remote->conn;
     ch_message_t*    msg  = NULL;
     if (conn == NULL) {
-        return _ch_wr_connect(remote);
+        if (remote->flags & CH_RM_CONN_BLOCKED) {
+            return CH_BUSY;
+        } else {
+            return _ch_wr_connect(remote);
+        }
     } else if (!(conn->flags & CH_CN_CONNECTED)) {
         return CH_BUSY;
     } else if (conn->writer.msg != NULL) {

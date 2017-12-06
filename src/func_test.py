@@ -37,11 +37,19 @@ class GenBuffer(GenericStateMachine):
             just("send_message"),
             tuples(
                 sampled_from((socket.AF_INET, socket.AF_INET6)),
-                just(2997),
+                sampled_from((2997,) * 5 + (7, 2991)),
             )
         )
 
+    def listen_dead_socket(self):
+        dead = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.dead = dead
+        dead.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        dead.bind((socket.gethostname(), 2991))
+        dead.listen(5)
+
     def reinit(self, enc):
+        self.listen_dead_socket()
         args = ["./src/echo_etest", "2997", enc]
         self.echo = Popen(args, stdin=PIPE, stdout=PIPE)
         time.sleep(0.1)  # Wait for echo to be ready
@@ -51,6 +59,8 @@ class GenBuffer(GenericStateMachine):
 
     def teardown(self):
         if self.initialzed:
+            self.dead.close()
+            self.dead = None
             ret = 1
             proc = self.proc
             echo = self.echo

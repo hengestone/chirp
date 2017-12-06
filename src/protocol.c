@@ -563,8 +563,9 @@ ch_pr_reconnect_remotes_cb(uv_timer_t* handle)
         int idx = 0;
         ch_rm_st_pop(&protocol->reconnect_remotes, &remote);
         while (remote != NULL) {
+            remote->flags &= ~CH_RM_CONN_BLOCKED;
             remotes[idx] = remote;
-            count += idx;
+            idx += 1;
             ch_rm_st_pop(&protocol->reconnect_remotes, &remote);
         }
         A(idx == count, "Index error while copying remotes");

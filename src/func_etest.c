@@ -113,7 +113,8 @@ static void
 _ch_tst_recheck_messages(uv_timer_t* handle)
 {
     mpack_writer_t* writer = handle->data;
-    if (_ch_tst_wait_count < 5) {
+    /* We must wait longer than any timeout */
+    if (_ch_tst_wait_count < 100) {
         _ch_tst_check_messages(writer);
     } else {
         mpack_start_array(writer, 0);

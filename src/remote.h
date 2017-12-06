@@ -20,6 +20,20 @@
 
 // Declarations
 // ============
+//
+// .. c:type:: ch_rm_flags_t
+//
+//    Represents connection flags.
+//
+//    .. c:member:: CH_RM_CONN_BLOCKED
+//
+//       Indicates remote is block from connecting
+//
+// .. code-block:: cpp
+
+typedef enum {
+    CH_RM_CONN_BLOCKED = 1 << 0,
+} ch_rm_flags_t;
 
 // .. c:type:: ch_remote_t
 //
@@ -62,6 +76,10 @@
 //
 //       The current serial number for this remote
 //
+//    .. c:member:: uint8_t serial
+//
+//       Flags of the remote
+//
 //    .. c:member:: char color
 //
 //       rbtree member
@@ -94,6 +112,7 @@ struct ch_remote_s {
     ch_message_t*    wait_ack_message;
     ch_chirp_t*      chirp;
     uint32_t         serial;
+    uint8_t          flags;
     char             color;
     ch_remote_t*     parent;
     ch_remote_t*     left;
