@@ -706,8 +706,12 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     ch_message_t* msg = writer->msg;
     ch_message_t* wam = NULL;
     if (remote) {
-        wam          = remote->wait_ack_message;
-        remote->conn = NULL;
+        wam = remote->wait_ack_message;
+        /* We could be a connection from old_connections and therefore we do
+         * not want to invalidate an active connection. */
+        if (remote->conn == conn) {
+            remote->conn = NULL;
+        }
     }
     if (msg == NULL) {
         msg = wam;
