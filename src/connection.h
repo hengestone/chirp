@@ -288,11 +288,6 @@ typedef struct ch_resume_state_s {
 //
 //       Libuv connect handler.
 //
-//    .. c:member:: ch_message_t* connect_msg
-//
-//       The message that caused connecting, used to send a error to that
-//       message.
-//
 //    .. c:member:: uv_buf* buffer_uv
 //
 //       Pointer to the libuv (data-) buffer data type.
@@ -446,7 +441,6 @@ struct ch_connection_s {
     ch_remote_t*      remote;
     uv_tcp_t          client;
     uv_connect_t      connect;
-    ch_message_t*     connect_msg;
     ch_buf*           buffer_uv;
     ch_buf*           buffer_wtls;
     ch_buf*           buffer_rtls;

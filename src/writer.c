@@ -42,7 +42,7 @@ _ch_wr_check_write_error(
 
 // .. c:function::
 static ch_error_t
-_ch_wr_connect(ch_remote_t* remote, ch_message_t* msg);
+_ch_wr_connect(ch_remote_t* remote);
 //
 //    Connects to a remote peer.
 //
@@ -160,7 +160,7 @@ _ch_wr_check_write_error(
 
 // .. c:function::
 static ch_error_t
-_ch_wr_connect(ch_remote_t* remote, ch_message_t* msg)
+_ch_wr_connect(ch_remote_t* remote)
 //    :noindex:
 //
 //    see: :c:func:`_ch_wr_connect`
@@ -168,27 +168,20 @@ _ch_wr_connect(ch_remote_t* remote, ch_message_t* msg)
 // .. code-block:: cpp
 //
 {
-    ch_chirp_t*      chirp   = remote->chirp;
-    ch_chirp_int_t*  ichirp  = chirp->_;
-    ch_connection_t* conn    = remote->conn;
-    ch_send_cb_t     send_cb = msg->_send_cb;
-    conn                     = ch_alloc(sizeof(*conn));
+    ch_chirp_t*      chirp  = remote->chirp;
+    ch_chirp_int_t*  ichirp = chirp->_;
+    ch_connection_t* conn   = remote->conn;
+    conn                    = ch_alloc(sizeof(*conn));
     if (!conn) {
-        E(chirp, "Could not allocate memory for connection", CH_NO_ARG);
-        msg->_flags &= ~CH_MSG_USED;
-        if (send_cb != NULL) {
-            send_cb(chirp, msg, CH_ENOMEM);
-        }
         return CH_ENOMEM;
     }
     remote->conn = conn;
     memset(conn, 0, sizeof(*conn));
     conn->chirp        = chirp;
-    conn->port         = msg->port;
-    conn->ip_protocol  = msg->ip_protocol;
+    conn->port         = remote->port;
+    conn->ip_protocol  = remote->ip_protocol;
     conn->connect.data = conn;
     conn->remote       = remote;
-    conn->connect_msg  = msg;
     conn->client.data  = conn;
     int tmp_err        = uv_timer_init(ichirp->loop, &conn->connect_timeout);
     if (tmp_err != CH_SUCCESS) {
@@ -197,10 +190,6 @@ _ch_wr_connect(ch_remote_t* remote, ch_message_t* msg)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        msg->_flags &= ~CH_MSG_USED;
-        if (send_cb != NULL) {
-            send_cb(chirp, msg, CH_FATAL);
-        }
         return CH_FATAL;
     }
     conn->connect_timeout.data = conn;
@@ -216,31 +205,24 @@ _ch_wr_connect(ch_remote_t* remote, ch_message_t* msg)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        msg->_flags &= ~CH_MSG_USED;
-        if (send_cb != NULL) {
-            send_cb(chirp, msg, CH_FATAL);
-        }
         return CH_FATAL;
     }
 
     ch_text_address_t taddr;
-    tmp_err = ch_msg_get_address(msg, &taddr);
-    if (tmp_err != CH_SUCCESS) {
-        E(chirp, "Failed to get message address: bad INET protocol", CH_NO_ARG);
-        if (send_cb != NULL) {
-            send_cb(chirp, msg, CH_CANNOT_CONNECT);
-        }
-        return CH_CANNOT_CONNECT;
-    }
+    uv_inet_ntop(
+            remote->ip_protocol,
+            remote->address,
+            taddr.data,
+            sizeof(taddr.data));
     if (!(ichirp->config.DISABLE_ENCRYPTION || ch_is_local_addr(&taddr))) {
         conn->flags |= CH_CN_ENCRYPTED;
     }
-    memcpy(&conn->address, &msg->address, CH_IP_ADDR_SIZE);
+    memcpy(&conn->address, &remote->address, CH_IP_ADDR_SIZE);
     uv_tcp_init(ichirp->loop, &conn->client);
     conn->flags |= CH_CN_INIT_CLIENT;
     struct sockaddr_storage addr;
     /* No error can happen, the address was taken from a binary format */
-    ch_textaddr_to_sockaddr(msg->ip_protocol, &taddr, msg->port, &addr);
+    ch_textaddr_to_sockaddr(remote->ip_protocol, &taddr, remote->port, &addr);
     tmp_err = uv_tcp_connect(
             &conn->connect,
             &conn->client,
@@ -250,18 +232,15 @@ _ch_wr_connect(ch_remote_t* remote, ch_message_t* msg)
         E(chirp,
           "Failed to connect to host: %s:%d (%d)",
           taddr.data,
-          msg->port,
+          remote->port,
           tmp_err);
-        if (send_cb != NULL) {
-            send_cb(chirp, msg, CH_CANNOT_CONNECT);
-        }
         return CH_CANNOT_CONNECT;
     }
     LC(chirp,
        "Connecting to remote %s:%d. ",
        "ch_connection_t:%p",
        taddr.data,
-       msg->port,
+       remote->port,
        (void*) conn);
     return CH_SUCCESS;
 }
@@ -276,19 +255,19 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
 // .. code-block:: cpp
 //
 {
-    ch_text_address_t taddr;
-    ch_connection_t*  conn  = req->data;
-    ch_chirp_t*       chirp = conn->chirp;
+    ch_connection_t* conn  = req->data;
+    ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
-    ch_message_t* msg = conn->connect_msg;
+    ch_text_address_t taddr;
     A(chirp == conn->chirp, "Chirp on connection should match");
-    ch_msg_get_address(msg, &taddr);
+    uv_inet_ntop(
+            conn->ip_protocol, conn->address, taddr.data, sizeof(taddr.data));
     if (status == CH_SUCCESS) {
         LC(chirp,
            "Connected to remote %s:%d. ",
            "ch_connection_t:%p",
            taddr.data,
-           msg->port,
+           conn->port,
            (void*) conn);
         /* Here we join the code called on accept. */
         ch_pr_conn_start(chirp, conn, &conn->client, 0);
@@ -297,7 +276,7 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
            "Connection to remote failed %s:%d (%d). ",
            "ch_connection_t:%p",
            taddr.data,
-           msg->port,
+           conn->port,
            status,
            (void*) conn);
         ch_cn_shutdown(conn, CH_CANNOT_CONNECT);
@@ -565,12 +544,7 @@ ch_wr_process_queues(ch_remote_t* remote)
     ch_connection_t* conn = remote->conn;
     ch_message_t*    msg  = NULL;
     if (conn == NULL) {
-        if (remote->no_rack_msg_queue != NULL) {
-            ch_msg_head(remote->no_rack_msg_queue, &msg);
-        } else {
-            ch_msg_head(remote->rack_msg_queue, &msg);
-        }
-        return _ch_wr_connect(remote, msg);
+        return _ch_wr_connect(remote);
     } else if (!(conn->flags & CH_CN_CONNECTED)) {
         return CH_BUSY;
     } else if (conn->writer.msg != NULL) {
