@@ -26,24 +26,6 @@
 
 // .. c:function::
 static void
-_ch_pr_update_resume(
-        ch_resume_state_t* resume,
-        ch_buf*            buf,
-        size_t             nread,
-        ssize_t            bytes_handled);
-//
-//    Update the resume state. Checks if reading was partial and sets resume
-//    state that points to the remaining data. If the last buffer was used, it
-//    is possible that all that has been read and we can just stop or that
-//    there is still a message in the buffer.
-//
-//    :param ch_resume_state_t* resume: Pointer to resume state.
-//    :param ch_buf* buf: Pointer to buffer being checked.
-//    :param size_t nread: Total bytes available
-//    :param ssize_t bytes_handled: Bytes actually handled
-
-// .. c:function::
-static void
 _ch_pr_close_free_connections(ch_chirp_t* chirp);
 //
 //    Close and free all remaining connections.
@@ -114,8 +96,18 @@ _ch_pr_resume(ch_connection_t* conn);
 //
 //    :param ch_connection_t* conn: Pointer to a connection handle.
 
-// Definitions
-// ===========
+// .. c:function::
+static inline ch_error_t
+_ch_pr_start_socket(
+        ch_chirp_t*      chirp,
+        int              af,
+        uv_tcp_t*        server,
+        uint8_t*         bind,
+        struct sockaddr* addr,
+        int              v6only);
+//
+//    Since dual stack sockets don't work on all platforms we start a IPv4 and
+//    IPv6 socket.
 
 // .. c:function::
 static void
@@ -123,21 +115,20 @@ _ch_pr_update_resume(
         ch_resume_state_t* resume,
         ch_buf*            buf,
         size_t             nread,
-        ssize_t            bytes_handled)
-//    :noindex:
+        ssize_t            bytes_handled);
 //
-//    see: :c:func:`_ch_pr_update_resume`
+//    Update the resume state. Checks if reading was partial and sets resume
+//    state that points to the remaining data. If the last buffer was used, it
+//    is possible that all that has been read and we can just stop or that
+//    there is still a message in the buffer.
 //
-// .. code-block:: cpp
-//
-{
-    if (bytes_handled != -1 && bytes_handled != (ssize_t) nread) {
-        A(resume->rest_of_buffer == NULL || resume->bytes_to_read != 0,
-          "Last partial read not completed");
-        resume->rest_of_buffer = buf + bytes_handled;
-        resume->bytes_to_read  = nread - bytes_handled;
-    }
-}
+//    :param ch_resume_state_t* resume: Pointer to resume state.
+//    :param ch_buf* buf: Pointer to buffer being checked.
+//    :param size_t nread: Total bytes available
+//    :param ssize_t bytes_handled: Bytes actually handled
+
+// Definitions
+// ===========
 
 // .. c:function::
 static void
@@ -300,6 +291,92 @@ _ch_pr_read_resume(ch_connection_t* conn, ch_resume_state_t* resume)
 }
 
 // .. c:function::
+static inline ch_error_t
+_ch_pr_start_socket(
+        ch_chirp_t*      chirp,
+        int              af,
+        uv_tcp_t*        server,
+        uint8_t*         bind,
+        struct sockaddr* addr,
+        int              v6only)
+//    :noindex:
+//
+//    see: :c:func:`_ch_pr_start_socket`
+//
+// .. code-block:: cpp
+//
+{
+    ch_text_address_t tmp_addr;
+    int               tmp_err;
+    ch_chirp_int_t*   ichirp = chirp->_;
+    ch_config_t*      config = &ichirp->config;
+    uv_tcp_init(ichirp->loop, server);
+    server->data = chirp;
+
+    tmp_err = uv_inet_ntop(af, bind, tmp_addr.data, sizeof(tmp_addr.data));
+    if (tmp_err != CH_SUCCESS) {
+        return CH_VALUE_ERROR;
+    }
+
+    tmp_err = ch_textaddr_to_sockaddr(
+            af, &tmp_addr, config->PORT, (struct sockaddr_storage*) addr);
+    if (tmp_err != CH_SUCCESS) {
+        return tmp_err;
+    }
+
+    tmp_err = uv_tcp_bind(server, addr, v6only);
+    if (tmp_err != CH_SUCCESS) {
+        fprintf(stderr,
+                "%s:%d Fatal: cannot bind port (IPv%d:%d)\n",
+                __FILE__,
+                __LINE__,
+                af == AF_INET6 ? 6 : 4,
+                config->PORT);
+        return CH_EADDRINUSE;
+    }
+
+    tmp_err = uv_tcp_nodelay(server, 1);
+    if (tmp_err != CH_SUCCESS) {
+        return CH_UV_ERROR;
+    }
+
+    tmp_err = uv_listen(
+            (uv_stream_t*) server, config->BACKLOG, _ch_pr_new_connection_cb);
+    if (tmp_err != CH_SUCCESS) {
+        fprintf(stderr,
+                "%s:%d Fatal: cannot listen port (IPv%d:%d)\n",
+                __FILE__,
+                __LINE__,
+                af == AF_INET6 ? 6 : 4,
+                config->PORT);
+        return CH_EADDRINUSE;
+    }
+    return CH_SUCCESS;
+}
+
+// .. c:function::
+static void
+_ch_pr_update_resume(
+        ch_resume_state_t* resume,
+        ch_buf*            buf,
+        size_t             nread,
+        ssize_t            bytes_handled)
+//    :noindex:
+//
+//    see: :c:func:`_ch_pr_update_resume`
+//
+// .. code-block:: cpp
+//
+{
+    if (bytes_handled != -1 && bytes_handled != (ssize_t) nread) {
+        A(resume->rest_of_buffer == NULL || resume->bytes_to_read != 0,
+          "Last partial read not completed");
+        resume->rest_of_buffer = buf + bytes_handled;
+        resume->bytes_to_read  = nread - bytes_handled;
+    }
+}
+
+// .. c:function::
 ch_error_t
 ch_pr_conn_start(
         ch_chirp_t* chirp, ch_connection_t* conn, uv_tcp_t* client, int accept)
@@ -345,21 +422,6 @@ ch_pr_conn_start(
         ch_rd_read(conn, NULL, 0, &stop); /* Start reader */
     }
     return CH_SUCCESS;
-}
-
-// .. c:function::
-void
-ch_pr_init(ch_chirp_t* chirp, ch_protocol_t* protocol)
-//    :noindex:
-//
-//    see: :c:func:`ch_pr_init`
-//
-// .. code-block:: cpp
-//
-{
-    memset(protocol, 0, sizeof(*protocol));
-    protocol->chirp = chirp;
-    ch_cn_tree_init(&protocol->handshake_conns);
 }
 
 // .. c:function::
@@ -455,6 +517,61 @@ ch_pr_decrypt_read(ch_connection_t* conn, int* stop)
                (void*) conn);
         }
         ch_cn_shutdown(conn, CH_TLS_ERROR);
+    }
+}
+
+// .. c:function::
+void
+ch_pr_init(ch_chirp_t* chirp, ch_protocol_t* protocol)
+//    :noindex:
+//
+//    see: :c:func:`ch_pr_init`
+//
+// .. code-block:: cpp
+//
+{
+    memset(protocol, 0, sizeof(*protocol));
+    protocol->chirp = chirp;
+    ch_cn_tree_init(&protocol->handshake_conns);
+}
+
+// .. c:function::
+void
+ch_pr_reconnect_remotes_cb(uv_timer_t* handle)
+//    :noindex:
+//
+//    see: :c:func:`_ch_pr_reconnect_remotes_cb`
+//
+// .. code-block:: cpp
+//
+{
+    ch_chirp_t*    chirp    = handle->data;
+    ch_protocol_t* protocol = &chirp->_->protocol;
+    ch_chirp_check_m(chirp);
+    if (protocol->reconnect_remotes != NULL) {
+        int          count = 0;
+        ch_remote_t* rm_iter;
+        ch_remote_t* rm_elem;
+
+        rb_for_m (ch_rm_st, protocol->reconnect_remotes, rm_iter, rm_elem) {
+            count += 1;
+        }
+        ch_remote_t** remotes = ch_alloc(count * sizeof(remotes));
+        ch_remote_t*  remote;
+        /* ch_wr_process_queues can add remotes to protocol->reconnect_remotes
+         * so we need to copy it first */
+        int idx = 0;
+        ch_rm_st_pop(&protocol->reconnect_remotes, &remote);
+        while (remote != NULL) {
+            remotes[idx] = remote;
+            count += idx;
+            ch_rm_st_pop(&protocol->reconnect_remotes, &remote);
+        }
+        A(idx == count, "Index error while copying remotes");
+        for (idx = 0; idx < count; idx++) {
+            ch_wr_process_queues(remotes[idx]);
+        }
+        ch_free(remotes);
     }
 }
 
@@ -571,63 +688,6 @@ _ch_pr_read_data_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
     }
 }
 
-static inline ch_error_t
-_ch_pr_start_socket(
-        ch_chirp_t*      chirp,
-        int              af,
-        uv_tcp_t*        server,
-        uint8_t*         bind,
-        struct sockaddr* addr,
-        int              v6only)
-{
-    ch_text_address_t tmp_addr;
-    int               tmp_err;
-    ch_chirp_int_t*   ichirp = chirp->_;
-    ch_config_t*      config = &ichirp->config;
-    uv_tcp_init(ichirp->loop, server);
-    server->data = chirp;
-
-    tmp_err = uv_inet_ntop(af, bind, tmp_addr.data, sizeof(tmp_addr.data));
-    if (tmp_err != CH_SUCCESS) {
-        return CH_VALUE_ERROR;
-    }
-
-    tmp_err = ch_textaddr_to_sockaddr(
-            af, &tmp_addr, config->PORT, (struct sockaddr_storage*) addr);
-    if (tmp_err != CH_SUCCESS) {
-        return tmp_err;
-    }
-
-    tmp_err = uv_tcp_bind(server, addr, v6only);
-    if (tmp_err != CH_SUCCESS) {
-        fprintf(stderr,
-                "%s:%d Fatal: cannot bind port (IPv%d:%d)\n",
-                __FILE__,
-                __LINE__,
-                af == AF_INET6 ? 6 : 4,
-                config->PORT);
-        return CH_EADDRINUSE;
-    }
-
-    tmp_err = uv_tcp_nodelay(server, 1);
-    if (tmp_err != CH_SUCCESS) {
-        return CH_UV_ERROR;
-    }
-
-    tmp_err = uv_listen(
-            (uv_stream_t*) server, config->BACKLOG, _ch_pr_new_connection_cb);
-    if (tmp_err != CH_SUCCESS) {
-        fprintf(stderr,
-                "%s:%d Fatal: cannot listen port (IPv%d:%d)\n",
-                __FILE__,
-                __LINE__,
-                af == AF_INET6 ? 6 : 4,
-                config->PORT);
-        return CH_EADDRINUSE;
-    }
-    return CH_SUCCESS;
-}
-
 // .. c:function::
 ch_error_t
 ch_pr_start(ch_protocol_t* protocol)
@@ -638,11 +698,11 @@ ch_pr_start(ch_protocol_t* protocol)
 // .. code-block:: cpp
 //
 {
-    int             tmp_err;
     ch_chirp_t*     chirp  = protocol->chirp;
     ch_chirp_int_t* ichirp = chirp->_;
     ch_config_t*    config = &ichirp->config;
-    tmp_err                = _ch_pr_start_socket(
+    int             tmp_err;
+    tmp_err = _ch_pr_start_socket(
             chirp,
             AF_INET,
             &protocol->serverv4,
@@ -662,6 +722,12 @@ ch_pr_start(ch_protocol_t* protocol)
     if (tmp_err != CH_SUCCESS) {
         return tmp_err;
     }
+    tmp_err = uv_timer_init(ichirp->loop, &protocol->reconnect_timeout);
+    if (tmp_err != CH_SUCCESS) {
+        return CH_INIT_FAIL;
+    }
+    protocol->reconnect_timeout.data = chirp;
+    protocol->reconnect_remotes      = NULL;
 
     ch_rm_tree_init(&protocol->remotes);
     protocol->old_connections = NULL;
@@ -683,6 +749,7 @@ ch_pr_stop(ch_protocol_t* protocol)
     _ch_pr_close_free_connections(chirp);
     uv_close((uv_handle_t*) &protocol->serverv4, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &protocol->serverv6, ch_chirp_close_cb);
-    chirp->_->closing_tasks += 2;
+    uv_close((uv_handle_t*) &protocol->reconnect_timeout, ch_chirp_close_cb);
+    chirp->_->closing_tasks += 3;
     return CH_SUCCESS;
 }

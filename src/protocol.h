@@ -45,6 +45,14 @@
 //
 //       Pointer to tree of remotes. They can have a connection.
 //
+//    .. c:member:: ch_remote_t* reconnect_remotes
+//
+//       A stack of remotes that should be reconnected after a timeout.
+//
+//    .. c:member:: uv_timer_t reconnect_timeout
+//
+//       Timeout after which we try to reconnect remotes.
+//
 //    .. c:member:: ch_connection_t* old_connections
 //
 //       Pointer to old connections. This is mainly used when there is a
@@ -63,6 +71,8 @@ struct ch_protocol_s {
     uv_tcp_t            serverv4;
     uv_tcp_t            serverv6;
     ch_remote_t*        remotes;
+    ch_remote_t*        reconnect_remotes;
+    uv_timer_t          reconnect_timeout;
     ch_connection_t*    old_connections;
     ch_connection_t*    handshake_conns;
     ch_chirp_t*         chirp;
@@ -92,6 +102,14 @@ ch_pr_decrypt_read(ch_connection_t* conn, int* stop);
 //
 //    :param ch_connection_t* conn: Pointer to a connection handle.
 //    :param int* stop:             (Out) Stop the reading process.
+
+// .. c:function::
+void
+ch_pr_reconnect_remotes_cb(uv_timer_t* handle);
+//
+//    Reconnects remotes that had connect failure after a timeout
+//
+//    :param uv_timer_t* handle: uv timer handle, data contains chirp
 
 // .. c:function::
 void

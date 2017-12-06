@@ -12,7 +12,7 @@
 #include "chirp.h"
 #include "util.h"
 
-// rbtree Prototypes
+// rbtree prototypes
 // =================
 //
 // .. c:function::
@@ -50,6 +50,13 @@ ch_remote_cmp(ch_remote_t* x, ch_remote_t* y)
 }
 
 rb_bind_impl_m(ch_rm, ch_remote_t) CH_ALLOW_NL;
+
+// stack prototypes
+// ===============
+//
+// .. code-block:: cpp
+
+qs_stack_bind_impl_m(ch_rm_st, ch_remote_t) CH_ALLOW_NL;
 
 // Definitions
 // ===========

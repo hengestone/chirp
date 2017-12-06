@@ -293,6 +293,7 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
     ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
     ch_text_address_t taddr;
+    ch_protocol_t*    protocol = &chirp->_->protocol;
     A(chirp == conn->chirp, "Chirp on connection should match");
     uv_inet_ntop(
             conn->ip_protocol, conn->address, taddr.data, sizeof(taddr.data));
@@ -313,7 +314,16 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
            conn->port,
            status,
            (void*) conn);
+        _ch_wr_abort_one_message(conn->remote, CH_TIMEOUT);
         ch_cn_shutdown(conn, CH_CANNOT_CONNECT);
+        if (protocol->reconnect_remotes == NULL) {
+            uv_timer_start(
+                    &protocol->reconnect_timeout,
+                    ch_pr_reconnect_remotes_cb,
+                    1000,
+                    0);
+        }
+        ch_rm_st_push(&protocol->reconnect_remotes, conn->remote);
     }
 }
 

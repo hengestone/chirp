@@ -78,6 +78,10 @@
 //
 //       rbtree member
 //
+//    .. c:member:: ch_remote_t* next
+//
+//       stack member
+//
 // .. code-block:: cpp
 //
 struct ch_remote_s {
@@ -94,9 +98,10 @@ struct ch_remote_s {
     ch_remote_t*     parent;
     ch_remote_t*     left;
     ch_remote_t*     right;
+    ch_remote_t*     next;
 };
 
-// rbtree Prototypes
+// rbtree prototypes
 // ------------------
 //
 // .. code-block:: cpp
@@ -107,9 +112,9 @@ struct ch_remote_s {
 //
 rb_bind_decl_m(ch_rm, ch_remote_t) CH_ALLOW_NL;
 
-        // .. c:function::
-        void ch_rm_init_from_msg(
-                ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg);
+// .. c:function::
+void
+ch_rm_init_from_msg(ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg);
 //
 //    Initialize the remote data-structure from a message.
 //
@@ -125,5 +130,12 @@ ch_rm_init_from_conn(
 //
 //    :param ch_remote_t* remote: Remote to initialize
 //    :param ch_connection_t*:   Connection to initialize from
+//
+// stack prototypes
+// ----------------
+//
+// .. code-block:: cpp
+
+qs_stack_bind_decl_m(ch_rm_st, ch_remote_t) CH_ALLOW_NL;
 
 #endif // ch_remote_h
