@@ -829,7 +829,7 @@ ch_chirp_run(
     }
     *chirp_out = NULL;
 
-    tmp_err    = ch_uv_error_map(ch_loop_init(&loop));
+    tmp_err    = ch_loop_init(&loop);
     chirp._log = NULL; /* Bootstrap order problem. E checks _log but
                         * ch_chirp_init() will initialize it. */
     if (tmp_err != CH_SUCCESS) {
@@ -838,7 +838,7 @@ ch_chirp_run(
            "uv_loop_t:%p",
            tmp_err,
            (void*) &loop);
-        return tmp_err;
+        return CH_INIT_FAIL;
     }
     tmp_err = ch_chirp_init(
             &chirp, config, &loop, recv_cb, start_cb, done_cb, log_cb);

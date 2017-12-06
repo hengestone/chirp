@@ -406,29 +406,6 @@ ch_textaddr_to_sockaddr(
 }
 
 // .. c:function::
-ch_error_t
-ch_uv_error_map(int error)
-//    :noindex:
-//
-//    see: :c:func:`ch_uv_error_map`
-//
-// .. code-block:: cpp
-//
-{
-    switch (error) {
-    case (0):
-        return CH_SUCCESS;
-    case (UV_EADDRINUSE):
-        return CH_EADDRINUSE;
-    case (UV_ENOTCONN):
-    case (UV_EINVAL):
-        return CH_VALUE_ERROR;
-    default:
-        return CH_UV_ERROR;
-    }
-}
-
-// .. c:function::
 CH_EXPORT
 void
 ch_write_log(

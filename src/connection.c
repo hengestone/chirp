@@ -538,7 +538,7 @@ ch_cn_init(ch_chirp_t* chirp, ch_connection_t* conn, uint8_t flags)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        return tmp_err;
+        return CH_INIT_FAIL;
     }
     conn->shutdown_timeout.data = conn;
     conn->flags |= CH_CN_INIT_SHUTDOWN_TIMEOUT;

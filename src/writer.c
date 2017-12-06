@@ -224,7 +224,7 @@ _ch_wr_connect(ch_remote_t* remote)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        return CH_FATAL;
+        return CH_INIT_FAIL;
     }
     conn->connect_timeout.data = conn;
     conn->flags |= CH_CN_INIT_CONNECT_TIMEOUT;
@@ -549,18 +549,18 @@ ch_wr_init(ch_writer_t* writer, ch_connection_t* conn)
 // .. code-block:: cpp
 //
 {
-    int tmp_err;
 
     ch_chirp_t*     chirp  = conn->chirp;
     ch_chirp_int_t* ichirp = chirp->_;
-    tmp_err                = uv_timer_init(ichirp->loop, &writer->send_timeout);
+    int             tmp_err;
+    tmp_err = uv_timer_init(ichirp->loop, &writer->send_timeout);
     if (tmp_err != CH_SUCCESS) {
         EC(chirp,
            "Initializing send timeout failed: %d. ",
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        return tmp_err;
+        return CH_INIT_FAIL;
     }
     writer->send_timeout.data = conn;
     return CH_SUCCESS;

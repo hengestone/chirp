@@ -606,7 +606,7 @@ _ch_pr_start_socket(
                 __LINE__,
                 af == AF_INET6 ? 6 : 4,
                 config->PORT);
-        return ch_uv_error_map(tmp_err);
+        return CH_EADDRINUSE;
     }
 
     tmp_err = uv_tcp_nodelay(server, 1);

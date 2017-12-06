@@ -113,15 +113,4 @@ ch_textaddr_to_sockaddr(
 //    :param uint16_t port:           The port
 //    :param sockaddr_storage* addr:  The socket to set
 
-// .. c:function::
-ch_error_t
-ch_uv_error_map(int error);
-//
-//    Map common libuv errors to chirp errors.
-//
-//    :param int error:  Libuv error.
-//
-//    :return:           a chirp error.
-//    :rtype:            ch_error_t
-
 #endif // ch_util_h
