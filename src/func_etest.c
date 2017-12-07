@@ -85,6 +85,7 @@ _ch_tst_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
     (void) (chirp);
     ch_tst_msg_tree_t* entry = msg->user_data;
     entry->status            = status;
+    assert(status == 0 || msg->port != 2997);
 }
 
 static void
@@ -114,7 +115,7 @@ _ch_tst_recheck_messages(uv_timer_t* handle)
 {
     mpack_writer_t* writer = handle->data;
     /* We must wait longer than any timeout */
-    if (_ch_tst_wait_count < 100) {
+    if (_ch_tst_wait_count < 20) {
         _ch_tst_check_messages(writer);
     } else {
         mpack_start_array(writer, 0);
@@ -280,6 +281,7 @@ main(int argc, char* argv[])
     config.CERT_CHAIN_PEM  = "./cert.pem";
     config.DH_PARAMS_PEM   = "./dh.pem";
     config.DISABLE_SIGNALS = 1;
+    config.TIMEOUT         = 0.5;
     int ret                = ch_chirp_run(
             &config,
             &_ch_tst_chirp,

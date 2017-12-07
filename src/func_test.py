@@ -25,7 +25,7 @@ def close(proc : Popen):
         raise  # Its a bug when the process doesn't complete
 
 
-class GenBuffer(GenericStateMachine):
+class GenFunc(GenericStateMachine):
     """Test if the stays consistent."""
 
     def __init__(self):
@@ -150,4 +150,4 @@ class GenBuffer(GenericStateMachine):
 # with settings(max_examples=10):
 
 
-TestBuffer = GenBuffer.TestCase
+TestFunc = GenFunc.TestCase
