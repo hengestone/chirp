@@ -1,6 +1,6 @@
 """Hypothesis based functional chirp test."""
 
-from hypothesis import settings  # noqa
+from hypothesis import settings, unlimited  # noqa
 from hypothesis.strategies import tuples, sampled_from, just, lists, binary
 from hypothesis.stateful import GenericStateMachine
 import mpipe
@@ -76,6 +76,7 @@ class GenFunc(GenericStateMachine):
         self.listen_dead_socket()
         self.etest_ready = True
         self.proc = mpipe.open(["./src/func_etest", "2998", self.enc])
+        time.sleep(0.1)
         self.open_messages = set()
 
     def teardown(self):
@@ -112,9 +113,12 @@ class GenFunc(GenericStateMachine):
             # If echo is not initialized and a timeout is open we cannot send
             # another message
             if self.timeout_open:
-                return self.x42_step | self.check_step | self.init_echo_step
+                return (
+                    self.x42_step | self.check_step | self.init_echo_step |
+                    self.fuzz_main_port_step
+                )
             else:
-                steps = steps | self.init_echo_step
+                steps = steps | self.init_echo_step | self.fuzz_main_port_step
         if not self.timeout_open:
             steps = steps | self.send_message_step_bad_port
         return steps
@@ -135,6 +139,8 @@ class GenFunc(GenericStateMachine):
             self.init_etest()
         elif action == 'init_echo':
             self.init_echo()
+        elif action == 'fuzz_main_port':
+            self.fuzz_main_port(value)
         elif action == '42':
             mpipe.write(self.proc, (func_42_e, ))
             assert mpipe.read(self.proc) == [42]
@@ -150,6 +156,19 @@ class GenFunc(GenericStateMachine):
         else:
             assert False, "Unknown step"
 
+    def fuzz_main_port(self, data):
+        fuzz = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        fuzz.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        fuzz.bind((socket.gethostname(), 2997))
+        fuzz.connect(("127.0.0.1", 2998))
+        try:
+            for msg in data:
+                fuzz.send(msg)
+                time.sleep(0.1)
+        except BrokenPipeError:
+            pass
+        fuzz.close()
+
     def check_messages(self):
         mpipe.write(self.proc, (func_check_messages_e, ))
         ret = mpipe.read(self.proc)
@@ -160,4 +179,5 @@ class GenFunc(GenericStateMachine):
 # with settings(max_examples=10):
 
 
-TestFunc = GenFunc.TestCase
+with settings(deadline=None, timeout=unlimited):
+    TestFunc = GenFunc.TestCase

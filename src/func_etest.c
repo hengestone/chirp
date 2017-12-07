@@ -288,7 +288,7 @@ main(int argc, char* argv[])
     config.CERT_CHAIN_PEM  = "./cert.pem";
     config.DH_PARAMS_PEM   = "./dh.pem";
     config.DISABLE_SIGNALS = 1;
-    config.TIMEOUT         = 0.5;
+    config.TIMEOUT         = 0.25;
     int ret                = ch_chirp_run(
             &config,
             &_ch_tst_chirp,
