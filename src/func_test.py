@@ -29,9 +29,13 @@ class GenBuffer(GenericStateMachine):
     """Test if the stays consistent."""
 
     def __init__(self):
-        self.initialzed = False
+        self.etest_ready = False
+        self.echo_ready = False
         self.timeout_open = False
-        self.init_step = tuples(just("init"), sampled_from(('0', '1')))
+        self.init_etest_step = tuples(
+            just("init_etest"), sampled_from(('0', '1'))
+        )
+        self.init_echo_step = tuples(just("init_echo"), just(0))
         self.x42_step = tuples(just("42"), just(0))
         self.check_step = tuples(just("check_messages"), just(0))
         self.send_message_step = tuples(
@@ -41,8 +45,8 @@ class GenBuffer(GenericStateMachine):
                 just(2997),
             )
         )
-        self.send_message_step_timeout = tuples(
-            just("send_message_timeout"),
+        self.send_message_step_bad_port = tuples(
+            just("send_message_bad_port"),
             tuples(
                 sampled_from((socket.AF_INET, socket.AF_INET6)),
                 sampled_from((7, 2991)),
@@ -56,22 +60,27 @@ class GenBuffer(GenericStateMachine):
         dead.bind((socket.gethostname(), 2991))
         dead.listen(5)
 
-    def reinit(self, enc):
-        self.listen_dead_socket()
-        self.initialzed = True
-        args = ["./src/echo_etest", "2997", enc]
+    def init_echo(self):
+        self.echo_ready = True
+        args = ["./src/echo_etest", "2997", self.enc]
         self.echo = Popen(args, stdin=PIPE, stdout=PIPE)
-        time.sleep(0.1)  # Wait for echo to be ready
-        self.proc = mpipe.open(["./src/func_etest", "2998", enc])
+        time.sleep(0.1)
+        # Make sure echo etest does not fail
+        self.echo.poll()
+        assert self.echo.returncode is None
+
+    def init_etest(self):
+        self.listen_dead_socket()
+        self.etest_ready = True
+        self.proc = mpipe.open(["./src/func_etest", "2998", self.enc])
         self.open_messages = set()
 
     def teardown(self):
-        if self.initialzed:
+        if self.etest_ready:
             self.dead.close()
             self.dead = None
             ret = 1
             proc = self.proc
-            echo = self.echo
             try:
                 try:
                     self.check_messages()
@@ -81,26 +90,26 @@ class GenBuffer(GenericStateMachine):
                     mpipe.close(proc)
             finally:
                 try:
-                    close(echo)
+                    if self.echo_ready:
+                        echo = self.echo
+                        close(echo)
                 finally:
                     self.proc = None
                     self.echo = None
                     assert ret == 0
-                    assert echo.returncode == 0
+                    if self.echo_ready:
+                        assert echo.returncode == 0
                     assert proc.returncode == 0
 
     def steps(self):
-        if not self.initialzed:
-            return self.init_step
-        if self.timeout_open:
-            return self.x42_step | self.send_message_step | self.check_step
-        else:
-            return (
-                self.x42_step |
-                self.send_message_step |
-                self.send_message_step_timeout |
-                self.check_step
-            )
+        steps = self.x42_step | self.send_message_step | self.check_step
+        if not self.etest_ready:
+            return self.init_etest_step
+        if not self.timeout_open:
+            steps = steps | self.send_message_step_bad_port
+        if not self.echo_ready:
+            steps = steps = self.init_echo_step
+        return steps
 
     def execute_step(self, step):
         def send_message():
@@ -113,14 +122,17 @@ class GenBuffer(GenericStateMachine):
             assert ret == 0
             self.open_messages.add(msg_id)
         action, value = step
-        if action == 'init':
-            self.reinit(str(value))
+        if action == 'init_etest':
+            self.enc = str(value)
+            self.init_etest()
+        elif action == 'init_echo':
+            self.init_echo()
         elif action == '42':
             mpipe.write(self.proc, (func_42_e, ))
             assert mpipe.read(self.proc) == [42]
         elif action == 'send_message':
             send_message()
-        elif action == 'send_message_timeout':
+        elif action == 'send_message_bad_port':
             self.timeout_open = True
             send_message()
         elif action == 'check_messages':
