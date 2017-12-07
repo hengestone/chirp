@@ -142,7 +142,6 @@ _ch_pr_close_free_connections(ch_chirp_t* chirp)
 {
     ch_chirp_int_t* ichirp   = chirp->_;
     ch_protocol_t*  protocol = &ichirp->protocol;
-    /* We may not change the data-structure during iteration */
     while (protocol->remotes != ch_rm_nil_ptr) {
         ch_remote_t* remote = protocol->remotes;
         if (remote->conn != NULL) {
@@ -151,18 +150,12 @@ _ch_pr_close_free_connections(ch_chirp_t* chirp)
         ch_rm_delete_node(&protocol->remotes, remote);
         ch_free(remote);
     }
-    rb_iter_decl_cx_m(ch_cn_old, old_iter, old_elem);
-    rb_for_m (ch_cn_old, protocol->old_connections, old_iter, old_elem) {
-        ch_cn_shutdown(old_elem, CH_SHUTDOWN);
+    while (protocol->old_connections != ch_cn_old_nil_ptr) {
+        ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
     }
-    /* Effectively we have cleared the list */
-    protocol->old_connections = NULL;
-    rb_iter_decl_cx_m(ch_cn, hs_iter, hs_elem);
-    rb_for_m (ch_cn, protocol->handshake_conns, hs_iter, hs_elem) {
-        ch_cn_shutdown(hs_elem, CH_SHUTDOWN);
+    while (protocol->handshake_conns != ch_cn_nil_ptr) {
+        ch_cn_shutdown(protocol->handshake_conns, CH_SHUTDOWN);
     }
-    /* Effectively we have cleared the list */
-    protocol->handshake_conns = NULL;
 }
 
 // .. c:function::
@@ -533,6 +526,9 @@ ch_pr_init(ch_chirp_t* chirp, ch_protocol_t* protocol)
     memset(protocol, 0, sizeof(*protocol));
     protocol->chirp = chirp;
     ch_cn_tree_init(&protocol->handshake_conns);
+    ch_cn_old_tree_init(&protocol->old_connections);
+    ch_rm_tree_init(&protocol->remotes);
+    protocol->reconnect_remotes = NULL;
 }
 
 // .. c:function::
@@ -549,10 +545,8 @@ ch_pr_reconnect_remotes_cb(uv_timer_t* handle)
     ch_protocol_t* protocol = &chirp->_->protocol;
     ch_chirp_check_m(chirp);
     if (protocol->reconnect_remotes != NULL) {
-        int          count = 0;
-        ch_remote_t* rm_iter;
-        ch_remote_t* rm_elem;
-
+        int count = 0;
+        rb_iter_decl_cx_m(ch_rm_st, rm_iter, rm_elem);
         rb_for_m (ch_rm_st, protocol->reconnect_remotes, rm_iter, rm_elem) {
             count += 1;
         }
@@ -728,10 +722,6 @@ ch_pr_start(ch_protocol_t* protocol)
         return CH_INIT_FAIL;
     }
     protocol->reconnect_timeout.data = chirp;
-    protocol->reconnect_remotes      = NULL;
-
-    ch_rm_tree_init(&protocol->remotes);
-    protocol->old_connections = NULL;
     return CH_SUCCESS;
 }
 

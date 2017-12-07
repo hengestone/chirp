@@ -23,10 +23,10 @@
 
 // Data Struct Prototypes
 // ======================
-
-// .. code-block:: cpp
 //
-qs_stack_bind_impl_m(ch_cn_old, ch_connection_t) CH_ALLOW_NL;
+// .. code-block:: cpp
+
+rb_bind_impl_m(ch_cn_old, ch_connection_t) CH_ALLOW_NL;
 
 rb_bind_impl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
 
@@ -690,21 +690,24 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     }
     LC(chirp, "Shutdown connection. ", "ch_connection_t:%p", (void*) conn);
     conn->flags |= CH_CN_SHUTTING_DOWN;
-    int             tmp_err;
-    ch_chirp_int_t* ichirp = chirp->_;
-    ch_writer_t*    writer = &conn->writer;
-    ch_remote_t*    remote = conn->remote;
-    /* In early handshake remote can empty, since we allocate resources after
-     * successful handshake. */
-    if (!(conn->flags & CH_CN_CONNECTED)) {
-        ch_connection_t* out;
-        ch_cn_delete(&ichirp->protocol.handshake_conns, conn, &out);
-    }
+    int              tmp_err;
+    ch_chirp_int_t*  ichirp = chirp->_;
+    ch_writer_t*     writer = &conn->writer;
+    ch_remote_t*     remote = conn->remote;
+    ch_connection_t* out;
+    /* In case this conn is in handshake_conns remove it, since we aborted the
+     * handshake */
+    ch_cn_delete(&ichirp->protocol.handshake_conns, conn, &out);
+    /* In case this conn is in old_connections remove it, since we now cleaned
+     * it up*/
+    ch_cn_old_delete(&ichirp->protocol.old_connections, conn, &out);
     if (conn->flags & CH_CN_INIT_CLIENT) {
         uv_read_stop((uv_stream_t*) &conn->client);
     }
     ch_message_t* msg = writer->msg;
     ch_message_t* wam = NULL;
+    /* In early handshake remote can empty, since we allocate resources after
+     * successful handshake. */
     if (remote) {
         wam = remote->wait_ack_message;
         /* We could be a connection from old_connections and therefore we do

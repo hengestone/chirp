@@ -410,10 +410,6 @@ typedef struct ch_resume_state_s {
 //
 //       Handle to a chirp writer, handles sending and writing on a connection.
 //
-//    .. c:member:: ch_connection_t* next
-//
-//       Pointer to the next connection in a data-structure.
-//
 //    .. c:member:: char color
 //
 //       rbtree member
@@ -467,7 +463,6 @@ struct ch_connection_s {
     int               tls_handshake_state;
     ch_reader_t       reader;
     ch_writer_t       writer;
-    ch_connection_t*  next;
     char              color;
     ch_connection_t*  parent;
     ch_connection_t*  left;
@@ -481,7 +476,8 @@ struct ch_connection_s {
 //
 // .. code-block:: cpp
 
-qs_stack_bind_decl_m(ch_cn_old, ch_connection_t) CH_ALLOW_NL;
+#define ch_cn_old_cmp_m(x, y) rb_pointer_cmp_m(x, y)
+rb_bind_decl_m(ch_cn_old, ch_connection_t) CH_ALLOW_NL;
 
 #define ch_cn_cmp_m(x, y) rb_pointer_cmp_m(x, y)
 rb_bind_decl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
