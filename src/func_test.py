@@ -68,6 +68,21 @@ class GenFunc(GenericStateMachine):
         args = ["./src/echo_etest", "2997", self.enc]
         self.echo = Popen(args, stdin=PIPE, stdout=PIPE)
         time.sleep(0.1)
+        check = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        check.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        connected = False
+        count = 0
+        while not connected:
+            try:
+                check.connect(("127.0.0.1", 2997))
+                connected = True
+            except ConnectionRefusedError:
+                count += 1
+                if count > 4:
+                    raise
+                else:
+                    time.sleep(0.2)
+        check.close()
         # Make sure echo etest does not fail
         self.echo.poll()
         assert self.echo.returncode is None
