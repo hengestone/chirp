@@ -16,6 +16,10 @@
 
 // Declarations
 // ============
+//
+// .. code-block:: cpp
+
+MINMAX_FUNCS(int)
 
 // .. c:function::
 static int
@@ -259,7 +263,8 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
     ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
     ch_text_address_t taddr;
-    ch_protocol_t*    protocol = &chirp->_->protocol;
+    ch_chirp_int_t*   ichirp   = chirp->_;
+    ch_protocol_t*    protocol = &ichirp->protocol;
     A(chirp == conn->chirp, "Chirp on connection should match");
     uv_inet_ntop(
             conn->ip_protocol, conn->address, taddr.data, sizeof(taddr.data));
@@ -285,7 +290,7 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
             uv_timer_start(
                     &protocol->reconnect_timeout,
                     ch_pr_reconnect_remotes_cb,
-                    1000,
+                    ch_min_int(1000, ichirp->config.TIMEOUT * 1000),
                     0);
         }
         conn->remote->flags |= CH_RM_CONN_BLOCKED;
