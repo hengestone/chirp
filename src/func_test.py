@@ -5,8 +5,10 @@ from hypothesis.strategies import tuples, sampled_from, just, lists, binary
 from hypothesis.stateful import GenericStateMachine
 import mpipe
 import socket
-from subprocess import Popen, PIPE, TimeoutExpired
+from subprocess import Popen, TimeoutExpired
 import time
+import signal
+import os
 
 func_42_e             = 1
 func_cleanup_e        = 2
@@ -17,11 +19,13 @@ func_check_messages_e = 4
 def close(proc : Popen):
     """Close the subprocess."""
     try:
-        proc.terminate()
-        proc.wait(1)
+        # Kill process group because we sometimes attach valgrind or rr
+        os.killpg(os.getpgid(proc.pid), signal.SIGINT)
+        proc.wait(2)
     except TimeoutExpired:
         print("Doing kill")
-        proc.kill()
+        proc.terminate()
+        proc.poll()
         raise  # Its a bug when the process doesn't complete
 
 
@@ -32,6 +36,8 @@ class GenFunc(GenericStateMachine):
         self.etest_ready = False
         self.echo_ready = False
         self.timeout_open = False
+        self.echo = None
+        self.proc = None
         self.init_etest_step = tuples(
             just("init_etest"), sampled_from(('0', '1'))
         )
@@ -60,29 +66,31 @@ class GenFunc(GenericStateMachine):
         dead = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.dead = dead
         dead.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        dead.bind((socket.gethostname(), 2991))
+        dead.bind(('', 2991))
         dead.listen(5)
 
     def init_echo(self):
         self.echo_ready = True
         args = ["./src/echo_etest", "2997", self.enc]
-        self.echo = Popen(args, stdin=PIPE, stdout=PIPE)
+        self.echo = Popen(args, preexec_fn=os.setsid)
         time.sleep(0.1)
         check = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         check.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         connected = False
         count = 0
-        while not connected:
-            try:
-                check.connect(("127.0.0.1", 2997))
-                connected = True
-            except ConnectionRefusedError:
-                count += 1
-                if count > 4:
-                    raise
-                else:
-                    time.sleep(0.2)
-        check.close()
+        try:
+            while not connected:
+                try:
+                    check.connect(("127.0.0.1", 2997))
+                    connected = True
+                except (ConnectionRefusedError, OSError):
+                    count += 1
+                    if count > 4:
+                        raise
+                    else:
+                        time.sleep(0.2)
+        finally:
+            check.close()
         # Make sure echo etest does not fail
         self.echo.poll()
         assert self.echo.returncode is None
@@ -99,6 +107,7 @@ class GenFunc(GenericStateMachine):
             self.dead = None
             ret = 1
             proc = self.proc
+            echo = self.echo
             try:
                 try:
                     self.check_messages()
@@ -109,7 +118,6 @@ class GenFunc(GenericStateMachine):
             finally:
                 try:
                     if self.echo_ready:
-                        echo = self.echo
                         close(echo)
                 finally:
                     self.proc = None
@@ -173,26 +181,29 @@ class GenFunc(GenericStateMachine):
     def fuzz_main_port(self, data):
         fuzz = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         fuzz.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        fuzz.bind((socket.gethostname(), 2997))
+        fuzz.bind(('', 2997))
         connected = False
         count = 0
-        while not connected:
-            try:
-                fuzz.connect(("127.0.0.1", 2998))
-                connected = True
-            except ConnectionRefusedError:
-                count += 1
-                if count > 4:
-                    raise
-                else:
-                    time.sleep(0.2)
         try:
-            for msg in data:
-                fuzz.send(msg)
-                time.sleep(0.1)
-        except BrokenPipeError:
-            pass
-        fuzz.close()
+            while not connected:
+                try:
+                    fuzz.connect(("127.0.0.1", 2998))
+                    connected = True
+                except (ConnectionRefusedError, OSError):
+                    count += 1
+                    if count > 4:
+                        raise
+                    else:
+                        time.sleep(0.2)
+
+            try:
+                for msg in data:
+                    fuzz.send(msg)
+                    time.sleep(0.1)
+            except BrokenPipeError:
+                pass
+        finally:
+            fuzz.close()
 
     def check_messages(self):
         mpipe.write(self.proc, (func_check_messages_e, ))

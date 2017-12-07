@@ -301,7 +301,7 @@ main(int argc, char* argv[])
         config.TIMEOUT = 0.25;
     } else {
         /* If memcheck is enabled everything takes much longer */
-        config.TIMEOUT = 5.0;
+        config.TIMEOUT = 1.0;
     }
     int ret = ch_chirp_run(
             &config,

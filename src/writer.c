@@ -293,8 +293,10 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
                     ch_min_int(1000, ichirp->config.TIMEOUT * 1000),
                     0);
         }
-        conn->remote->flags |= CH_RM_CONN_BLOCKED;
-        ch_rm_st_push(&protocol->reconnect_remotes, conn->remote);
+        if (!(conn->remote->flags & CH_RM_CONN_BLOCKED)) {
+            conn->remote->flags |= CH_RM_CONN_BLOCKED;
+            ch_rm_st_push(&protocol->reconnect_remotes, conn->remote);
+        }
     }
 }
 

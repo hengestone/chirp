@@ -12,12 +12,15 @@ import ctypes
 from subprocess import Popen, PIPE, TimeoutExpired
 import sys
 import os
+import signal
 import time
 try:
     import umsgpack
 except ImportError:
     import msgpack as umsgpack
 from contextlib import contextmanager
+
+mc = os.environ.get("MPP_MC")
 
 
 @contextmanager
@@ -33,7 +36,6 @@ def open_and_close(args : list):
 
 def open(args : list) -> Popen:
     """Open a subprocess for sending message-pack messages."""
-    mc = os.environ.get("MPP_MC")
     if os.environ.get("MPP_RR") == "True":
         proc = Popen(["rr"] + args, stdin=PIPE, stdout=PIPE)
     elif mc:
@@ -51,7 +53,7 @@ def open(args : list) -> Popen:
             stdout=PIPE
         )
     else:
-        proc = Popen(args, stdin=PIPE, stdout=PIPE)
+        proc = Popen(args, stdin=PIPE, stdout=PIPE, preexec_fn=os.setsid)
     proc._mpipe_last = None
     return proc
 
@@ -60,11 +62,15 @@ def close(proc : Popen):
     """Close the subprocess."""
     write(proc, (0,))
     try:
-        proc.wait(1)
+        if mc:
+            proc.wait(4)
+        else:
+            proc.wait(1)
     except TimeoutExpired:
-        proc.terminate()
+        # Kill process group because we sometimes attach valgrind or rr
+        os.killpg(os.getpgid(proc.pid), signal.SIGINT)
         time.sleep(0.2)  # Allow the process to cleanup
-        proc.kill()
+        proc.terminate()
         raise  # Its a bug when the process doesn't complete
 
 

@@ -67,6 +67,7 @@ _ch_tst_recv_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 int
 main(int argc, char* argv[])
 {
+    fprintf(stderr, "Starting echo_etest\n");
     if (argc < 3) {
         fprintf(stderr, "%s listen_port always_encrypt\n", argv[0]);
         exit(1);
@@ -107,4 +108,6 @@ main(int argc, char* argv[])
             NULL,
             NULL);
     ch_libchirp_cleanup();
+    fprintf(stderr, "Closing echo_etest\n");
+    return 0;
 }
