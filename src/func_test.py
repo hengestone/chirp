@@ -76,7 +76,6 @@ class GenFunc(GenericStateMachine):
         self.listen_dead_socket()
         self.etest_ready = True
         self.proc = mpipe.open(["./src/func_etest", "2998", self.enc])
-        time.sleep(0.1)
         self.open_messages = set()
 
     def teardown(self):
@@ -160,7 +159,18 @@ class GenFunc(GenericStateMachine):
         fuzz = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         fuzz.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         fuzz.bind((socket.gethostname(), 2997))
-        fuzz.connect(("127.0.0.1", 2998))
+        connected = False
+        count = 0
+        while not connected:
+            try:
+                fuzz.connect(("127.0.0.1", 2998))
+                connected = True
+            except ConnectionRefusedError:
+                count += 1
+                if count > 4:
+                    raise
+                else:
+                    time.sleep(0.2)
         try:
             for msg in data:
                 fuzz.send(msg)
