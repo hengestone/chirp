@@ -1,7 +1,7 @@
 """Hypothesis based functional chirp test."""
 
 from hypothesis import settings  # noqa
-from hypothesis.strategies import tuples, sampled_from, just
+from hypothesis.strategies import tuples, sampled_from, just, lists, binary
 from hypothesis.stateful import GenericStateMachine
 import mpipe
 import socket
@@ -51,6 +51,9 @@ class GenFunc(GenericStateMachine):
                 sampled_from((socket.AF_INET, socket.AF_INET6)),
                 sampled_from((7, 2991)),
             )
+        )
+        self.fuzz_main_port_step = tuples(
+            just("fuzz_main_port"), lists(binary(), max_size=4)
         )
 
     def listen_dead_socket(self):
@@ -105,17 +108,22 @@ class GenFunc(GenericStateMachine):
         steps = self.x42_step | self.send_message_step | self.check_step
         if not self.etest_ready:
             return self.init_etest_step
+        if not self.echo_ready:
+            # If echo is not initialized and a timeout is open we cannot send
+            # another message
+            if self.timeout_open:
+                return self.x42_step | self.check_step | self.init_echo_step
+            else:
+                steps = steps | self.init_echo_step
         if not self.timeout_open:
             steps = steps | self.send_message_step_bad_port
-        if not self.echo_ready:
-            steps = steps = self.init_echo_step
         return steps
 
     def execute_step(self, step):
         def send_message():
             mpipe.write(
                 self.proc,
-                (func_send_message_e, value[0], value[1])
+                (func_send_message_e, value[0], value[1], int(self.echo_ready))
             )
             msg_id, ret = mpipe.read(self.proc)
             assert msg_id not in self.open_messages
@@ -131,6 +139,8 @@ class GenFunc(GenericStateMachine):
             mpipe.write(self.proc, (func_42_e, ))
             assert mpipe.read(self.proc) == [42]
         elif action == 'send_message':
+            if not self.echo_ready:
+                self.timeout_open = True
             send_message()
         elif action == 'send_message_bad_port':
             self.timeout_open = True

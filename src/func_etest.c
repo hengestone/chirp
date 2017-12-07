@@ -26,6 +26,7 @@ typedef struct ch_tst_msg_tree_s ch_tst_msg_tree_t;
 struct ch_tst_msg_tree_s {
     ch_message_t       msg;
     int32_t            status;
+    int                echo_ready;
     char               color;
     ch_tst_msg_tree_t* parent;
     ch_tst_msg_tree_t* left;
@@ -85,14 +86,19 @@ _ch_tst_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
     (void) (chirp);
     ch_tst_msg_tree_t* entry = msg->user_data;
     entry->status            = status;
-    assert(status == 0 || msg->port != 2997);
+    assert(!entry->echo_ready || status == 0 || msg->port != 2997);
 }
 
 static void
-_ch_tst_send_message(mpack_writer_t* writer, ch_ip_protocol_t proto, int port)
+_ch_tst_send_message(
+        mpack_writer_t*  writer,
+        ch_ip_protocol_t proto,
+        int              port,
+        int              echo_ready)
 {
     ch_tst_msg_tree_t* entry = ch_alloc(sizeof(*entry));
     entry->status            = 0x0ddba11; /* no status */
+    entry->echo_ready        = echo_ready;
     _ch_tst_msg_node_init(entry);
     ch_message_t* msg = &entry->msg;
     ch_msg_init(msg);
@@ -180,9 +186,10 @@ _ch_tst_async_mpack_handler_cb(uv_async_t* handle)
         break;
     }
     case func_send_message_e: {
-        int proto = mpack_node_int(mpack_node_array_at(data, 1));
-        int port  = mpack_node_int(mpack_node_array_at(data, 2));
-        _ch_tst_send_message(writer, proto, port);
+        int proto      = mpack_node_int(mpack_node_array_at(data, 1));
+        int port       = mpack_node_int(mpack_node_array_at(data, 2));
+        int echo_ready = mpack_node_int(mpack_node_array_at(data, 3));
+        _ch_tst_send_message(writer, proto, port, echo_ready);
         _ch_tst_next();
         break;
     }
