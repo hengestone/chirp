@@ -34,6 +34,15 @@ rb_bind_impl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
 // ============
 
 // .. c:function::
+static void
+_ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error);
+//
+//    Abort one message in queue, cause connecting failed.
+//
+//    :param ch_remote_t* remote: Remote failed to connect.
+//    :param ch_error_t error: Status returned by connect.
+
+// .. c:function::
 static ch_error_t
 _ch_cn_allocate_buffers(ch_connection_t* conn);
 //
@@ -109,6 +118,31 @@ _ch_cn_write_cb(uv_write_t* req, int status);
 // .. code-block:: cpp
 
 MINMAX_FUNCS(size_t)
+
+// .. c:function::
+static void
+_ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error)
+//    :noindex:
+//
+//    see: :c:func:`_ch_cn_abort_one_message`
+//
+// .. code-block:: cpp
+//
+{
+    ch_message_t* msg = NULL;
+    if (remote->no_rack_msg_queue != NULL) {
+        ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
+    } else if (remote->rack_msg_queue != NULL) {
+        ch_msg_dequeue(&remote->rack_msg_queue, &msg);
+    }
+    if (msg != NULL) {
+        ch_send_cb_t cb = msg->_send_cb;
+        if (cb != NULL) {
+            msg->_send_cb = NULL;
+            cb(remote->chirp, msg, error);
+        }
+    }
+}
 
 // .. c:function::
 static ch_error_t
@@ -782,6 +816,11 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         /* We bypass shutdown */
         conn->shutdown_req.handle = (uv_stream_t*) &conn->client;
         _ch_cn_closing(&conn->shutdown_req, 1);
+        if (remote) {
+            /* If the connection is not connected it means we opened it, but
+             * the handshake was not successful, so we abort one message */
+            _ch_cn_abort_one_message(remote, reason);
+        }
     }
     return CH_SUCCESS;
 }

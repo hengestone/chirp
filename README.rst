@@ -174,18 +174,6 @@ Running pytest manually with -s for example:
    make all
    pytest -s ../src
 
-Or with gdb attached to the runner binary:
-
-.. code-block:: bash
-
-   MPP_GDB=True pytest -s ../src/
-
-If you want to stop debugging, but pytest is restarting GDB endlessly:
-
-.. code-block:: bash
-
-   killall pytest
-
 Docker
 ------
 

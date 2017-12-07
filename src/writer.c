@@ -18,15 +18,6 @@
 // ============
 
 // .. c:function::
-static void
-_ch_wr_abort_one_message(ch_remote_t* remote, ch_error_t error);
-//
-//    Abort one message in queue, cause connecting failed.
-//
-//    :param ch_remote_t* remote: Remote failed to connect.
-//    :param ch_error_t error: Status returned by connect.
-
-// .. c:function::
 static int
 _ch_wr_check_write_error(
         ch_chirp_t*      chirp,
@@ -138,31 +129,6 @@ _ch_wr_write_timeout_cb(uv_timer_t* handle);
 
 // Definitions
 // ===========
-
-// .. c:function::
-static void
-_ch_wr_abort_one_message(ch_remote_t* remote, ch_error_t error)
-//    :noindex:
-//
-//    see: :c:func:`_ch_wr_abort_one_message`
-//
-// .. code-block:: cpp
-//
-{
-    ch_message_t* msg = NULL;
-    if (remote->no_rack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
-    } else if (remote->rack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->rack_msg_queue, &msg);
-    }
-    if (msg != NULL) {
-        ch_send_cb_t cb = msg->_send_cb;
-        if (cb != NULL) {
-            msg->_send_cb = NULL;
-            cb(remote->chirp, msg, error);
-        }
-    }
-}
 
 // .. c:function::
 static int
@@ -314,7 +280,6 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
            conn->port,
            status,
            (void*) conn);
-        _ch_wr_abort_one_message(conn->remote, CH_TIMEOUT);
         ch_cn_shutdown(conn, CH_CANNOT_CONNECT);
         if (protocol->reconnect_remotes == NULL) {
             uv_timer_start(
@@ -344,7 +309,6 @@ _ch_wr_connect_timeout_cb(uv_timer_t* handle)
     LC(chirp, "Connect timed out. ", "ch_connection_t:%p", (void*) conn);
     ch_cn_shutdown(conn, CH_TIMEOUT);
     uv_timer_stop(&conn->connect_timeout);
-    _ch_wr_abort_one_message(conn->remote, CH_TIMEOUT);
     /* We have waited long enough, we send the next message */
     ch_wr_process_queues(conn->remote);
 }

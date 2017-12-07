@@ -276,10 +276,11 @@ main(int argc, char* argv[])
     _ch_tst_msg_tree_init(&_ch_tst_msg_tree);
     ch_config_t config;
     ch_chirp_config_init(&config);
-    config.PORT           = port;
-    config.CERT_CHAIN_PEM = "./cert.pem";
-    config.DH_PARAMS_PEM  = "./dh.pem";
-    int ret               = ch_chirp_run(
+    config.PORT            = port;
+    config.CERT_CHAIN_PEM  = "./cert.pem";
+    config.DH_PARAMS_PEM   = "./dh.pem";
+    config.DISABLE_SIGNALS = 1;
+    int ret                = ch_chirp_run(
             &config,
             &_ch_tst_chirp,
             _ch_tst_recv_message_cb,
