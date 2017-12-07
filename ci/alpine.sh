@@ -1,6 +1,6 @@
 #!/bin/sh
 
-curl https://www.adfinis-sygroup.ch/adsy-logo.txt
+curl -s https://www.adfinis-sygroup.ch/adsy-logo.txt
 set -e
 
 SCRIPT="$(pwd -P)/$0"

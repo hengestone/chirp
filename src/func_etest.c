@@ -8,11 +8,19 @@
 // ================
 //
 // .. code-block:: cpp
-//
+
 #include "common.h"
 #include "libchirp.h"
 #include "rbtree.h"
 #include "test_test.h"
+
+// System includes
+// ===============
+//
+// .. code-block:: cpp
+
+#include <stdlib.h>
+#include <string.h>
 
 typedef enum {
     func_42_e             = 1,
@@ -288,8 +296,14 @@ main(int argc, char* argv[])
     config.CERT_CHAIN_PEM  = "./cert.pem";
     config.DH_PARAMS_PEM   = "./dh.pem";
     config.DISABLE_SIGNALS = 1;
-    config.TIMEOUT         = 0.25;
-    int ret                = ch_chirp_run(
+    char* env              = getenv("MPP_MC");
+    if (env == NULL) {
+        config.TIMEOUT = 0.25;
+    } else {
+        /* If memcheck is enabled everything takes much longer */
+        config.TIMEOUT = 5.0;
+    }
+    int ret = ch_chirp_run(
             &config,
             &_ch_tst_chirp,
             _ch_tst_recv_message_cb,
