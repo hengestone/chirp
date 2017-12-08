@@ -181,6 +181,7 @@ _ch_wr_connect(ch_remote_t* remote)
     }
     remote->conn = conn;
     memset(conn, 0, sizeof(*conn));
+    ch_cn_node_init(conn);
     conn->chirp        = chirp;
     conn->port         = remote->port;
     conn->ip_protocol  = remote->ip_protocol;

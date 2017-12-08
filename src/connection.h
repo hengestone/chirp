@@ -403,15 +403,11 @@ typedef struct ch_resume_state_s {
 //
 //       rbtree member
 //
-//    .. c:member:: ch_remote_t* left
+//    .. c:member:: ch_connection_t* left
 //
 //       rbtree member
 //
-//    .. c:member:: ch_remote_t* right
-//
-//       rbtree member
-//
-//    .. c:member:: ch_remote_t* parent
+//    .. c:member:: ch_connection_t* right
 //
 //       rbtree member
 //
