@@ -16,6 +16,7 @@
 //
 // .. code-block:: cpp
 //
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -172,6 +173,7 @@ ch_tst_listen(char* port)
 int
 main(int argc, char* argv[])
 {
+    signal(SIGPIPE, SIG_IGN);
     if (argc < 2) {
         printf("Arguments:\nport : listen mode\n"
                "[nmsgs] [ipv4:port]+ : send mode\n");

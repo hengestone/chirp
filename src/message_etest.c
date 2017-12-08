@@ -21,6 +21,7 @@
 //
 #include <assert.h>
 #include <getopt.h>
+#include <signal.h>
 #include <unistd.h>
 
 // Declarations
@@ -287,6 +288,7 @@ print_help(struct option long_options[])
 int
 main(int argc, char* argv[])
 {
+    signal(SIGPIPE, SIG_IGN);
     int                  option_index;
     static struct option long_options[] = {
             {"always-encrypt", no_argument, 0, CH_TST_ALWAYS_ENCRYPT},

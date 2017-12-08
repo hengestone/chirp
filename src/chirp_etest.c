@@ -13,6 +13,13 @@
 //
 #include "libchirp.h"
 
+// System includes
+// ===============
+//
+// .. code-block:: cpp
+//
+#include <signal.h>
+
 static void
 ch_tst_start(ch_chirp_t* chirp)
 {
@@ -29,6 +36,7 @@ main()
 // .. code-block:: cpp
 //
 {
+    signal(SIGPIPE, SIG_IGN);
     ch_chirp_t  chirp;
     uv_loop_t   loop;
     ch_config_t config;

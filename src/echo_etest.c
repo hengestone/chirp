@@ -19,6 +19,7 @@
 //
 // .. code-block:: cpp
 //
+#include <signal.h>
 
 // Declarations
 // ============
@@ -67,6 +68,7 @@ _ch_tst_recv_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 int
 main(int argc, char* argv[])
 {
+    signal(SIGPIPE, SIG_IGN);
     fprintf(stderr, "Starting echo_etest\n");
     if (argc < 3) {
         fprintf(stderr, "%s listen_port always_encrypt\n", argv[0]);
