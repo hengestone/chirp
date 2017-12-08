@@ -37,7 +37,7 @@ static ch_chirp_t* _chirp_instance;
 //
 // .. code-block:: cpp
 
-static int shutting_down;
+static int shutting_down = 0;
 
 // Declaring our functions
 // =======================
@@ -86,7 +86,6 @@ static uv_timer_t   poll_timer;
 static uv_timer_t   poll_timeout_timer;
 static uv_tcp_t     poll_socket;
 static uv_connect_t poll_connect;
-uv_shutdown_t       poll_closer;
 
 // Poll the service, report it's status
 // ------------------------------------
@@ -118,37 +117,6 @@ do_poll_cb(uv_timer_t* timer)
     uv_timer_start(&poll_timeout_timer, connection_timeout_cb, 2000, 0);
 }
 
-// Socket shutdown callback
-// ------------------------
-//
-// This is how ``libuv`` shuts down a socket: You "request" a shutdown, which
-// triggers a callback, then you can close the socket - which triggers another
-// callback. This callback here responds to the completed shutdown request.
-//
-// .. code-block:: cpp
-
-static void
-socket_shutdown_cb(uv_shutdown_t* req, int status)
-{
-    (void) (status);
-
-    uv_close((uv_handle_t*) req->handle, socket_close_cb);
-}
-
-// Socket closed callback
-// ----------------------
-//
-// This is the second stage after ``socket_shutdown_cb``. Required by
-// ``libuv``, but we're not really doing anything here.
-//
-// .. code-block:: cpp
-
-static void
-socket_close_cb(uv_handle_t* handle)
-{
-    (void) handle;
-}
-
 // Connection callback
 // -------------------
 //
@@ -169,8 +137,8 @@ poll_connected_cb(uv_connect_t* conn, int status)
     uv_timer_stop(&poll_timeout_timer);
 
     /* We don't really want to talk to the service, so immediately request a
-     * shutdown of the socket..  */
-    uv_shutdown(&poll_closer, (uv_stream_t*) conn->handle, socket_shutdown_cb);
+     * close of the socket..  */
+    uv_close((uv_handle_t*) conn->handle, NULL);
 }
 
 // Callback when we could not connect to our service after some time
@@ -190,11 +158,8 @@ connection_timeout_cb(uv_timer_t* timer)
 
     notify_status(0, 1);
 
-    /* Shutdown the connection, we had a timeout */
-    uv_shutdown(
-            &poll_closer,
-            (uv_stream_t*) poll_connect.handle,
-            socket_shutdown_cb);
+    /* Closing the connection, we had a timeout */
+    uv_close((uv_handle_t*) poll_connect.handle, NULL);
 }
 
 // Upstream communication
@@ -346,9 +311,6 @@ chirp_started_cb(ch_chirp_t* chirp)
 {
     uv_timer_init(ch_chirp_get_loop(chirp), &poll_timer);
     poll_timer.data = chirp;
-
-    // we're not shutting down just yet
-    shutting_down = 0;
 
     // Setup a signal handler, so we can shut down gracefully on Ctrl+C
     uv_signal_init(ch_chirp_get_loop(chirp), &sighandler);
