@@ -191,7 +191,7 @@ class GenFunc(GenericStateMachine):
                     connected = True
                 except (ConnectionRefusedError, OSError):
                     count += 1
-                    if count > 4:
+                    if count > 7:
                         raise
                     else:
                         time.sleep(0.2)

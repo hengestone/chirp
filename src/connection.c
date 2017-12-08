@@ -53,14 +53,11 @@ _ch_cn_allocate_buffers(ch_connection_t* conn);
 //
 // .. c:function::
 static void
-_ch_cn_closing(uv_shutdown_t* req, int bypass);
+_ch_cn_closing(ch_connection_t* conn);
 //
-//    Called by _ch_cn_shutdown_cb or ch_cn_shutdown to enter the closing
-//    stage.
+//    Called by ch_cn_shutdown to enter the closing stage.
 //
-//    :param uv_shutdown_t* req: Shutdown request type, holding the
-//                               connection handle
-//    :param int bypass: Boolean set to true if uv_shutdown was bypassed.
+//    :param ch_connection_t: Connection to close
 
 // .. c:function::
 static void
@@ -81,26 +78,6 @@ _ch_cn_send_pending_cb(uv_write_t* req, int status);
 //                            connection handle
 //    :param int status: Send status
 //
-
-// .. c:function::
-static void
-_ch_cn_shutdown_cb(uv_shutdown_t* req, int status);
-//
-//    Called by libuv after shutting a connection down.
-//
-//    :param uv_shutdown_t* req: Shutdown request type, holding the
-//                               connection handle
-//    :param int status: The status after the shutdown. 0 in case of
-//                       success, < 0 otherwise
-
-// .. c:function::
-static void
-_ch_cn_shutdown_timeout_cb(uv_timer_t* handle);
-//
-//    Called after shutdown timeout. Closing the connection even though
-//    shutdown was delayed.
-//
-//    :param uv_timer_t* handle: Timer handle to schedule callback
 
 // .. c:function::
 static void
@@ -193,7 +170,7 @@ _ch_cn_allocate_buffers(ch_connection_t* conn)
 
 // .. c:function::
 static void
-_ch_cn_closing(uv_shutdown_t* req, int bypass)
+_ch_cn_closing(ch_connection_t* conn)
 //    :noindex:
 //
 //    see: :c:func:`_ch_cn_closing`
@@ -201,29 +178,18 @@ _ch_cn_closing(uv_shutdown_t* req, int bypass)
 // .. code-block:: cpp
 //
 {
-    ch_connection_t* conn  = req->handle->data;
-    ch_chirp_t*      chirp = conn->chirp;
+    ch_chirp_t* chirp = conn->chirp;
     ch_chirp_check_m(chirp);
     LC(chirp, "Shutdown callback called. ", "ch_connection_t:%p", (void*) conn);
     conn->flags &= ~CH_CN_CONNECTED;
-    if (!bypass) {
-        int tmp_err = uv_timer_stop(&conn->shutdown_timeout);
-        if (tmp_err != CH_SUCCESS) {
-            EC(chirp,
-               "Stopping shutdown timeout failed: %d. ",
-               "ch_connection_t:%p",
-               tmp_err,
-               (void*) chirp);
-        }
-    }
-    uv_handle_t* handle = (uv_handle_t*) req->handle;
+    uv_handle_t* handle = (uv_handle_t*) &conn->client;
     if (uv_is_closing(handle)) {
         EC(chirp,
-           "Connection already closed after shutdown. ",
+           "Connection already closing on closing. ",
            "ch_connection_t:%p",
            (void*) conn);
     } else {
-        uv_read_stop(req->handle);
+        uv_read_stop((uv_stream_t*) &conn->client);
         if (conn->flags & CH_CN_INIT_READER_WRITER) {
             ch_wr_free(&conn->writer);
             ch_rd_free(&conn->reader);
@@ -233,11 +199,6 @@ _ch_cn_closing(uv_shutdown_t* req, int bypass)
             uv_close(handle, ch_cn_close_cb);
             conn->shutdown_tasks += 1;
             conn->flags &= ~CH_CN_INIT_CLIENT;
-        }
-        if (conn->flags & CH_CN_INIT_SHUTDOWN_TIMEOUT) {
-            uv_close((uv_handle_t*) &conn->shutdown_timeout, ch_cn_close_cb);
-            conn->flags &= ~CH_CN_INIT_SHUTDOWN_TIMEOUT;
-            conn->shutdown_tasks += 1;
         }
         if (conn->flags & CH_CN_INIT_CONNECT_TIMEOUT) {
             uv_close((uv_handle_t*) &conn->connect_timeout, ch_cn_close_cb);
@@ -366,49 +327,6 @@ _ch_cn_send_pending_cb(uv_write_t* req, int status)
            (void*) conn);
     }
     ch_cn_send_if_pending(conn);
-}
-
-// .. c:function::
-static void
-_ch_cn_shutdown_cb(uv_shutdown_t* req, int status)
-//    :noindex:
-//
-//    see: :c:func:`_ch_cn_shutdown_cb`
-//
-// .. code-block:: cpp
-//
-{
-    (void) (status);
-    _ch_cn_closing(req, 0);
-}
-
-// .. c:function::
-static void
-_ch_cn_shutdown_timeout_cb(uv_timer_t* handle)
-//    :noindex:
-//
-//    see: :c:func:`_ch_cn_shutdown_timeout_cb`
-//
-// .. code-block:: cpp
-//
-{
-    ch_connection_t* conn = handle->data;
-    int              tmp_err;
-    ch_chirp_t*      chirp = conn->chirp;
-    ch_chirp_check_m(chirp);
-    _ch_cn_shutdown_cb(&conn->shutdown_req, 1);
-    tmp_err = uv_cancel((uv_req_t*) &conn->shutdown_req);
-    if (tmp_err != CH_SUCCESS) {
-        EC(chirp,
-           "Canceling shutdown timeout failed: %d. ",
-           "ch_connection_t:%p",
-           tmp_err,
-           (void*) conn);
-    }
-    LC(chirp,
-       "Shutdown timed out closing. ",
-       "ch_connection_t:%p",
-       (void*) conn);
 }
 
 // .. c:function::
@@ -564,19 +482,6 @@ ch_cn_init(ch_chirp_t* chirp, ch_connection_t* conn, uint8_t flags)
         return tmp_err;
     }
     conn->flags |= CH_CN_INIT_READER_WRITER;
-
-    tmp_err = uv_timer_init(ichirp->loop, &conn->shutdown_timeout);
-    if (tmp_err != CH_SUCCESS) {
-        EC(chirp,
-           "Initializing shutdown timeout failed: %d. ",
-           "ch_connection_t:%p",
-           tmp_err,
-           (void*) conn);
-        return CH_INIT_FAIL;
-    }
-    conn->shutdown_timeout.data = conn;
-    conn->flags |= CH_CN_INIT_SHUTDOWN_TIMEOUT;
-
     if (conn->flags & CH_CN_ENCRYPTED) {
         tmp_err = ch_cn_init_enc(chirp, conn);
     }
@@ -772,55 +677,20 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
                tmp_err,
                (void*) conn);
         }
-        /* If we have a valid SSL connection send a shutdown to the remote */
-        if (SSL_is_init_finished(conn->ssl)) {
-            if (SSL_shutdown(conn->ssl) < 0) {
-                EC(chirp,
-                   "Could not shutdown SSL connection. ",
-                   "ch_connection_t:%p",
-                   (void*) conn);
-            } else {
-                ch_cn_send_if_pending(conn);
-            }
-        }
+        /* I remove SSL_shutdown, because many other clients don't do it
+         * anymore, an we are talking just with other chirp clients. There is
+         * also no security reason, because this is not http. If you don't like
+         * my decision, sue me. */
     }
     if (ichirp->flags & CH_CHIRP_CLOSING) {
         conn->flags |= CH_CN_DO_CLOSE_ACCOUTING;
         ichirp->closing_tasks += 1;
     }
-    if (conn->flags & CH_CN_CONNECTED) {
-        tmp_err = uv_timer_start(
-                &conn->shutdown_timeout,
-                _ch_cn_shutdown_timeout_cb,
-                ichirp->config.TIMEOUT * 1000,
-                0);
-        if (tmp_err != CH_SUCCESS) {
-            EC(chirp,
-               "Starting shutdown timeout failed: %d. ",
-               "ch_connection_t:%p",
-               tmp_err,
-               (void*) conn);
-        }
-        uv_shutdown(
-                &conn->shutdown_req,
-                (uv_stream_t*) &conn->client,
-                _ch_cn_shutdown_cb);
-        if (tmp_err != CH_SUCCESS) {
-            EC(chirp,
-               "uv_shutdown returned error: %d. ",
-               "ch_connection_t:%p",
-               tmp_err,
-               (void*) conn);
-        }
-    } else {
-        /* We bypass shutdown */
-        conn->shutdown_req.handle = (uv_stream_t*) &conn->client;
-        _ch_cn_closing(&conn->shutdown_req, 1);
-        if (remote) {
-            /* If the connection is not connected it means we opened it, but
-             * the handshake was not successful, so we abort one message */
-            _ch_cn_abort_one_message(remote, reason);
-        }
+    _ch_cn_closing(conn);
+    if (!(conn->flags & CH_CN_CONNECTED) && remote) {
+        /* If the connection is not connected it means we opened it, but
+         * the handshake was not successful, so we abort one message */
+        _ch_cn_abort_one_message(remote, reason);
     }
     return CH_SUCCESS;
 }

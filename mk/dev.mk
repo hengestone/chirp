@@ -130,7 +130,7 @@ $(BUILD)/abi_dumps/chirp/$(VERSION)/ABI.dump: libchirp.so
 
 # Pytest target
 # =============
-pytest:  ## Run pytests
+pytest: all  ## Run pytests
 	pytest $(BASE)/src
 ifneq ($(TLS),openssl)
 ifeq ($(CI_DISTRO),alpine)
