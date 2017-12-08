@@ -686,12 +686,12 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         conn->flags |= CH_CN_DO_CLOSE_ACCOUTING;
         ichirp->closing_tasks += 1;
     }
-    _ch_cn_closing(conn);
     if (!(conn->flags & CH_CN_CONNECTED) && remote) {
         /* If the connection is not connected it means we opened it, but
          * the handshake was not successful, so we abort one message */
         _ch_cn_abort_one_message(remote, reason);
     }
+    _ch_cn_closing(conn);
     return CH_SUCCESS;
 }
 
