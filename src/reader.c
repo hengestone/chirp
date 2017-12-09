@@ -26,7 +26,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read);
 //    Handle a handshake on the given connection.
 //
 //    Ensures, that the byte count which shall be read is at least the same as
-//    the handshike size.
+//    the handshake size.
 //
 //    The given buffer gets copied into the handshake structure of the reader.
 //    Then the port, the maximum time until a timeout happens and the remote
@@ -97,7 +97,7 @@ _ch_rd_read_buffer(
 //    of the message ``assign_buf``. A preallocated buffer will be used if the
 //    message is small enough, otherwise a buffer will be allocated. The
 //    function also handles partial reads.
-//
+
 // .. c:function::
 static inline ssize_t
 _ch_rd_read_step(
@@ -117,6 +117,15 @@ _ch_rd_read_step(
 //    :param int* stop:             (Out) Stop the reading process.
 //    :param int* cont:             (Out) Request continuation
 //
+
+// .. c:function::
+static inline ch_error_t
+_ch_rd_verify_msg(ch_connection_t* conn, ch_message_t* msg);
+//
+//    One step in the reader state machine.
+//
+//    :param ch_connection_t* conn: Connection the message came from
+//    :param ch_message_t* msg:     Message to verify
 
 //
 // Definitions
@@ -368,17 +377,14 @@ _ch_rd_read_step(
             return bytes_handled;
         }
         ch_sr_buf_to_msg(reader->net_msg, wire_msg);
-        uint32_t total_wire_msg_size =
-                wire_msg->header_len + wire_msg->data_len;
-        if (total_wire_msg_size > ichirp->config.MAX_MSG_SIZE) {
-            EC(chirp,
-               "Message size exceeds hardlimit. ",
-               "ch_connection_t:%p",
-               (void*) conn);
-            ch_cn_shutdown(conn, CH_ENOMEM);
+        int tmp_err = _ch_rd_verify_msg(conn, wire_msg);
+        if (tmp_err != CH_SUCCESS) {
+            ch_cn_shutdown(conn, tmp_err);
             return -1; /* Shutdown */
         }
-        if ((wire_msg->type & CH_MSG_ACK)) {
+        if (wire_msg->type & CH_MSG_NOOP) {
+            break;
+        } else if (wire_msg->type & CH_MSG_ACK) {
             ch_message_t* wam = conn->remote->wait_ack_message;
             if (memcmp(wam->identity, wire_msg->identity, CH_ID_SIZE) == 0) {
                 wam->_flags |= CH_MSG_ACK_RECEIVED;
@@ -492,6 +498,45 @@ _ch_rd_read_step(
         break;
     }
     return bytes_handled;
+}
+
+// .. c:function::
+static inline ch_error_t
+_ch_rd_verify_msg(ch_connection_t* conn, ch_message_t* msg)
+//    :noindex:
+//
+//    see: :c:func:`_ch_rd_verify_msg`
+//
+// .. code-block:: cpp
+//
+{
+    ch_chirp_t*     chirp               = conn->chirp;
+    ch_chirp_int_t* ichirp              = chirp->_;
+    uint32_t        total_wire_msg_size = msg->header_len + msg->data_len;
+    if (total_wire_msg_size > ichirp->config.MAX_MSG_SIZE) {
+        EC(chirp,
+           "Message size exceeds hardlimit. ",
+           "ch_connection_t:%p",
+           (void*) conn);
+        return CH_ENOMEM;
+    }
+    if ((msg->type & CH_MSG_ACK) || (msg->type & CH_MSG_NOOP)) {
+        if (msg->header_len != 0 || msg->data_len != 0) {
+            EC(chirp,
+               "A ack/noop may not have header or data set. ",
+               "ch_connection_t:%p",
+               (void*) conn);
+            return CH_PROTOCOL_ERROR;
+        }
+        if (msg->type & CH_MSG_REQ_ACK) {
+            EC(chirp,
+               "A ack/noop may not require an ack. ",
+               "ch_connection_t:%p",
+               (void*) conn);
+            return CH_PROTOCOL_ERROR;
+        }
+    }
+    return CH_SUCCESS;
 }
 
 // .. c:function::

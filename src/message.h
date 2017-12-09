@@ -43,6 +43,7 @@ qs_queue_bind_decl_cx_m(ch_msg, ch_message_t) CH_ALLOW_NL;
 typedef enum {
     CH_MSG_REQ_ACK = 1 << 0,
     CH_MSG_ACK     = 1 << 1,
+    CH_MSG_NOOP    = 1 << 2,
 } ch_msg_types_t;
 
 // .. c:type:: ch_msg_flags_t
