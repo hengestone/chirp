@@ -567,7 +567,11 @@ ch_wr_process_queues(ch_remote_t* remote)
         if (remote->flags & CH_RM_CONN_BLOCKED) {
             return CH_BUSY;
         } else {
-            return _ch_wr_connect(remote);
+            /* Only connect of the queue is not empty */
+            if (remote->no_rack_msg_queue != NULL ||
+                remote->rack_msg_queue != NULL) {
+                return _ch_wr_connect(remote);
+            }
         }
     } else if (!(conn->flags & CH_CN_CONNECTED)) {
         return CH_BUSY;
