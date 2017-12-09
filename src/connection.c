@@ -26,8 +26,6 @@
 //
 // .. code-block:: cpp
 
-rb_bind_impl_m(ch_cn_old, ch_connection_t) CH_ALLOW_NL;
-
 rb_bind_impl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
 
 // Declarations
@@ -629,7 +627,6 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     }
     LC(chirp, "Shutdown connection. ", "ch_connection_t:%p", (void*) conn);
     conn->flags |= CH_CN_SHUTTING_DOWN;
-    int              tmp_err;
     ch_chirp_int_t*  ichirp = chirp->_;
     ch_writer_t*     writer = &conn->writer;
     ch_remote_t*     remote = conn->remote;
@@ -639,7 +636,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     ch_cn_delete(&ichirp->protocol.handshake_conns, conn, &out);
     /* In case this conn is in old_connections remove it, since we now cleaned
      * it up*/
-    ch_cn_old_delete(&ichirp->protocol.old_connections, conn, &out);
+    ch_cn_delete(&ichirp->protocol.old_connections, conn, &out);
     if (conn->flags & CH_CN_INIT_CLIENT) {
         uv_read_stop((uv_stream_t*) &conn->client);
     }
@@ -669,7 +666,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         ch_chirp_finish_message(chirp, conn, msg, reason);
     }
     if (conn->flags & CH_CN_ENCRYPTED && conn->flags & CH_CN_INIT_ENCRYPTION) {
-        tmp_err = SSL_get_verify_result(conn->ssl);
+        int tmp_err = SSL_get_verify_result(conn->ssl);
         if (tmp_err != X509_V_OK) {
             EC(chirp,
                "Connection has cert verification error: %d. ",

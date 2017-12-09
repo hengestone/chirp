@@ -150,7 +150,7 @@ _ch_pr_close_free_connections(ch_chirp_t* chirp)
         ch_rm_delete_node(&protocol->remotes, remote);
         ch_free(remote);
     }
-    while (protocol->old_connections != ch_cn_old_nil_ptr) {
+    while (protocol->old_connections != ch_cn_nil_ptr) {
         ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
     }
     while (protocol->handshake_conns != ch_cn_nil_ptr) {
@@ -526,7 +526,7 @@ ch_pr_init(ch_chirp_t* chirp, ch_protocol_t* protocol)
     memset(protocol, 0, sizeof(*protocol));
     protocol->chirp = chirp;
     ch_cn_tree_init(&protocol->handshake_conns);
-    ch_cn_old_tree_init(&protocol->old_connections);
+    ch_cn_tree_init(&protocol->old_connections);
     ch_rm_tree_init(&protocol->remotes);
     protocol->reconnect_remotes = NULL;
 }

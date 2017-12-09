@@ -196,7 +196,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
               "ch_connection_t:%p replaced ch_connection_t:%p",
               (void*) conn,
               (void*) old_conn);
-            ch_cn_old_insert(&protocol->old_connections, old_conn);
+            ch_cn_insert(&protocol->old_connections, old_conn);
         }
     }
 #ifdef CH_ENABLE_LOGGING

@@ -459,9 +459,6 @@ struct ch_connection_s {
 //
 // .. code-block:: cpp
 
-#define ch_cn_old_cmp_m(x, y) rb_pointer_cmp_m(x, y)
-rb_bind_decl_m(ch_cn_old, ch_connection_t) CH_ALLOW_NL;
-
 #define ch_cn_cmp_m(x, y) rb_pointer_cmp_m(x, y)
 rb_bind_decl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
 
