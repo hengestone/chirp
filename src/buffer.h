@@ -60,6 +60,10 @@ typedef struct ch_bf_handler_s {
 //
 //    Contains the preallocated buffers for the chirp handlers.
 //
+//    .. c:member:: unsigned int refcnf
+//
+//       Reference count
+//
 //    .. c:member:: uint8_t max_buffers
 //
 //       Defines the maximum number of buffers.
@@ -85,6 +89,7 @@ typedef struct ch_bf_handler_s {
 // .. code-block:: cpp
 //
 typedef struct ch_buffer_pool_s {
+    unsigned int     refcnt;
     uint8_t          max_buffers;
     uint8_t          used_buffers;
     uint32_t         free_buffers;

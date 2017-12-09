@@ -56,7 +56,11 @@ ch_bf_free(ch_buffer_pool_t* pool)
 // .. code-block:: cpp
 //
 {
-    ch_free(pool->handlers);
+    pool->refcnt -= 1;
+    if (pool->refcnt == 0) {
+        ch_free(pool->handlers);
+        ch_free(pool);
+    }
 }
 
 // .. c:function::
@@ -73,6 +77,7 @@ ch_bf_init(ch_buffer_pool_t* pool, ch_connection_t* conn, uint8_t max_buffers)
     A(max_buffers <= 32, "buffer.c can't handle more than 32 handlers");
     memset(pool, 0, sizeof(*pool));
     pool->conn         = conn;
+    pool->refcnt       = 1;
     size_t pool_mem    = max_buffers * sizeof(ch_bf_handler_t);
     pool->used_buffers = 0;
     pool->max_buffers  = max_buffers;
@@ -110,6 +115,7 @@ ch_bf_acquire(ch_buffer_pool_t* pool)
     if (pool->used_buffers < pool->max_buffers) {
         int free;
         pool->used_buffers += 1;
+        pool->refcnt += 1;
         free = ch_msb32(pool->free_buffers);
         /* Reserve the buffer. */
         pool->free_buffers &= ~(1 << (free - 1));
@@ -152,6 +158,7 @@ ch_bf_release(ch_buffer_pool_t* pool, int id)
                 (void*) pool);
         return;
     }
+    ch_bf_free(pool);
     pool->used_buffers -= 1;
     /* Release the buffer. */
     handler_buf->used = 0;

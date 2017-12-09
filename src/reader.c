@@ -405,7 +405,7 @@ _ch_rd_read_step(
     case CH_RD_HANDLER: {
         ch_message_t* wire_msg = &reader->wire_msg;
         if (reader->handler == NULL) {
-            reader->handler = ch_bf_acquire(&reader->pool);
+            reader->handler = ch_bf_acquire(reader->pool);
             if (reader->handler == NULL) {
                 LC(chirp, "Stop reading", "ch_connection_t:%p", conn);
                 if (!(conn->flags & CH_CN_STOPPED)) {
@@ -504,7 +504,9 @@ ch_rd_free(ch_reader_t* reader)
 // .. code-block:: cpp
 //
 {
-    ch_bf_free(&reader->pool);
+    /* Remove the reference to connection, since it is now invalid */
+    reader->pool->conn = NULL;
+    ch_bf_free(reader->pool);
 }
 
 // .. c:function::
@@ -518,7 +520,11 @@ ch_rd_init(ch_reader_t* reader, ch_connection_t* conn, ch_chirp_int_t* ichirp)
 //
 {
     reader->state = CH_RD_START;
-    return ch_bf_init(&reader->pool, conn, ichirp->config.MAX_HANDLERS);
+    reader->pool  = ch_alloc(sizeof(*reader->pool));
+    if (reader->pool == NULL) {
+        return CH_ENOMEM;
+    }
+    return ch_bf_init(reader->pool, conn, ichirp->config.MAX_HANDLERS);
 }
 
 // .. c:function::
@@ -565,10 +571,8 @@ ch_chirp_release_message(ch_message_t* msg)
 // .. code-block:: cpp
 //
 {
-    ch_buffer_pool_t* pool   = msg->_pool;
-    ch_connection_t*  conn   = pool->conn;
-    ch_reader_t*      reader = &conn->reader;
-    ch_chirp_t*       chirp  = conn->chirp;
+    ch_buffer_pool_t* pool = msg->_pool;
+    ch_connection_t*  conn = pool->conn;
     if (!(msg->_flags & CH_MSG_IS_HANDLER)) {
         fprintf(stderr,
                 "%s:%d Fatal: Release of non handler message. "
@@ -578,19 +582,27 @@ ch_chirp_release_message(ch_message_t* msg)
                 (void*) pool);
         return;
     }
-    if (msg->type & CH_MSG_REQ_ACK) {
-        /* Send the ack to the connection, in case the user changed the message
-         * for his need, which is absolutely ok, and valid use case. */
-        ch_message_t* ack_msg = &reader->ack_msg;
-        memset(ack_msg, 0, sizeof(*ack_msg));
-        memcpy(ack_msg->identity, msg->identity, CH_ID_SIZE);
-        memcpy(ack_msg->address, conn->address, CH_IP_ADDR_SIZE);
-        ack_msg->ip_protocol = conn->ip_protocol;
-        ack_msg->type        = CH_MSG_ACK;
-        ack_msg->header_len  = 0;
-        ack_msg->data_len    = 0;
-        ack_msg->port        = conn->port;
-        ch_wr_send(chirp, ack_msg, NULL);
+    /* If the connection does not exist, it is already shutdown. The user may
+     * release a message after a connection has been shutdown. We use reference
+     * counting in the buffer pool to delay ch_free of the pool. */
+    if (conn) {
+        ch_reader_t* reader = &conn->reader;
+        ch_chirp_t*  chirp  = conn->chirp;
+        if (msg->type & CH_MSG_REQ_ACK) {
+            /* Send the ack to the connection, in case the user changed the
+             * message
+             * for his need, which is absolutely ok, and valid use case. */
+            ch_message_t* ack_msg = &reader->ack_msg;
+            memset(ack_msg, 0, sizeof(*ack_msg));
+            memcpy(ack_msg->identity, msg->identity, CH_ID_SIZE);
+            memcpy(ack_msg->address, conn->address, CH_IP_ADDR_SIZE);
+            ack_msg->ip_protocol = conn->ip_protocol;
+            ack_msg->type        = CH_MSG_ACK;
+            ack_msg->header_len  = 0;
+            ack_msg->data_len    = 0;
+            ack_msg->port        = conn->port;
+            ch_wr_send(chirp, ack_msg, NULL);
+        }
     }
     if (msg->_flags & CH_MSG_FREE_DATA) {
         ch_free(msg->data);
@@ -599,7 +611,9 @@ ch_chirp_release_message(ch_message_t* msg)
         ch_free(msg->header);
     }
     ch_bf_release(pool, msg->_handler);
-    ch_pr_restart_stream(pool->conn);
+    if (conn) {
+        ch_pr_restart_stream(conn);
+    }
 }
 
 static ssize_t

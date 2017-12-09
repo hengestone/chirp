@@ -96,13 +96,13 @@ typedef enum {
 // .. code-block:: cpp
 //
 typedef struct ch_reader_s {
-    ch_rd_state_t    state;
-    ch_bf_handler_t* handler;
-    ch_message_t     ack_msg;
-    ch_message_t     wire_msg;
-    size_t           bytes_read;
-    ch_buf           net_msg[CH_SR_WIRE_MESSAGE_SIZE];
-    ch_buffer_pool_t pool;
+    ch_rd_state_t     state;
+    ch_bf_handler_t*  handler;
+    ch_message_t      ack_msg;
+    ch_message_t      wire_msg;
+    size_t            bytes_read;
+    ch_buf            net_msg[CH_SR_WIRE_MESSAGE_SIZE];
+    ch_buffer_pool_t* pool;
 } ch_reader_t;
 
 // .. c:function::

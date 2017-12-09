@@ -21,7 +21,7 @@ typedef enum {
     func_cleanup_e = 4,
 } ch_tst_func_t;
 
-static ch_buffer_pool_t pool;
+static ch_buffer_pool_t* pool;
 
 // Runner
 // ======
@@ -36,11 +36,12 @@ ch_tst_test_handler(mpack_node_t data, mpack_writer_t* writer)
     switch (func) {
         ch_bf_handler_t* handler;
     case func_init_e:
-        ch_bf_init(&pool, NULL, val);
+        pool = ch_alloc(sizeof(*pool));
+        ch_bf_init(pool, NULL, val);
         ch_tst_return_int(writer, 0);
         break;
     case func_acquire_e:
-        handler = ch_bf_acquire(&pool);
+        handler = ch_bf_acquire(pool);
         mpack_start_array(writer, 1);
         if (handler == NULL) {
             mpack_write_int(writer, -1);
@@ -50,11 +51,11 @@ ch_tst_test_handler(mpack_node_t data, mpack_writer_t* writer)
         mpack_finish_array(writer);
         break;
     case func_release_e:
-        ch_bf_release(&pool, val);
+        ch_bf_release(pool, val);
         ch_tst_return_int(writer, 0);
         break;
     case func_cleanup_e:
-        ch_bf_free(&pool);
+        ch_bf_free(pool);
         ch_tst_return_int(writer, 0);
         break;
     default:
