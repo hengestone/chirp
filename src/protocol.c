@@ -204,8 +204,12 @@ _ch_pr_new_connection_cb(uv_stream_t* server, int status)
 {
     ch_chirp_t* chirp = server->data;
     ch_chirp_check_m(chirp);
-    ch_chirp_int_t* ichirp   = chirp->_;
-    ch_protocol_t*  protocol = &ichirp->protocol;
+    ch_chirp_int_t* ichirp = chirp->_;
+    /* Do not accept new connections when chirp is closing */
+    if (ichirp->flags & CH_CHIRP_CLOSING) {
+        return;
+    }
+    ch_protocol_t* protocol = &ichirp->protocol;
     if (status < 0) {
         L(chirp, "New connection error %s", uv_strerror(status));
         return;
