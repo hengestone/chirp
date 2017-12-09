@@ -1,7 +1,9 @@
 """Hypothesis based functional chirp test."""
 
 from hypothesis import settings, unlimited  # noqa
-from hypothesis.strategies import tuples, sampled_from, just, lists, binary
+from hypothesis.strategies import (
+    tuples, sampled_from, just, lists, binary, one_of, none
+)
 from hypothesis.stateful import GenericStateMachine
 import mpipe
 import socket
@@ -59,7 +61,14 @@ class GenFunc(GenericStateMachine):
             )
         )
         self.fuzz_main_port_step = tuples(
-            just("fuzz_main_port"), lists(binary(), max_size=4)
+            just("fuzz_main_port"),
+            tuples(
+                one_of(
+                    binary(),
+                    just(b"\x0b\xb5\xbcdf\x08\x04\xe4ZD\x8fk\xe4.z~\x0f;")
+                ),
+                lists(binary(), max_size=3),
+            )
         )
 
     def listen_dead_socket(self):
@@ -179,6 +188,7 @@ class GenFunc(GenericStateMachine):
             assert False, "Unknown step"
 
     def fuzz_main_port(self, data):
+        data = [data[0]] + list(data[1])
         fuzz = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         fuzz.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         fuzz.bind(('', 2997))
