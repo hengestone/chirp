@@ -8,9 +8,9 @@ Message-passing for everyone
 .. note::
 
    On some platforms libuv writes can cause SIGPIPE, generally you want to
-   ignore the SIGPIPE and handle the error. Most applications just ignore
-   SIGPIPE. Since libuv and libchirp are libraries you have to ignore SIGPIPE,
-   if you want to.
+   ignore the SIGPIPE and handle the error. Most applications ignore SIGPIPE.
+   Since libuv and libchirp are libraries you have to ignore SIGPIPE, if you
+   want to.
 
    .. code-block:: cpp
 
