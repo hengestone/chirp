@@ -558,7 +558,7 @@ void
 ch_chirp_config_init(ch_config_t* config)
 //    :noindex:
 //
-//    see: :c:func:`ch_chirp_close_cb`
+//    see: :c:func:`ch_chirp_config_init`
 //
 // .. code-block:: cpp
 //

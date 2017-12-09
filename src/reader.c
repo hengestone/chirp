@@ -539,6 +539,11 @@ ch_rd_read(ch_connection_t* conn, ch_buf* buf, size_t bytes_read, int* stop)
     ssize_t bytes_handled = 0;
     int     cont;
 
+    /* Ignore reads while shutting down */
+    if (conn->flags & CH_CN_SHUTTING_DOWN) {
+        return bytes_read;
+    }
+
     do {
         cont          = 0;
         bytes_handled = _ch_rd_read_step(
