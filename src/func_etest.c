@@ -100,7 +100,7 @@ _ch_tst_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
     if (_ch_tst_mpp_mc == NULL) {
         /* If memcheck is enabled we want to check for memory leaks not
          * correctness. Connect sometime fails if memcheck is attached, I blame
-         * valgrind for now. I can find a real problem. */
+         * valgrind for now. I can't find a real problem. */
         assert(!entry->echo_ready || status == 0 || msg->port != 2997);
     }
 }
