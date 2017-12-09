@@ -640,6 +640,10 @@ _ch_pr_read_data_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
     ch_connection_t* conn  = stream->data;
     ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
+    /* Ignore reads while shutting down */
+    if (conn->flags & CH_CN_SHUTTING_DOWN) {
+        return;
+    }
     ssize_t bytes_handled = 0;
 #ifdef CH_ENABLE_ASSERTS
     conn->flags &= ~CH_CN_BUF_UV_USED;
