@@ -2,7 +2,7 @@
 
 from hypothesis import settings, unlimited  # noqa
 from hypothesis.strategies import (
-    tuples, sampled_from, just, lists, binary, one_of, none
+    tuples, sampled_from, just, lists, binary, one_of
 )
 from hypothesis.stateful import GenericStateMachine
 import mpipe
@@ -62,12 +62,21 @@ class GenFunc(GenericStateMachine):
         )
         self.fuzz_main_port_step = tuples(
             just("fuzz_main_port"),
-            tuples(
-                one_of(
-                    binary(),
-                    just(b"\x0b\xb5\xbcdf\x08\x04\xe4ZD\x8fk\xe4.z~\x0f;")
+            one_of(
+                tuples(
+                    one_of(
+                        binary(),
+                        just(b"\x0b\xb5\xbcdf\x08\x04\xe4ZD\x8fk\xe4.z~\x0f;")
+                    ),
+                    lists(binary(), max_size=3),
                 ),
-                lists(binary(), max_size=3),
+                tuples(
+                    just(b'\x0b\xb5\xbcdf\x08\x04\xe4ZD\x8fk\xe4.z~\x0f;'),
+                    just([
+                        b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+                        b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'  # noqa
+                    ])
+                )
             )
         )
 

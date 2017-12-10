@@ -360,9 +360,9 @@ _ch_rd_read_step(
         if (bytes_read == 0)
             return -1;
         ch_message_t* wire_msg = &reader->wire_msg;
-        if (to_read >= CH_SR_WIRE_MESSAGE_SIZE) {
+        ssize_t       reading  = CH_SR_WIRE_MESSAGE_SIZE - reader->bytes_read;
+        if (to_read >= reading) {
             /* We can read everything */
-            size_t reading = CH_SR_WIRE_MESSAGE_SIZE - reader->bytes_read;
             memcpy(reader->net_msg + reader->bytes_read,
                    buf + bytes_handled,
                    reading);
