@@ -53,7 +53,7 @@ static char* const _ch_lg_colors[8] = {
         "\x1B[1;33m",
 };
 
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
 
 // Debug alloc tracking
 // ====================
@@ -128,17 +128,18 @@ ch_at_cleanup(void)
 // .. code-block:: cpp
 //
 {
-    fprintf(stderr, "Leaked allocations: \n");
-    int no_leak = _ch_alloc_tree == _ch_at_nil_ptr;
-    while (_ch_alloc_tree != _ch_at_nil_ptr) {
-        ch_alloc_track_t* item;
-        item = _ch_alloc_tree;
-        fprintf(stderr, "%p ", item->buf);
-        _ch_at_delete_node(&_ch_alloc_tree, item);
-        _ch_free_cb(item);
+    if (_ch_alloc_tree != _ch_at_nil_ptr) {
+        fprintf(stderr, "Leaked allocations: \n");
+        while (_ch_alloc_tree != _ch_at_nil_ptr) {
+            ch_alloc_track_t* item;
+            item = _ch_alloc_tree;
+            fprintf(stderr, "%p ", item->buf);
+            _ch_at_delete_node(&_ch_alloc_tree, item);
+            _ch_free_cb(item);
+        }
+        fprintf(stderr, "\n");
+        A(0, "There is a memory leak")
     }
-    fprintf(stderr, "\n");
-    A(no_leak, "There is a memory leak")
     uv_mutex_destroy(&_ch_at_lock);
 }
 
@@ -228,7 +229,7 @@ ch_alloc(size_t size)
     /* Assert memory (do not rely on this, implement it robust: be graceful and
      * return error to user) */
     A(buf, "Allocation failure");
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     return _ch_at_alloc(buf);
 #else
     return buf;
@@ -277,7 +278,7 @@ ch_free(void* buf)
 // .. code-block:: cpp
 //
 {
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     _ch_at_free(buf);
 #endif
     _ch_free_cb(buf);
@@ -359,7 +360,7 @@ ch_realloc(void* buf, size_t size)
     /* Assert memory (do not rely on this, implement it robust: be graceful and
      * return error to user) */
     A(rbuf, "Reallocation failure");
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     return _ch_at_realloc(buf, rbuf);
 #else
     return rbuf;

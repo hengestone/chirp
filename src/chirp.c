@@ -955,7 +955,7 @@ ch_libchirp_cleanup(void)
     _ch_libchirp_initialized = 0;
     uv_mutex_destroy(&_ch_chirp_init_lock);
     ch_error_t ret = ch_en_tls_cleanup();
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     ch_at_cleanup();
 #endif
     return ret;
@@ -982,7 +982,7 @@ ch_libchirp_init(void)
     }
     _ch_libchirp_initialized = 1;
     uv_mutex_init(&_ch_chirp_init_lock);
-#ifndef NDEBUG
+#ifdef CH_ENABLE_ASSERTS
     ch_at_init();
 #endif
     return ch_en_tls_init();
