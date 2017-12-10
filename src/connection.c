@@ -645,7 +645,9 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     /* In early handshake remote can empty, since we allocate resources after
      * successful handshake. */
     if (remote) {
-        wam = remote->wait_ack_message;
+        /* We finish the message and therefore set wam to NULL. */
+        wam                      = remote->wait_ack_message;
+        remote->wait_ack_message = NULL;
         /* We could be a connection from old_connections and therefore we do
          * not want to invalidate an active connection. */
         if (remote->conn == conn) {
