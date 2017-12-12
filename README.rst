@@ -313,3 +313,18 @@ Contributing
 Please open an issue first. Contributions of missing features are very welcome, but
 we want to keep to scope of libchirp minimal, so additional features should
 probably be implemented in an upper layer.
+
+Most valuable contributions:
+
+* If you run continuous integration on your app, build chirp with
+  CH_ENABLE_ASSERTS and report bugs.
+
+* Contribute any kind of tests or fuzzing (if possible hypothesis_ based)
+
+* Make bindings for your favorite language
+
+* Make packages for your favorite distribution
+
+* Promote libchirp
+
+.. _hypothesis: https://hypothesis.readthedocs.io/en/latest/
