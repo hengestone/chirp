@@ -36,4 +36,11 @@ Example: Debug
    CFLAGS=-O0 make
    make install PREFIX=/usr/local
 
-#ifndef NDEBUG is stripped in source distribution, so still no debug code.
+Most debug code is activated with CH_ENABLE_ASSERTS. In fact if you are running
+continuous integration on your application, please build libchirp with assert
+and report bugs.
+
+.. code-block:: bash
+
+   CFLAGS="-O0 -DCH_ENABLE_ASSERTS" make
+   make install PREFIX=/usr/local
