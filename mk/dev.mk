@@ -171,7 +171,8 @@ amalg: $(AMALB).c  ## Create amalgamation
 
 $(AMALB).c: $(LIB_CFILES) $(HEADERS) $(BUILD)/unifdef
 	$(V_E) GEN header.h
-	$(V_M)echo // ================================ > $(BUILD)/header.h
+	$(V_M)cp -f $(BASE)/mk/mpl-boilerplate $(BUILD)/header.h
+	$(V_M)echo // ================================ >> $(BUILD)/header.h
 	$(V_M)echo // libchirp $(VERSION_LONG) amalgamation >> $(BUILD)/header.h
 	$(V_M)echo // ================================ >> $(BUILD)/header.h
 	$(V_M)echo >> $(BUILD)/header.h

@@ -311,7 +311,10 @@ For reviewing my pull requests:
 License
 =======
 
-LGPL 3.0
+libchirp is subject to the terms of the Mozilla Public License, v. 2.0. Creating
+a "Larger Work" under the GNU (Lesser) General Public License is explicitly
+allowed. Contributors to libchirp must agree to the Mozilla Public License, v.
+2.0.
 
 Contributing
 ============
