@@ -25,6 +25,15 @@
 // ============
 
 // .. c:function::
+static void
+_ch_pr_abort_all_message(ch_remote_t* remote, ch_error_t error);
+//
+//    Abort all messages in queue, because we are closing down.
+//
+//    :param ch_remote_t* remote: Remote failed to connect.
+//    :param ch_error_t error: Status returned by connect.
+
+// .. c:function::
 static int
 _ch_pr_decrypt_feed(ch_connection_t* conn, ch_buf* buf, size_t read, int* stop);
 //
@@ -121,6 +130,38 @@ _ch_pr_update_resume(
 
 // Definitions
 // ===========
+
+// .. c:function::
+static void
+_ch_pr_abort_all_message(ch_remote_t* remote, ch_error_t error)
+//    :noindex:
+//
+//    see: :c:func:`_ch_pr_abort_all_message`
+//
+// .. code-block:: cpp
+//
+{
+    /* The remote is going away, we need to abort all messages */
+    ch_message_t* msg = NULL;
+    if (remote->no_rack_msg_queue != NULL) {
+        ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
+    } else if (remote->rack_msg_queue != NULL) {
+        ch_msg_dequeue(&remote->rack_msg_queue, &msg);
+    }
+    while (msg != NULL) {
+        ch_send_cb_t cb = msg->_send_cb;
+        if (cb != NULL) {
+            msg->_send_cb = NULL;
+            cb(remote->chirp, msg, error);
+        }
+        msg = NULL;
+        if (remote->no_rack_msg_queue != NULL) {
+            ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
+        } else if (remote->rack_msg_queue != NULL) {
+            ch_msg_dequeue(&remote->rack_msg_queue, &msg);
+        }
+    }
+}
 
 // .. c:function::
 static void
@@ -402,9 +443,12 @@ ch_pr_close_free_connections(ch_chirp_t* chirp)
         if (remote->conn != NULL) {
             ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
         }
+        _ch_pr_abort_all_message(remote, CH_SHUTDOWN);
         ch_rm_delete_node(&protocol->remotes, remote);
         ch_free(remote);
     }
+    /* Remove all remotes, sync with reconnect_remotes */
+    protocol->reconnect_remotes = NULL;
     while (protocol->old_connections != ch_cn_nil_ptr) {
         ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
     }

@@ -35,7 +35,7 @@ rb_bind_impl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
 static void
 _ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error);
 //
-//    Abort one message in queue, cause connecting failed.
+//    Abort one message in queue, because connecting failed.
 //
 //    :param ch_remote_t* remote: Remote failed to connect.
 //    :param ch_error_t error: Status returned by connect.
