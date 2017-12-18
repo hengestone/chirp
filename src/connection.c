@@ -105,10 +105,10 @@ _ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error)
 //
 {
     ch_message_t* msg = NULL;
-    if (remote->no_rack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
-    } else if (remote->rack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->rack_msg_queue, &msg);
+    if (remote->ack_msg_queue != NULL) {
+        ch_msg_dequeue(&remote->ack_msg_queue, &msg);
+    } else if (remote->msg_queue != NULL) {
+        ch_msg_dequeue(&remote->msg_queue, &msg);
     }
     if (msg != NULL) {
         ch_send_cb_t cb = msg->_send_cb;
@@ -653,13 +653,20 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         if (remote->conn == conn) {
             remote->conn = NULL;
         }
+        /* Abort all ack messsages */
+        remote->ack_msg_queue = NULL;
+    }
+    if (!(conn->flags & CH_CN_CONNECTED) && remote != NULL) {
+        /* If the connection is not connected it means we opened it, but
+         * the handshake was not successful, so we abort one message */
+        _ch_cn_abort_one_message(remote, reason);
     }
     if (msg == NULL) {
         msg = wam;
     }
 #ifdef CH_ENABLE_ASSERTS
     else {
-        A(wam == NULL || wam == msg,
+        A(wam == NULL || wam == msg || msg->type & CH_MSG_ACK,
           "Wait ack message should be the same as writer msg");
     }
 #endif
@@ -680,11 +687,6 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     if (ichirp->flags & CH_CHIRP_CLOSING) {
         conn->flags |= CH_CN_DO_CLOSE_ACCOUTING;
         ichirp->closing_tasks += 1;
-    }
-    if (!(conn->flags & CH_CN_CONNECTED) && remote != NULL) {
-        /* If the connection is not connected it means we opened it, but
-         * the handshake was not successful, so we abort one message */
-        _ch_cn_abort_one_message(remote, reason);
     }
     _ch_cn_closing(conn);
     return CH_SUCCESS;

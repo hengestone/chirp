@@ -26,7 +26,7 @@
 
 // .. c:function::
 static void
-_ch_pr_abort_all_message(ch_remote_t* remote, ch_error_t error);
+_ch_pr_abort_all_messages(ch_remote_t* remote, ch_error_t error);
 //
 //    Abort all messages in queue, because we are closing down.
 //
@@ -133,34 +133,26 @@ _ch_pr_update_resume(
 
 // .. c:function::
 static void
-_ch_pr_abort_all_message(ch_remote_t* remote, ch_error_t error)
+_ch_pr_abort_all_messages(ch_remote_t* remote, ch_error_t error)
 //    :noindex:
 //
-//    see: :c:func:`_ch_pr_abort_all_message`
+//    see: :c:func:`_ch_pr_abort_all_messages`
 //
 // .. code-block:: cpp
 //
 {
     /* The remote is going away, we need to abort all messages */
-    ch_message_t* msg = NULL;
-    if (remote->no_rack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
-    } else if (remote->rack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->rack_msg_queue, &msg);
-    }
+    ch_message_t* msg;
+    ch_msg_dequeue(&remote->msg_queue, &msg);
     while (msg != NULL) {
         ch_send_cb_t cb = msg->_send_cb;
         if (cb != NULL) {
             msg->_send_cb = NULL;
             cb(remote->chirp, msg, error);
         }
-        msg = NULL;
-        if (remote->no_rack_msg_queue != NULL) {
-            ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
-        } else if (remote->rack_msg_queue != NULL) {
-            ch_msg_dequeue(&remote->rack_msg_queue, &msg);
-        }
+        ch_msg_dequeue(&remote->msg_queue, &msg);
     }
+    remote->ack_msg_queue = NULL;
 }
 
 // .. c:function::
@@ -449,10 +441,11 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
     } else {
         while (protocol->remotes != ch_rm_nil_ptr) {
             ch_remote_t* remote = protocol->remotes;
+            /* Leaves the queue empty and there prevents reconnects. */
+            _ch_pr_abort_all_messages(remote, CH_SHUTDOWN);
             if (remote->conn != NULL) {
                 ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
             }
-            _ch_pr_abort_all_message(remote, CH_SHUTDOWN);
             ch_rm_delete_node(&protocol->remotes, remote);
             ch_free(remote);
         }

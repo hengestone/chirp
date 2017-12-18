@@ -567,8 +567,7 @@ ch_wr_process_queues(ch_remote_t* remote)
             return CH_BUSY;
         } else {
             /* Only connect of the queue is not empty */
-            if (remote->no_rack_msg_queue != NULL ||
-                remote->rack_msg_queue != NULL) {
+            if (remote->msg_queue != NULL || remote->ack_msg_queue != NULL) {
                 return _ch_wr_connect(remote);
             }
         }
@@ -576,19 +575,25 @@ ch_wr_process_queues(ch_remote_t* remote)
         return CH_BUSY;
     } else if (conn->writer.msg != NULL) {
         return CH_BUSY;
-    } else if (remote->no_rack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->no_rack_msg_queue, &msg);
+    } else if (remote->ack_msg_queue != NULL) {
+        ch_msg_dequeue(&remote->ack_msg_queue, &msg);
         ch_wr_write(conn, msg);
         return CH_SUCCESS;
-    } else if (remote->rack_msg_queue != NULL) {
-        /* The chirp protocol has to be synchronous or we get deadlocks! */
-        if (remote->wait_ack_message == NULL) {
-            ch_msg_dequeue(&remote->rack_msg_queue, &msg);
-            remote->wait_ack_message = msg;
+    } else if (remote->msg_queue != NULL) {
+        if (chirp->_->config.ACKNOWLEDGE) {
+            if (remote->wait_ack_message == NULL) {
+                ch_msg_dequeue(&remote->msg_queue, &msg);
+                remote->wait_ack_message = msg;
+                ch_wr_write(conn, msg);
+                return CH_SUCCESS;
+            } else {
+                return CH_BUSY;
+            }
+        } else {
+            ch_msg_dequeue(&remote->msg_queue, &msg);
+            A(!(msg->type & CH_MSG_REQ_ACK), "REQ_ACK unexpected");
             ch_wr_write(conn, msg);
             return CH_SUCCESS;
-        } else {
-            return CH_BUSY;
         }
     }
     return CH_EMPTY;
@@ -638,12 +643,12 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
     msg->serial = remote->serial;
 
     int queued = 0;
-    if (msg->type & CH_MSG_REQ_ACK) {
-        queued = remote->rack_msg_queue != NULL;
-        ch_msg_enqueue(&remote->rack_msg_queue, msg);
+    if (msg->type & CH_MSG_ACK) {
+        queued = remote->ack_msg_queue != NULL;
+        ch_msg_enqueue(&remote->ack_msg_queue, msg);
     } else {
-        queued = remote->no_rack_msg_queue != NULL;
-        ch_msg_enqueue(&remote->no_rack_msg_queue, msg);
+        queued = remote->msg_queue != NULL;
+        ch_msg_enqueue(&remote->msg_queue, msg);
     }
 
     ch_wr_process_queues(remote);

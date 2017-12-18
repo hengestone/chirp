@@ -134,7 +134,7 @@ ch_bf_acquire(ch_buffer_pool_t* pool);
 static inline int
 ch_bf_is_exhausted(ch_buffer_pool_t* pool)
 //
-//    Returns 1 if pool is exhausted.
+//    Returns 1 if the pool is exhausted.
 //
 //    :param ch_buffer_pool_t* pool: The buffer pool object
 {

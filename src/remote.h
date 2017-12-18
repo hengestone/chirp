@@ -60,13 +60,14 @@ typedef enum {
 //       connection to NULL has to notify the user. So callbacks can safely
 //       abort if conn is NULL.
 //
-//    .. c:member:: ch_message_t* no_rack_msg_queue
+//    .. c:member:: ch_message_t* msg_queue
 //
-//       Queue of messages that don't require an ACK.
+//       Queue of messages.
 //
-//    .. c:member:: ch_message_t* rack_msg_queue
+//    .. c:member:: ch_message_t* ack_msg_queue
 //
-//       Queue of messages that require an ACK.
+//       Queue of ack messages. There can max be two acks in the queue, one
+//       from the current (new) connection and one from the old connection.
 //
 //    .. c:member:: ch_chirp_t* chirp
 //
@@ -107,8 +108,8 @@ struct ch_remote_s {
     uint8_t          address[CH_IP_ADDR_SIZE];
     int32_t          port;
     ch_connection_t* conn;
-    ch_message_t*    no_rack_msg_queue;
-    ch_message_t*    rack_msg_queue;
+    ch_message_t*    msg_queue;
+    ch_message_t*    ack_msg_queue;
     ch_message_t*    wait_ack_message;
     ch_chirp_t*      chirp;
     uint32_t         serial;

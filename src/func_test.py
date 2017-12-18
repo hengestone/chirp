@@ -254,8 +254,8 @@ class GenFunc(GenericStateMachine):
         assert not self.open_messages
         self.timeout_open = False
 
-# with settings(max_examples=10):
 
-
+# with settings(deadline=None, timeout=unlimited, max_examples=1000,
+#               max_iterations=10000):
 with settings(deadline=None, timeout=unlimited):
     TestFunc = GenFunc.TestCase

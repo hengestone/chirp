@@ -639,8 +639,8 @@ ch_chirp_release_message(ch_message_t* msg)
         ch_chirp_t*  chirp  = conn->chirp;
         if (msg->type & CH_MSG_REQ_ACK) {
             /* Send the ack to the connection, in case the user changed the
-             * message
-             * for his need, which is absolutely ok, and valid use case. */
+             * message for his need, which is absolutely ok, and valid use
+             * case. */
             ch_message_t* ack_msg = &reader->ack_msg;
             memset(ack_msg, 0, sizeof(*ack_msg));
             memcpy(ack_msg->identity, msg->identity, CH_ID_SIZE);
