@@ -309,7 +309,7 @@ main(int argc, char* argv[])
         fprintf(stderr, "always_encrypt must be boolean (0/1).\n");
         exit(1);
     }
-    _ch_tst_expect_shutdown = strtol(argv[2], NULL, 10);
+    _ch_tst_expect_shutdown = strtol(argv[3], NULL, 10);
     if (errno) {
         fprintf(stderr, "expect that the test driver is calling shutdown.\n");
         exit(1);
