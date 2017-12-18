@@ -91,7 +91,14 @@ ch_pr_conn_start(
 //    :param int accept: Is accepted connection
 //
 //    :return: Void since only called from callbacks.
+
+// .. c:function::
+void
+ch_pr_close_free_connections(ch_chirp_t* chirp);
 //
+//    Close and free all remaining connections.
+//
+//    :param ch_chirpt_t* chirp: Chrip object
 
 // .. c:function::
 void

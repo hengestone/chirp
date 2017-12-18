@@ -11,6 +11,7 @@
 
 #include "common.h"
 #include "libchirp.h"
+#include "protocol.h"
 #include "rbtree.h"
 #include "test_test.h"
 
@@ -28,6 +29,7 @@ typedef enum {
     func_cleanup_e        = 2,
     func_send_message_e   = 3,
     func_check_messages_e = 4,
+    func_shutdown_conns_e = 5,
 } ch_tst_func_t;
 
 struct ch_tst_msg_tree_s;
@@ -49,7 +51,8 @@ struct ch_tst_msg_tree_s {
 
 rb_bind_m(_ch_tst_msg, ch_tst_msg_tree_t) CH_ALLOW_NL;
 
-static int                _ch_tst_always_encrypt = 0;
+static int                _ch_tst_always_encrypt  = 0;
+static int                _ch_tst_expect_shutdown = 0;
 static ch_chirp_t*        _ch_tst_chirp;
 static mpack_node_t       _ch_tst_cur_mpack_data;
 static mpack_writer_t*    _ch_tst_cur_mpack_writer;
@@ -97,7 +100,7 @@ _ch_tst_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
     ch_tst_msg_tree_t* entry = msg->user_data;
     entry->status            = status;
 
-    if (_ch_tst_mpp_mc == NULL) {
+    if (_ch_tst_mpp_mc == NULL && !_ch_tst_expect_shutdown) {
         /* If memcheck is enabled we want to check for memory leaks not
          * correctness. Connect sometime fails if memcheck is attached, I blame
          * valgrind for now. I can't find a real problem. */
@@ -214,6 +217,12 @@ _ch_tst_async_mpack_handler_cb(uv_async_t* handle)
         _ch_tst_check_messages(writer);
         break;
     }
+    case func_shutdown_conns_e: {
+        ch_pr_close_free_connections(_ch_tst_chirp);
+        ch_tst_return_int(writer, 0);
+        _ch_tst_next();
+        break;
+    }
     default:
         assert(0 && "Not implemented");
     }
@@ -272,8 +281,10 @@ main(int argc, char* argv[])
     ch_libchirp_init();
     uv_sem_init(&_ch_tst_sem, 0);
 
-    if (argc < 3) {
-        fprintf(stderr, "%s listen_port always_encrypt\n", argv[0]);
+    if (argc < 4) {
+        fprintf(stderr,
+                "%s listen_port always_encrypt expect_shutdown\n",
+                argv[0]);
         exit(1);
     }
     int port = strtol(argv[1], NULL, 10);
@@ -296,6 +307,15 @@ main(int argc, char* argv[])
     }
     if (!(_ch_tst_always_encrypt == 0 || _ch_tst_always_encrypt == 1)) {
         fprintf(stderr, "always_encrypt must be boolean (0/1).\n");
+        exit(1);
+    }
+    _ch_tst_expect_shutdown = strtol(argv[2], NULL, 10);
+    if (errno) {
+        fprintf(stderr, "expect that the test driver is calling shutdown.\n");
+        exit(1);
+    }
+    if (!(_ch_tst_expect_shutdown == 0 || _ch_tst_expect_shutdown == 1)) {
+        fprintf(stderr, "expect_shutdown must be boolean (0/1).\n");
         exit(1);
     }
     _ch_tst_msg_tree_init(&_ch_tst_msg_tree);

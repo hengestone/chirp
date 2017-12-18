@@ -16,6 +16,7 @@ func_42_e             = 1
 func_cleanup_e        = 2
 func_send_message_e   = 3
 func_check_messages_e = 4
+func_shutdown_conns_e = 5
 
 
 def close(proc : Popen):
@@ -35,13 +36,19 @@ class GenFunc(GenericStateMachine):
     """Test if the stays consistent."""
 
     def __init__(self):
+        self.shutdown = "0"
         self.etest_ready = False
         self.echo_ready = False
         self.timeout_open = False
         self.echo = None
         self.proc = None
+        self.shutdown_conns_step = tuples(just("shutdown_conns"), just(0))
         self.init_etest_step = tuples(
-            just("init_etest"), sampled_from(('0', '1'))
+            just("init_etest"),
+            tuples(
+                sampled_from(('0', '1')),
+                sampled_from(('0', '1')),
+            )
         )
         self.init_echo_step = tuples(just("init_echo"), just(0))
         self.x42_step = tuples(just("42"), just(0))
@@ -119,7 +126,12 @@ class GenFunc(GenericStateMachine):
     def init_etest(self):
         self.listen_dead_socket()
         self.etest_ready = True
-        self.proc = mpipe.open(["./src/func_etest", "2998", self.enc])
+        self.proc = mpipe.open([
+            "./src/func_etest",
+            "2998",
+            self.enc,
+            self.shutdown,
+        ])
         self.open_messages = set()
 
     def teardown(self):
@@ -150,6 +162,8 @@ class GenFunc(GenericStateMachine):
 
     def steps(self):
         steps = self.x42_step | self.send_message_step | self.check_step
+        if self.shutdown == "1":
+            steps = steps | self.shutdown_conns_step
         if not self.etest_ready:
             return self.init_etest_step
         if not self.echo_ready:
@@ -178,7 +192,8 @@ class GenFunc(GenericStateMachine):
             self.open_messages.add(msg_id)
         action, value = step
         if action == 'init_etest':
-            self.enc = str(value)
+            self.enc = str(value[0])
+            self.shutdown = str(value[1])
             self.init_etest()
         elif action == 'init_echo':
             self.init_echo()
@@ -196,6 +211,9 @@ class GenFunc(GenericStateMachine):
             send_message()
         elif action == 'check_messages':
             self.check_messages()
+        elif action == 'shutdown_conns':
+            mpipe.write(self.proc, (func_shutdown_conns_e, ))
+            assert mpipe.read(self.proc) == [0]
         else:
             assert False, "Unknown step"
 

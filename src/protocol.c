@@ -25,14 +25,6 @@
 // ============
 
 // .. c:function::
-static void
-_ch_pr_close_free_connections(ch_chirp_t* chirp);
-//
-//    Close and free all remaining connections.
-//
-//    :param ch_chirpt_t* chirp: Chrip object
-
-// .. c:function::
 static int
 _ch_pr_decrypt_feed(ch_connection_t* conn, ch_buf* buf, size_t read, int* stop);
 //
@@ -129,34 +121,6 @@ _ch_pr_update_resume(
 
 // Definitions
 // ===========
-
-// .. c:function::
-static void
-_ch_pr_close_free_connections(ch_chirp_t* chirp)
-//    :noindex:
-//
-//    see: :c:func:`_ch_pr_close_free_connections`
-//
-// .. code-block:: cpp
-//
-{
-    ch_chirp_int_t* ichirp   = chirp->_;
-    ch_protocol_t*  protocol = &ichirp->protocol;
-    while (protocol->remotes != ch_rm_nil_ptr) {
-        ch_remote_t* remote = protocol->remotes;
-        if (remote->conn != NULL) {
-            ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
-        }
-        ch_rm_delete_node(&protocol->remotes, remote);
-        ch_free(remote);
-    }
-    while (protocol->old_connections != ch_cn_nil_ptr) {
-        ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
-    }
-    while (protocol->handshake_conns != ch_cn_nil_ptr) {
-        ch_cn_shutdown(protocol->handshake_conns, CH_SHUTDOWN);
-    }
-}
 
 // .. c:function::
 static void
@@ -419,6 +383,34 @@ ch_pr_conn_start(
         ch_rd_read(conn, NULL, 0, &stop); /* Start reader */
     }
     return CH_SUCCESS;
+}
+
+// .. c:function::
+void
+ch_pr_close_free_connections(ch_chirp_t* chirp)
+//    :noindex:
+//
+//    see: :c:func:`ch_pr_close_free_connections`
+//
+// .. code-block:: cpp
+//
+{
+    ch_chirp_int_t* ichirp   = chirp->_;
+    ch_protocol_t*  protocol = &ichirp->protocol;
+    while (protocol->remotes != ch_rm_nil_ptr) {
+        ch_remote_t* remote = protocol->remotes;
+        if (remote->conn != NULL) {
+            ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
+        }
+        ch_rm_delete_node(&protocol->remotes, remote);
+        ch_free(remote);
+    }
+    while (protocol->old_connections != ch_cn_nil_ptr) {
+        ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
+    }
+    while (protocol->handshake_conns != ch_cn_nil_ptr) {
+        ch_cn_shutdown(protocol->handshake_conns, CH_SHUTDOWN);
+    }
 }
 
 // .. c:function::
@@ -745,7 +737,7 @@ ch_pr_stop(ch_protocol_t* protocol)
 {
     ch_chirp_t* chirp = protocol->chirp;
     L(chirp, "Closing protocol", CH_NO_ARG);
-    _ch_pr_close_free_connections(chirp);
+    ch_pr_close_free_connections(chirp);
     uv_close((uv_handle_t*) &protocol->serverv4, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &protocol->serverv6, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &protocol->reconnect_timeout, ch_chirp_close_cb);
