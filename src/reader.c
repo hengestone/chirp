@@ -386,17 +386,15 @@ _ch_rd_read_step(
             break;
         } else if (wire_msg->type & CH_MSG_ACK) {
             ch_message_t* wam = conn->remote->wait_ack_message;
-            if (memcmp(wam->identity, wire_msg->identity, CH_ID_SIZE) == 0) {
-                wam->_flags |= CH_MSG_ACK_RECEIVED;
-                conn->remote->wait_ack_message = NULL;
-                ch_chirp_finish_message(chirp, conn, wam, CH_SUCCESS);
-            } else {
-                EC(chirp,
-                   "Received bad ack -> shutdown. ",
-                   "ch_connection_t:%p",
-                   (void*) conn);
-                ch_cn_shutdown(conn, CH_PROTOCOL_ERROR);
-                return -1; /* Shutdown */
+            /* Since we abort wam on shutdown, we can receive acks for a old
+             * wam */
+            if (wam != NULL) {
+                if (memcmp(wam->identity, wire_msg->identity, CH_ID_SIZE) ==
+                    0) {
+                    wam->_flags |= CH_MSG_ACK_RECEIVED;
+                    conn->remote->wait_ack_message = NULL;
+                    ch_chirp_finish_message(chirp, conn, wam, CH_SUCCESS);
+                }
             }
             break;
         } else {
