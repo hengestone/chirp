@@ -195,9 +195,15 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
     }
     conn->remote = remote;
     /* If there is a network race condition we replace the old connection and
-     * leave the old one for garbage collection */
+     * leave the old one for garbage collection. */
     old_conn     = remote->conn;
     remote->conn = conn;
+    /* By definition, the connection that last completes the handshake is the
+     * new one, the other the old one. Since we store outgoing connections at
+     * the moment we connect, both connections might fight the place in
+     * old_conns. It would be possible to prevent this, but removing the new
+     * connection from old_conns is easier and just as correct. */
+    ch_cn_delete(&protocol->old_connections, conn, &tmp_conn);
     if (old_conn != NULL) {
         /* If we found the current connection everything is ok */
         if (conn != old_conn) {

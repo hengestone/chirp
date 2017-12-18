@@ -174,8 +174,7 @@ _ch_wr_connect(ch_remote_t* remote)
 {
     ch_chirp_t*      chirp  = remote->chirp;
     ch_chirp_int_t*  ichirp = chirp->_;
-    ch_connection_t* conn   = remote->conn;
-    conn                    = ch_alloc(sizeof(*conn));
+    ch_connection_t* conn   = ch_alloc(sizeof(*conn));
     if (!conn) {
         return CH_ENOMEM;
     }
