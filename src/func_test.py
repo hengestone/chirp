@@ -42,7 +42,9 @@ class GenFunc(GenericStateMachine):
         self.timeout_open = False
         self.echo = None
         self.proc = None
-        self.shutdown_conns_step = tuples(just("shutdown_conns"), just(0))
+        self.shutdown_conns_step = tuples(
+            just("shutdown_conns"),  sampled_from((0, 1)),
+        )
         self.init_etest_step = tuples(
             just("init_etest"),
             tuples(
@@ -212,7 +214,7 @@ class GenFunc(GenericStateMachine):
         elif action == 'check_messages':
             self.check_messages()
         elif action == 'shutdown_conns':
-            mpipe.write(self.proc, (func_shutdown_conns_e, ))
+            mpipe.write(self.proc, (func_shutdown_conns_e, value))
             assert mpipe.read(self.proc) == [0]
         else:
             assert False, "Unknown step"

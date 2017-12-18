@@ -428,27 +428,36 @@ ch_pr_conn_start(
 
 // .. c:function::
 void
-ch_pr_close_free_connections(ch_chirp_t* chirp)
+ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
 //    :noindex:
 //
-//    see: :c:func:`ch_pr_close_free_connections`
+//    see: :c:func:`ch_pr_close_free_remotes`
 //
 // .. code-block:: cpp
 //
 {
     ch_chirp_int_t* ichirp   = chirp->_;
     ch_protocol_t*  protocol = &ichirp->protocol;
-    while (protocol->remotes != ch_rm_nil_ptr) {
-        ch_remote_t* remote = protocol->remotes;
-        if (remote->conn != NULL) {
-            ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
+    if (only_conns) {
+        rb_iter_decl_cx_m(ch_rm, rm_iter, rm_elem);
+        rb_for_m (ch_rm, protocol->remotes, rm_iter, rm_elem) {
+            if (rm_elem->conn != NULL) {
+                ch_cn_shutdown(rm_elem->conn, CH_SHUTDOWN);
+            }
         }
-        _ch_pr_abort_all_message(remote, CH_SHUTDOWN);
-        ch_rm_delete_node(&protocol->remotes, remote);
-        ch_free(remote);
+    } else {
+        while (protocol->remotes != ch_rm_nil_ptr) {
+            ch_remote_t* remote = protocol->remotes;
+            if (remote->conn != NULL) {
+                ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
+            }
+            _ch_pr_abort_all_message(remote, CH_SHUTDOWN);
+            ch_rm_delete_node(&protocol->remotes, remote);
+            ch_free(remote);
+        }
+        /* Remove all remotes, sync with reconnect_remotes */
+        protocol->reconnect_remotes = NULL;
     }
-    /* Remove all remotes, sync with reconnect_remotes */
-    protocol->reconnect_remotes = NULL;
     while (protocol->old_connections != ch_cn_nil_ptr) {
         ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
     }
@@ -781,7 +790,7 @@ ch_pr_stop(ch_protocol_t* protocol)
 {
     ch_chirp_t* chirp = protocol->chirp;
     L(chirp, "Closing protocol", CH_NO_ARG);
-    ch_pr_close_free_connections(chirp);
+    ch_pr_close_free_remotes(chirp, 0);
     uv_close((uv_handle_t*) &protocol->serverv4, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &protocol->serverv6, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &protocol->reconnect_timeout, ch_chirp_close_cb);

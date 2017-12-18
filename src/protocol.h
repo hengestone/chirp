@@ -94,11 +94,13 @@ ch_pr_conn_start(
 
 // .. c:function::
 void
-ch_pr_close_free_connections(ch_chirp_t* chirp);
+ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns);
 //
 //    Close and free all remaining connections.
 //
 //    :param ch_chirpt_t* chirp: Chrip object
+//    :paramint only_conns: (bool) Only close / free connections. Do not touch
+//                          remotes
 
 // .. c:function::
 void

@@ -218,7 +218,8 @@ _ch_tst_async_mpack_handler_cb(uv_async_t* handle)
         break;
     }
     case func_shutdown_conns_e: {
-        ch_pr_close_free_connections(_ch_tst_chirp);
+        int only_conns = mpack_node_int(mpack_node_array_at(data, 1));
+        ch_pr_close_free_remotes(_ch_tst_chirp, only_conns);
         ch_tst_return_int(writer, 0);
         _ch_tst_next();
         break;
