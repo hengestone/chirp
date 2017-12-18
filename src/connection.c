@@ -681,12 +681,17 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         conn->flags |= CH_CN_DO_CLOSE_ACCOUTING;
         ichirp->closing_tasks += 1;
     }
-    if (!(conn->flags & CH_CN_CONNECTED) && remote) {
+    if (!(conn->flags & CH_CN_CONNECTED) && remote != NULL) {
         /* If the connection is not connected it means we opened it, but
          * the handshake was not successful, so we abort one message */
         _ch_cn_abort_one_message(remote, reason);
     }
     _ch_cn_closing(conn);
+    /* In the case the connection is closed by us (either in testing or by
+     * garbage-collection), we need to continue processing messages. */
+    if (msg == NULL && remote != NULL) {
+        ch_wr_process_queues(remote);
+    }
     return CH_SUCCESS;
 }
 
