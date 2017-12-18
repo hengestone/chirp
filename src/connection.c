@@ -676,10 +676,6 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
                tmp_err,
                (void*) conn);
         }
-        /* I remove SSL_shutdown, because many other clients don't do it
-         * anymore, an we are talking just with other chirp clients. There is
-         * also no security reason, because this is not http. If you don't like
-         * my decision, sue me. */
     }
     if (ichirp->flags & CH_CHIRP_CLOSING) {
         conn->flags |= CH_CN_DO_CLOSE_ACCOUTING;
