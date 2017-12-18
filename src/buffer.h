@@ -130,6 +130,16 @@ ch_bf_acquire(ch_buffer_pool_t* pool);
 //            pool. See :c:type:`ch_bf_handler_t`
 //    :rtype:  ch_bf_handler_t
 //
+// .. c:function::
+static inline int
+ch_bf_is_exhausted(ch_buffer_pool_t* pool)
+//
+//    Returns 1 if pool is exhausted.
+//
+//    :param ch_buffer_pool_t* pool: The buffer pool object
+{
+    return pool->used_buffers >= pool->max_buffers;
+}
 
 // .. c:function::
 void

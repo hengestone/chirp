@@ -659,8 +659,9 @@ ch_chirp_release_message(ch_message_t* msg)
     if (msg->_flags & CH_MSG_FREE_HEADER) {
         ch_free(msg->header);
     }
+    int pool_is_empty = ch_bf_is_exhausted(pool);
     ch_bf_release(pool, msg->_handler);
-    if (conn) {
+    if (pool_is_empty && conn) {
         ch_pr_restart_stream(conn);
     }
 }
