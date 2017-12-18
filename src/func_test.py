@@ -66,10 +66,13 @@ class GenFunc(GenericStateMachine):
                 tuples(
                     one_of(
                         binary(),
+                        # This is a valid handshake, so we can fuzz messages
+                        # more often
                         just(b"\x0b\xb5\xbcdf\x08\x04\xe4ZD\x8fk\xe4.z~\x0f;")
                     ),
                     lists(binary(), max_size=3),
                 ),
+                # This found a bug on travis, copied here to always test it
                 tuples(
                     just(b'\x0b\xb5\xbcdf\x08\x04\xe4ZD\x8fk\xe4.z~\x0f;'),
                     just([
