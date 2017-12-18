@@ -443,6 +443,7 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
         rb_for_m (ch_rm, protocol->remotes, rm_iter, rm_elem) {
             if (rm_elem->conn != NULL) {
                 ch_cn_shutdown(rm_elem->conn, CH_SHUTDOWN);
+                ch_wr_process_queues(rm_elem);
             }
         }
     } else {

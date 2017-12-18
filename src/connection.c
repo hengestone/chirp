@@ -687,11 +687,6 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         _ch_cn_abort_one_message(remote, reason);
     }
     _ch_cn_closing(conn);
-    /* In the case the connection is closed by us (either in testing or by
-     * garbage-collection), we need to continue processing messages. */
-    if (msg == NULL && remote != NULL) {
-        ch_wr_process_queues(remote);
-    }
     return CH_SUCCESS;
 }
 
