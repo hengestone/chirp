@@ -33,7 +33,16 @@ ch_alloc(size_t size);
 //
 // .. code-block:: cpp
 
-#ifndef NDEBUG
+#ifndef CH_ENABLE_ASSERTS
+// .. c:function::
+int
+ch_at_allocated(void* buf);
+//
+//    Check if a buffer currently is allocated. Return 1 if buffer is
+//    allocated.
+//
+//    :param void* buf: Pointer to the buffer to track.
+//
 // .. c:function::
 void
 ch_at_init(void);
@@ -45,6 +54,7 @@ void
 ch_at_cleanup(void);
 //
 //    Cleanup and print memory leak summary.
+//
 //
 #endif
 

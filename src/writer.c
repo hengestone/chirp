@@ -568,6 +568,7 @@ ch_wr_process_queues(ch_remote_t* remote)
 // .. code-block:: cpp
 //
 {
+    A(ch_at_allocated(remote), "Remote not allocated");
     ch_chirp_t* chirp = remote->chirp;
     ch_chirp_check_m(chirp);
     ch_connection_t* conn = remote->conn;
@@ -581,29 +582,32 @@ ch_wr_process_queues(ch_remote_t* remote)
                 return _ch_wr_connect(remote);
             }
         }
-    } else if (!(conn->flags & CH_CN_CONNECTED)) {
-        return CH_BUSY;
-    } else if (conn->writer.msg != NULL) {
-        return CH_BUSY;
-    } else if (remote->ack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->ack_msg_queue, &msg);
-        ch_wr_write(conn, msg);
-        return CH_SUCCESS;
-    } else if (remote->msg_queue != NULL) {
-        if (chirp->_->config.ACKNOWLEDGE) {
-            if (remote->wait_ack_message == NULL) {
-                ch_msg_dequeue(&remote->msg_queue, &msg);
-                remote->wait_ack_message = msg;
-                ch_wr_write(conn, msg);
-                return CH_SUCCESS;
-            } else {
-                return CH_BUSY;
-            }
-        } else {
-            ch_msg_dequeue(&remote->msg_queue, &msg);
-            A(!(msg->type & CH_MSG_REQ_ACK), "REQ_ACK unexpected");
+    } else {
+        A(ch_at_allocated(conn), "Conn not allocated");
+        if (!(conn->flags & CH_CN_CONNECTED)) {
+            return CH_BUSY;
+        } else if (conn->writer.msg != NULL) {
+            return CH_BUSY;
+        } else if (remote->ack_msg_queue != NULL) {
+            ch_msg_dequeue(&remote->ack_msg_queue, &msg);
             ch_wr_write(conn, msg);
             return CH_SUCCESS;
+        } else if (remote->msg_queue != NULL) {
+            if (chirp->_->config.ACKNOWLEDGE) {
+                if (remote->wait_ack_message == NULL) {
+                    ch_msg_dequeue(&remote->msg_queue, &msg);
+                    remote->wait_ack_message = msg;
+                    ch_wr_write(conn, msg);
+                    return CH_SUCCESS;
+                } else {
+                    return CH_BUSY;
+                }
+            } else {
+                ch_msg_dequeue(&remote->msg_queue, &msg);
+                A(!(msg->type & CH_MSG_REQ_ACK), "REQ_ACK unexpected");
+                ch_wr_write(conn, msg);
+                return CH_SUCCESS;
+            }
         }
     }
     return CH_EMPTY;

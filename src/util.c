@@ -87,6 +87,22 @@ rb_bind_m(_ch_at, ch_alloc_track_t) CH_ALLOW_NL;
 ch_alloc_track_t* _ch_alloc_tree;
 
 // .. c:function::
+int
+ch_at_allocated(void* buf)
+//    :noindex:
+//
+//    see: :c:func:`ch_at_allocated`
+//
+// .. code-block:: cpp
+//
+{
+    ch_alloc_track_t  key;
+    ch_alloc_track_t* value;
+    key.buf = buf;
+    return _ch_at_find(_ch_alloc_tree, &key, &value) == CH_SUCCESS;
+}
+
+// .. c:function::
 static void*
 _ch_at_alloc(void* buf)
 //
