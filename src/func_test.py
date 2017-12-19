@@ -27,7 +27,7 @@ def close(proc : Popen):
         proc.wait(2)
     except TimeoutExpired:
         print("Doing kill")
-        proc.terminate()
+        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
         proc.poll()
         raise  # Its a bug when the process doesn't complete
 

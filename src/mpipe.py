@@ -70,7 +70,7 @@ def close(proc : Popen):
         # Kill process group because we sometimes attach valgrind or rr
         os.killpg(os.getpgid(proc.pid), signal.SIGINT)
         time.sleep(0.2)  # Allow the process to cleanup
-        proc.terminate()
+        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
         raise  # Its a bug when the process doesn't complete
 
 
