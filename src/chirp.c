@@ -801,7 +801,21 @@ ch_chirp_finish_message(
             cb(chirp, msg, status);
         }
     }
-    ch_wr_process_queues(conn->remote);
+    if (conn->remote != NULL) {
+        ch_wr_process_queues(conn->remote);
+    } else {
+        A(conn->flags & CH_CN_SHUTTING_DOWN, "Expected shutdown");
+        /* Late write callback after shutdown. These are perfectly valid, since
+         * we clear the remote early to improve consistency. We have to lookup
+         * the remote. */
+        ch_remote_t  key;
+        ch_remote_t* remote = NULL;
+        ch_rm_init_from_conn(chirp, &key, conn);
+        if (ch_rm_find(chirp->_->protocol.remotes, &key, &remote) ==
+            CH_SUCCESS) {
+            ch_wr_process_queues(remote);
+        }
+    }
 }
 
 // .. c:function::
