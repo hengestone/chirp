@@ -50,7 +50,8 @@ def open(args : list) -> Popen:
                 "--suppressions=%s" % mc,
             ] + args,
             stdin=PIPE,
-            stdout=PIPE
+            stdout=PIPE,
+            preexec_fn=os.setsid
         )
     else:
         proc = Popen(args, stdin=PIPE, stdout=PIPE, preexec_fn=os.setsid)
