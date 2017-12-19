@@ -286,16 +286,21 @@ _ch_wr_connect_cb(uv_connect_t* req, int status)
            status,
            (void*) conn);
         ch_cn_shutdown(conn, CH_CANNOT_CONNECT);
-        if (protocol->reconnect_remotes == NULL) {
-            uv_timer_start(
-                    &protocol->reconnect_timeout,
-                    ch_pr_reconnect_remotes_cb,
-                    ch_min_int(1000, ichirp->config.TIMEOUT * 1000),
-                    0);
-        }
-        if (!(conn->remote->flags & CH_RM_CONN_BLOCKED)) {
-            conn->remote->flags |= CH_RM_CONN_BLOCKED;
-            ch_rm_st_push(&protocol->reconnect_remotes, conn->remote);
+        ch_remote_t  key;
+        ch_remote_t* remote = NULL;
+        ch_rm_init_from_conn(chirp, &key, conn);
+        if (ch_rm_find(protocol->remotes, &key, &remote) == CH_SUCCESS) {
+            if (protocol->reconnect_remotes == NULL) {
+                uv_timer_start(
+                        &protocol->reconnect_timeout,
+                        ch_pr_reconnect_remotes_cb,
+                        ch_min_int(1000, ichirp->config.TIMEOUT * 1000),
+                        0);
+            }
+            if (!(remote->flags & CH_RM_CONN_BLOCKED)) {
+                remote->flags |= CH_RM_CONN_BLOCKED;
+                ch_rm_st_push(&protocol->reconnect_remotes, remote);
+            }
         }
     }
 }
@@ -317,7 +322,12 @@ _ch_wr_connect_timeout_cb(uv_timer_t* handle)
     ch_cn_shutdown(conn, CH_TIMEOUT);
     uv_timer_stop(&conn->connect_timeout);
     /* We have waited long enough, we send the next message */
-    ch_wr_process_queues(conn->remote);
+    ch_remote_t  key;
+    ch_remote_t* remote = NULL;
+    ch_rm_init_from_conn(chirp, &key, conn);
+    if (ch_rm_find(chirp->_->protocol.remotes, &key, &remote) == CH_SUCCESS) {
+        ch_wr_process_queues(remote);
+    }
 }
 
 // .. c:function::
@@ -627,7 +637,7 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
     ch_protocol_t* protocol = &ichirp->protocol;
 
     ch_rm_init_from_msg(chirp, &search_remote, msg);
-    if (ch_rm_find(protocol->remotes, &search_remote, &remote) != 0) {
+    if (ch_rm_find(protocol->remotes, &search_remote, &remote) != CH_SUCCESS) {
         remote = ch_alloc(sizeof(*remote));
         if (remote == NULL) {
             if (send_cb != NULL) {

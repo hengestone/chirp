@@ -689,6 +689,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         ichirp->closing_tasks += 1;
     }
     _ch_cn_closing(conn);
+    conn->remote = NULL; /* Disassociate from remote */
     return CH_SUCCESS;
 }
 

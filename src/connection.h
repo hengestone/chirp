@@ -122,6 +122,16 @@
 //
 // * sending: successful send()
 //
+// One important thing to understand. There can be network races and if the two
+// ends of a peer-association open a connection at the same time, while we just
+// close one connection when we receive another one, we can end up in a endless
+// loop. Since if both nodes do not decide to close the same one, both
+// connections are gone and we start fresh. We do not solve that problem by
+// randomized reconnect timeouts, but rather by allowing two connections for
+// REUSE_TIME + random time. That is the reason, the queues and
+// wait_ack_message are in a shared structure called ch_remote_t. If both
+// connections are used they will stay.
+//
 // .. code-block:: cpp
 //
 #ifndef ch_connection_h

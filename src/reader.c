@@ -183,7 +183,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
     conn->port = hs_tmp.port;
     memcpy(conn->remote_identity, hs_tmp.identity, CH_ID_SIZE);
     ch_rm_init_from_conn(chirp, &search_remote, conn);
-    if (ch_rm_find(protocol->remotes, &search_remote, &remote) != 0) {
+    if (ch_rm_find(protocol->remotes, &search_remote, &remote) != CH_SUCCESS) {
         remote = ch_alloc(sizeof(*remote));
         if (remote == NULL) {
             ch_cn_shutdown(conn, CH_ENOMEM);
@@ -634,7 +634,7 @@ ch_chirp_release_message(ch_message_t* msg)
     /* If the connection does not exist, it is already shutdown. The user may
      * release a message after a connection has been shutdown. We use reference
      * counting in the buffer pool to delay ch_free of the pool. */
-    if (conn) {
+    if (conn && !(conn->flags & CH_CN_SHUTTING_DOWN)) {
         ch_reader_t* reader = &conn->reader;
         ch_chirp_t*  chirp  = conn->chirp;
         if (msg->type & CH_MSG_REQ_ACK) {
