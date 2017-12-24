@@ -31,6 +31,7 @@ sudo docker run -it \
     -e "TESTSHELL=$TESTSHELL" \
     -e "VERBOSE=$VERBOSE" \
     -e "DOC_FORMAT=$DOC_FORMAT" \
+    -e "IS_ALPINE_CI=True" \
     -v "$(pwd -P)/..":/outside \
     --rm \
     alpine:3.6 \

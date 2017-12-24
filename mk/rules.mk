@@ -1,7 +1,7 @@
 .PHONY += doc
 
 BN = $(basename $(@))
-CLFORMAT_EXPECT=version 4
+CLFORMAT_EXPECT=version 4.
 CLFORMAT_VERSION=$(shell clang-format -version)
 
 # Make .o form .c files
@@ -34,6 +34,11 @@ ifeq ($(CLANG_FORMAT),True)
 else
 	$(V_M)diff $< $@.cf > /dev/null || \
 		(echo $<:1:1: Please clang-format the file; false)
+endif
+else
+ifeq ($(IS_ALPINE_CI),True)
+	@echo Wrong clang-format version. Please check CLFORMAT_EXPECT.
+	@false
 endif
 endif
 	$(V_E) RST $<
