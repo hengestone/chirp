@@ -85,7 +85,7 @@ Install to prefix /usr/local. (with docs)
    cd build
    ../configure --doc
    make
-   make check
+   make check doc
    sudo make install
 
 Install to prefix /usr. (without docs)
@@ -95,7 +95,7 @@ Install to prefix /usr. (without docs)
    cd build
    ../configure --prefix /usr
    make
-   make check
+   make check doc
    sudo make install
 
 Install to prefix /usr, but copy to package dir. (Package creation)
