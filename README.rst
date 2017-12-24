@@ -120,7 +120,7 @@ easily be compiled with just a ``make`` call.
 .. code-block:: bash
 
    cd build
-   ../configure --dest --doc
+   ../configure --dev --doc
    make dist
    ls dist
 
