@@ -34,7 +34,7 @@ Example: Debug
 .. code-block:: bash
 
    CFLAGS=-O0 make
-   make install PREFIX=/usr/local
+   sudo make install PREFIX=/usr/local
 
 Most debug code is activated with CH_ENABLE_ASSERTS. In fact if you are running
 continuous integration on your application, please build libchirp with assert
@@ -43,4 +43,4 @@ and report bugs.
 .. code-block:: bash
 
    CFLAGS="-O0 -DCH_ENABLE_ASSERTS" make
-   make install PREFIX=/usr/local
+   sudo make install PREFIX=/usr/local
