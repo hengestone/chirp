@@ -2,6 +2,10 @@ sudo: required
 
 language: generic
 
+before_install:
+  - echo '{"ipv6":true,"fixed-cidr-v6":"fc00:beef:beef::/40"}' | sudo tee /etc/docker/daemon.json
+  - sudo service docker restart
+
 cache:
   directories:
     - ci/alpine/.cache/
