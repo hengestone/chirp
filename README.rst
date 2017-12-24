@@ -95,7 +95,7 @@ Install to prefix /usr. (without docs)
    cd build
    ../configure --prefix /usr
    make
-   make check doc
+   make check
    sudo make install
 
 Install to prefix /usr, but copy to package dir. (Package creation)
