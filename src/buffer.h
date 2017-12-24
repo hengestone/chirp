@@ -137,6 +137,9 @@ ch_bf_is_exhausted(ch_buffer_pool_t* pool)
 //    Returns 1 if the pool is exhausted.
 //
 //    :param ch_buffer_pool_t* pool: The buffer pool object
+//
+// .. code-block:: cpp
+//
 {
     return pool->used_buffers >= pool->max_buffers;
 }
