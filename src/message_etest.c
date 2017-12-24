@@ -133,6 +133,8 @@ _ch_tst_echo_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
     ch_identity_t other_id       = ch_chirp_get_identity(other);
     ch_identity_t id             = ch_msg_get_remote_identity(msg);
     A(memcmp(&other_id, &id, sizeof(id)) == 0, "Wrong remote identity set");
+    (void) (other_id);
+    (void) (id);
     if (_ch_tst_slow) {
         ch_tst_msg_stack_t* item = ch_alloc(sizeof(*item));
         item->next               = NULL;

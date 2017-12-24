@@ -652,6 +652,7 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
         *remote     = search_remote;
         int tmp_err = ch_rm_insert(&protocol->remotes, remote);
         A(tmp_err == 0, "Inserting remote failed");
+        (void) (tmp_err);
     }
     remote->serial += 1;
     msg->serial = remote->serial;

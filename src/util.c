@@ -264,6 +264,7 @@ ch_bytes_to_hex(uint8_t* bytes, size_t bytes_size, char* str, size_t str_size)
 {
     size_t i;
     A(bytes_size * 2 + 1 <= str_size, "Not enough space for string");
+    (void) (str_size);
     for (i = 0; i < bytes_size; i++) {
         snprintf(str, 3, "%02X", bytes[i]);
         str += 2;

@@ -233,9 +233,8 @@ typedef struct ch_protocol_s ch_protocol_t;
 //
 // .. code-block:: cpp
 //
-#define A(condition, message)                                                  \
-    (void) (condition);                                                        \
-    (void) (message)
+#define A(condition, message) (void) 0
+
 #define ch_chirp_check_m(chirp) (void) (chirp)
 
 #endif

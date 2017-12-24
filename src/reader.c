@@ -192,6 +192,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
         *remote     = search_remote;
         int tmp_err = ch_rm_insert(&protocol->remotes, remote);
         A(tmp_err == 0, "Inserting remote failed");
+        (void) (tmp_err);
     }
     conn->remote = remote;
     /* If there is a network race condition we replace the old connection and

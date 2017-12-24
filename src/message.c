@@ -45,6 +45,7 @@ ch_msg_get_address(const ch_message_t* message, ch_text_address_t* address)
     /* This error is not dynamic, it means ch_text_address_t is too small, so
      * we do not return it to the user */
     A(tmp_err == 0, "Cannot convert address to text (not enough space)");
+    (void) (tmp_err);
     return CH_SUCCESS;
 }
 

@@ -196,6 +196,7 @@ _ch_chirp_check_closing_cb(uv_prepare_t* handle)
         int tmp_err;
         tmp_err = uv_prepare_stop(handle);
         A(tmp_err == CH_SUCCESS, "Could not stop prepare callback");
+        (void) (tmp_err);
         if (!ichirp->config.DISABLE_ENCRYPTION) {
             tmp_err = ch_en_stop(&ichirp->encryption);
             A(tmp_err == CH_SUCCESS, "Could not stop encryption");
@@ -217,7 +218,6 @@ _ch_chirp_close_async_cb(uv_async_t* handle)
 // .. code-block:: cpp
 //
 {
-    int         tmp_err;
     ch_chirp_t* chirp = handle->data;
     ch_chirp_check_m(chirp);
     if (chirp->_ == NULL) {
@@ -230,8 +230,10 @@ _ch_chirp_close_async_cb(uv_async_t* handle)
         return;
     }
     L(chirp, "Chirp closing callback called", CH_NO_ARG);
+    int tmp_err;
     tmp_err = ch_pr_stop(&ichirp->protocol);
     A(tmp_err == CH_SUCCESS, "Could not stop protocol");
+    (void) (tmp_err);
     if (!ichirp->config.DISABLE_SIGNALS) {
         uv_signal_stop(&ichirp->signals[0]);
         uv_signal_stop(&ichirp->signals[1]);
