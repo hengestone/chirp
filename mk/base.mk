@@ -137,7 +137,7 @@ tutorial_files: $(wildcard $(BASE)/doc/tutorial/*.rst)
 	$(V_E) CP tutorial
 	$(V_M)mkdir -p $(BUILD)/doc
 	$(V_M)rm -rf $(BUILD)/doc/tutorial/
-	$(V_M)cp -r $(BASE)/doc/tutorial/ $(BUILD)/doc/
+	$(V_M)cp -r $(BASE)/doc/tutorial $(BUILD)/doc/
 
 # Install target
 # ==============

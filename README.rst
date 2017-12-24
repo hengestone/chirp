@@ -108,6 +108,12 @@ Install to prefix /usr, but copy to package dir. (Package creation)
    make check
    make install DEST=pkgdir
 
+.. note::
+
+   On Mac you need to install clang-format using
+
+   brew install clang-format
+
 .. _source_dist:
 
 How to create a source distribution
