@@ -2,7 +2,7 @@
 
 BN = $(basename $(@))
 CLFORMAT_EXPECT=version 4.
-CLFORMAT_VERSION=$(shell clang-format -version)
+CLFORMAT_VERSION=$(shell clang-format -version 2> /dev/null)
 
 # Make .o form .c files
 # =====================

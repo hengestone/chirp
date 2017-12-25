@@ -285,6 +285,20 @@ OSX:            brew install abi-compliance-checker
 """)
         else:
             print("ok")
+        sys.stdout.write("Checking for clang-format: ")
+        if os.system("command -v clang-format > /dev/null"):
+            print("""clang-format was not found.
+
+Please install clang-format:
+
+Alpine:         apk add clang
+Debian-based:   apt install clang-format
+Redhat-based:   yum install clang
+Arch:           yaourt -S clang
+OSX:            brew install clang-format
+""")
+        else:
+            print("ok")
         sys.stdout.write("Checking for hypothesis: ")
         try:
             import hypothesis  # noqa
