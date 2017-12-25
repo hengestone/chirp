@@ -294,7 +294,7 @@ OSX:            brew install abi-compliance-checker
 
 Please install hypothesis:
 
-Alpine:         apk add py3-hypothesis
+Alpine:         pip3 install hypothesis
 Debian-based:   apt install python3-hypothesis
 Redhat-based:   yum install python3-hypothesis
 Arch:           pacman -S python-hypothesis
@@ -309,7 +309,7 @@ OSX:            brew install python3; pip3 install hypothesis
 
 Please install pytest:
 
-Alpine:         apk add py3-pytest
+Alpine:         pip3 install pytest
 Debian-based:   apt install python3-pytest
 Redhat-based:   yum install python3-pytest
 Arch:           pacman -S python-pytest
@@ -328,11 +328,11 @@ OSX:            brew install python3; pip3 install pytest
 
 Please install umsgpack (or msgpack):
 
-Alpine:         apk add py3-msgpack
+Alpine:         pip3 install u-msgpack-python
 Debian-based:   apt install python3-u-msgpack
 Redhat-based:   yum install python3-msgpack
 Arch:           pacman -S python-msgpack
-OSX:            brew install python3; pip3 install python-msgpack
+OSX:            brew install python3; pip3 install u-msgpack-python
 """)
 
 
