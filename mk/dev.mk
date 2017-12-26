@@ -282,3 +282,8 @@ help:  ## Display this help
 	@cat $(MAKEFILE_LIST) | grep -E '^[0-9a-zA-Z_.-]+:.*?## .*$$' | sort -k1,1 | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo 'Known variables: VERBOSE=True, MACRO_DEBUG=True'
+
+# Format target
+# =============
+format:
+	CLANG_FORMAT=True $(MAKE) clean doc_files tutorial_files tutorial_code  ## Format code

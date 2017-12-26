@@ -94,11 +94,6 @@ check: all  ## Check basic functionality
 	$(BUILD)/src/message_etest --always-encrypt --message-count 3
 	$(BUILD)/src/message_etest --message-count 3
 
-# Format target
-# =============
-format:
-	CLANG_FORMAT=True $(MAKE) clean doc_files tutorial_files tutorial_code  ## Format code
-
 # Doc target
 # ==========
 ifeq ($(DOC),True)

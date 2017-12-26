@@ -149,6 +149,7 @@ _ch_wr_check_write_error(
 //
 {
     A(writer->msg != NULL, "ⱳriter->msg should be set on callback");
+    (void) (writer);
     if (status != CH_SUCCESS) {
         LC(chirp,
            "Write failed with uv status: %d. ",
