@@ -111,6 +111,21 @@ _ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error)
         ch_msg_dequeue(&remote->msg_queue, &msg);
     }
     if (msg != NULL) {
+#ifdef CH_ENABLE_LOGGING
+        {
+            char id[CH_ID_SIZE * 2 + 1];
+            ch_bytes_to_hex(
+                    msg->identity, sizeof(msg->identity), id, sizeof(id));
+            if (msg->type & CH_MSG_ACK) {
+                LC(remote->chirp,
+                   "Abort message on queue id: %s\n"
+                   "                             "
+                   "ch_message_t:%p",
+                   id,
+                   (void*) msg);
+            }
+        }
+#endif
         ch_send_cb_t cb = msg->_send_cb;
         if (cb != NULL) {
             msg->_send_cb = NULL;
@@ -440,7 +455,7 @@ ch_cn_close_cb(uv_handle_t* handle)
                 BIO_free(conn->bio_app);
             }
         }
-        /* Since we define a unecrypted connection as CH_CN_INIT_ENCRYPTION */
+        /* Since we define a unencrypted connection as CH_CN_INIT_ENCRYPTION. */
         conn->flags &= ~CH_CN_INIT_ENCRYPTION;
         A(!(conn->flags & CH_CN_INIT),
           "Connection resources haven't been freed completely");
@@ -640,6 +655,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     if (conn->flags & CH_CN_INIT_CLIENT) {
         uv_read_stop((uv_stream_t*) &conn->client);
     }
+    conn->remote      = NULL; /* Disassociate from remote */
     ch_message_t* msg = writer->msg;
     ch_message_t* wam = NULL;
     /* In early handshake remote can empty, since we allocate resources after
@@ -656,24 +672,22 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         /* Abort all ack messsages */
         remote->ack_msg_queue = NULL;
     }
-    if (!(conn->flags & CH_CN_CONNECTED) && remote != NULL) {
-        /* If the connection is not connected it means we opened it, but
-         * the handshake was not successful, so we abort one message */
-        _ch_cn_abort_one_message(remote, reason);
+    if (wam != NULL) {
+        wam->_flags |= CH_MSG_FAILURE;
+        ch_chirp_finish_message(chirp, conn, wam, reason);
     }
-    if (msg == NULL) {
-        msg = wam;
-    }
-#ifdef CH_ENABLE_ASSERTS
-    else {
-        A(wam == NULL || wam == msg || msg->type & CH_MSG_ACK,
-          "Wait ack message should be the same as writer msg");
-    }
-#endif
-    if (msg != NULL) {
-        msg->_flags |= CH_MSG_FAILURE;
+    if (msg != NULL && msg != wam) {
+        wam->_flags |= CH_MSG_FAILURE;
         ch_chirp_finish_message(chirp, conn, msg, reason);
     }
+    if (wam == NULL && msg == NULL && remote != NULL) {
+        /* If we have not finished a message we abort one on the remote. */
+        _ch_cn_abort_one_message(remote, reason);
+    }
+    /* finish vs abort - finish: cancel a message on the current connection.
+     * abort: means canceling a message that hasn't been queued yet. If
+     * possible we don't want to cancel a message that hasn't been queued
+     * yet.*/
     if (conn->flags & CH_CN_ENCRYPTED && conn->flags & CH_CN_INIT_ENCRYPTION) {
         int tmp_err = SSL_get_verify_result(conn->ssl);
         if (tmp_err != X509_V_OK) {
@@ -689,7 +703,6 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         ichirp->closing_tasks += 1;
     }
     _ch_cn_closing(conn);
-    conn->remote = NULL; /* Disassociate from remote */
     return CH_SUCCESS;
 }
 

@@ -156,7 +156,6 @@ _ch_wr_check_write_error(
            status,
            (void*) conn);
         ch_cn_shutdown(conn, CH_PROTOCOL_ERROR);
-        uv_timer_stop(&writer->send_timeout);
         return CH_PROTOCOL_ERROR;
     }
     return CH_SUCCESS;
@@ -462,13 +461,11 @@ _ch_wr_write_timeout_cb(uv_timer_t* handle)
 // .. code-block:: cpp
 //
 {
-    ch_connection_t* conn   = handle->data;
-    ch_writer_t*     writer = &conn->writer;
-    ch_chirp_t*      chirp  = conn->chirp;
+    ch_connection_t* conn  = handle->data;
+    ch_chirp_t*      chirp = conn->chirp;
     ch_chirp_check_m(chirp);
     LC(chirp, "Write timed out. ", "ch_connection_t:%p", (void*) conn);
     ch_cn_shutdown(conn, CH_TIMEOUT);
-    uv_timer_stop(&writer->send_timeout);
 }
 
 // .. c:function::
@@ -527,6 +524,7 @@ ch_wr_free(ch_writer_t* writer)
 //
 {
     ch_connection_t* conn = writer->send_timeout.data;
+    uv_timer_stop(&writer->send_timeout);
     uv_close((uv_handle_t*) &writer->send_timeout, ch_cn_close_cb);
     conn->shutdown_tasks += 1;
 }
@@ -584,12 +582,14 @@ ch_wr_process_queues(ch_remote_t* remote)
         }
     } else {
         A(ch_at_allocated(conn), "Conn not allocated");
-        if (!(conn->flags & CH_CN_CONNECTED)) {
+        if (!(conn->flags & CH_CN_CONNECTED) ||
+            conn->flags & CH_CN_SHUTTING_DOWN) {
             return CH_BUSY;
         } else if (conn->writer.msg != NULL) {
             return CH_BUSY;
         } else if (remote->ack_msg_queue != NULL) {
             ch_msg_dequeue(&remote->ack_msg_queue, &msg);
+            A(msg->type & CH_MSG_ACK, "ACK expected");
             ch_wr_write(conn, msg);
             return CH_SUCCESS;
         } else if (remote->msg_queue != NULL) {

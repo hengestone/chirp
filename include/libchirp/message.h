@@ -110,7 +110,6 @@ struct ch_message_s {
     uint8_t       remote_identity[CH_ID_SIZE];
     void*         user_data;
     uint8_t       _flags;
-    uint8_t       _retries;
     ch_send_cb_t  _send_cb;
     uint8_t       _handler;
     void*         _pool;

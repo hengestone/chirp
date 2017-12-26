@@ -2,9 +2,8 @@
 
 apt update
 apt install \
-    python3-u-msgpack \
-    python3-pytest \
-    python3-hypothesis \
+    python3-pip \
+    clang-format \
     python3-sphinx \
     python3-sphinx-rtd-theme graphviz \
     libuv1-dev \
@@ -14,3 +13,4 @@ apt install \
     rr \
     gdb \
     valgrind
+pip3 install hypothesis pytest u-msgpack-python
