@@ -21,10 +21,26 @@ endif
 chirp_test: chirp_test.o libchirp.so
 	$(CC) -o $@ $< -L. -lchirp $(LDFLAGS)
 
-check: chirp_test
+echo_test: echo_test.o libchirp.so
+	$(CC) -o $@ $< -L. -lchirp $(LDFLAGS)
+
+send_test: send_test.o libchirp.so
+	$(CC) -o $@ $< -L. -lchirp $(LDFLAGS)
+
+check: chirp_test echo_test send_test
 	@cat .keys/dh.pem | tr '%' 'a' > dh.pem
 	@cat .keys/cert.pem | tr '%' 'a' > cert.pem
-	LD_LIBRARY_PATH="." ./chirp_test
+	@LD_LIBRARY_PATH="." ./chirp_test
+	TMPOUT=$$(mktemp); \
+	LD_LIBRARY_PATH="." ./echo_test 3000 1 2> $$TMPOUT & \
+	PID=$$!; \
+	sleep 1; \
+	LD_LIBRARY_PATH="." ./send_test 1 2 127.0.0.1:3000 || exit 1; \
+	sleep 1; \
+	kill $$PID; \
+	grep -q "Echo message" $$TMPOUT || exit 1; \
+	rm $$TMPOUT
+
 	@rm -f *.pem
 
 # Install

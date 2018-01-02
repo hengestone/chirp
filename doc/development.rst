@@ -65,7 +65,7 @@ Test binaries
    src/func_etest.c.rst
    src/message_etest.c.rst
    src/quickcheck_etest.c.rst
-   src/star_etest.c.rst
+   src/send_etest.c.rst
    src/serializer_etest.c.rst
    src/uv_error_etest.c.rst
    src/write_log_etest.c.rst
@@ -80,12 +80,3 @@ External Libs
    src/mpipe_test.h.rst
    src/qs.h.rst
    src/rbtree.h.rst
-
-Development only libs
-=====================
-
-.. toctree::
-   :maxdepth: 2
-   :includehidden:
-
-   sds.rst

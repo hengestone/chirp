@@ -18,7 +18,6 @@ RULES
   - libuv
   - rbtree
   - openssl
-  - sds (for tests only)
   - We try not do add our own abstractions, to keep complexity low
 
 * We use defined length integers ie. uint8_t for file-formates, wire-protocols

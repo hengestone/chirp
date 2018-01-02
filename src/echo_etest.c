@@ -9,16 +9,14 @@
 //
 // .. code-block:: cpp
 //
-#include "common.h"
-#include "connection.h"
 #include "libchirp.h"
-#include "message.h"
 
 // System includes
 // ===============
 //
 // .. code-block:: cpp
 //
+#include <assert.h>
 #include <signal.h>
 
 // Declarations
@@ -29,6 +27,14 @@
 static ch_chirp_t* _ch_tst_chirp;
 static int         _ch_tst_always_encrypt = 0;
 
+// Internal for checks
+// ===================
+//
+// .. code-block:: cpp
+
+#define CH_MSG_ACK 1 << 1
+#define CH_MSG_USED 1 << 2
+
 // Definitions
 // ============
 //
@@ -38,8 +44,7 @@ static int         _ch_tst_always_encrypt = 0;
 static void
 _ch_tst_start(ch_chirp_t* chirp)
 {
-    ch_chirp_check_m(chirp);
-    L(chirp, "Echo server started", CH_NO_ARG);
+    CH_WRITE_LOG(chirp, "Echo server started", CH_NO_ARG);
     if (_ch_tst_always_encrypt) {
         ch_chirp_set_always_encrypt(chirp);
     }
@@ -50,18 +55,17 @@ _ch_tst_sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (chirp);
     (void) (status);
-    ch_chirp_check_m(chirp);
-    L(chirp, "Release message ch_message_t:%p", msg);
+    CH_WRITE_LOGC(chirp, "Release message.", "ch_message_t:%p", msg);
     ch_chirp_release_message(msg);
 }
+
 static void
 _ch_tst_recv_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 {
-    ch_chirp_check_m(chirp);
-    A(msg != NULL, "Not a ch_message_t*");
-    A(!(msg->type & CH_MSG_ACK), "ACK should not call callback");
-    A(!(msg->_flags & CH_MSG_USED), "The message should not be used");
-    L(chirp, "Echo message ch_message_t:%p", msg);
+    assert(msg != NULL && "Not a ch_message_t*");
+    assert(!(msg->type & CH_MSG_ACK) && "ACK should not call callback");
+    assert(!(msg->_flags & CH_MSG_USED) && "The message should not be used");
+    CH_WRITE_LOGC(chirp, "Echo message", "ch_message_t:%p", msg);
     ch_chirp_send(chirp, msg, _ch_tst_sent_cb);
 }
 

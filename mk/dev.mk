@@ -256,6 +256,8 @@ else
 endif
 	$(V_M)cp $(BASE)/LICENSE $(DISTD)
 	$(V_M)cp $(BASE)/src/chirp_etest.c $(DISTD)/chirp_test.c
+	$(V_M)cp $(BASE)/src/echo_etest.c $(DISTD)/echo_test.c
+	$(V_M)cp $(BASE)/src/send_etest.c $(DISTD)/send_test.c
 	$(V_M)echo 'UNAME_S := $$(shell uname -s)' > $(DISTM)
 	$(V_M)echo VERSION := $(VERSION) >> $(DISTM)
 	$(V_M)echo MAJOR := $(MAJOR) >> $(DISTM)
