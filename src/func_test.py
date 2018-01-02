@@ -36,7 +36,9 @@ class GenFunc(GenericStateMachine):
     """Test if the stays consistent."""
 
     def __init__(self):
+        self.enc = "0"
         self.shutdown = "0"
+        self.acknowledge = "0"
         self.fast = False
         self.etest_ready = False
         self.echo_ready = False
@@ -49,6 +51,7 @@ class GenFunc(GenericStateMachine):
         self.init_etest_step = tuples(
             just("init_etest"),
             tuples(
+                sampled_from(('0', '1')),
                 sampled_from(('0', '1')),
                 sampled_from(('0', '1')),
                 sampled_from((True, True, True, False)),
@@ -137,6 +140,7 @@ class GenFunc(GenericStateMachine):
             "2998",
             self.enc,
             self.shutdown,
+            self.acknowledge,
         ])
         self.open_messages = set()
 
@@ -200,7 +204,8 @@ class GenFunc(GenericStateMachine):
         if action == 'init_etest':
             self.enc = str(value[0])
             self.shutdown = str(value[1])
-            self.fast = value[2]
+            self.acknowledge = str(value[2])
+            self.fast = value[3]
             self.init_etest()
         elif action == 'init_echo':
             self.init_echo()
