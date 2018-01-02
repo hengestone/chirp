@@ -29,6 +29,10 @@
 //
 //       Indicates remote is block from connecting
 //
+//    .. c:member:: CH_RM_GCED
+//
+//       Indicates that the remote has been garbage-collected
+//
 // .. code-block:: cpp
 
 typedef enum {

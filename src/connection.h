@@ -34,11 +34,11 @@
 //    connection.
 //
 // chck = check
-//    Check if a connection has been idle for RESUE_TIME seconds, since the
+//    Check if a connection has been idle for REUSE_TIME seconds, since the
 //    connection is valid: do nothing.
 //
 // gc = collect connection
-//    Check if a connection has been idle for RESUE_TIME seconds, since the
+//    Check if a connection has been idle for REUSE_TIME seconds, since the
 //    connection is not valid: close it if needed and cleanup ch_remote_t.
 //
 // wait = wait
@@ -426,6 +426,10 @@ typedef struct ch_resume_state_s {
 //
 //       rbtree member
 //
+//    .. c:member:: ch_connection_t* next
+//
+//       stack member
+//
 // .. code-block:: cpp
 //
 struct ch_connection_s {
@@ -466,6 +470,7 @@ struct ch_connection_s {
     ch_connection_t*  parent;
     ch_connection_t*  left;
     ch_connection_t*  right;
+    ch_connection_t*  next;
 };
 
 // TODO: Timestamp has to be in ch_connection_t because of old connections
@@ -477,6 +482,8 @@ struct ch_connection_s {
 
 #define ch_cn_cmp_m(x, y) rb_pointer_cmp_m(x, y)
 rb_bind_decl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
+
+qs_stack_bind_decl_m(ch_cn_st, ch_connection_t) CH_ALLOW_NL;
 
 // .. c:function::
 void

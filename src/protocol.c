@@ -51,6 +51,14 @@ _ch_pr_do_handshake(ch_connection_t* conn);
 //    Do a handshake on the given connection.
 //
 //    :param ch_connection_t* conn: Pointer to a connection handle.
+//
+// .. c:function::
+static void
+_ch_pr_gc_connections_cb(uv_timer_t* handle);
+//
+//    Called to cleanup connections/remotes that aren't use for REUSE_TIME+.
+//
+//    :param uv_timer_t* handle: uv timer handle, data contains chirp
 
 // .. c:function::
 static void
@@ -187,6 +195,70 @@ _ch_pr_do_handshake(ch_connection_t* conn)
         }
     }
     ch_cn_send_if_pending(conn);
+}
+// .. c:function::
+static void
+_ch_pr_gc_connections_cb(uv_timer_t* handle)
+//    :noindex:
+//
+//    see: :c:func:`_ch_pr_gc_connections_cb`
+//
+// .. code-block:: cpp
+//
+{
+    ch_chirp_t* chirp = handle->data;
+    ch_chirp_check_m(chirp);
+    ch_chirp_int_t*  ichirp   = chirp->_;
+    ch_protocol_t*   protocol = &ichirp->protocol;
+    ch_config_t*     config   = &ichirp->config;
+    uint64_t         now      = uv_hrtime();
+    uint64_t         then     = now - (1000 * 1000 * 1000 * config->REUSE_TIME);
+    ch_remote_t*     rm_del_stack = NULL;
+    ch_connection_t* cn_del_stack = NULL;
+
+    L(chirp, "Garbage-collecting connections and remotes", CH_NO_ARG);
+    rb_iter_decl_cx_m(ch_cn, cn_iter, cn_elem);
+    rb_for_m (ch_cn, protocol->old_connections, cn_iter, cn_elem) {
+        if (cn_elem->timestamp < then) {
+            ch_cn_st_push(&cn_del_stack, cn_elem);
+        }
+    }
+    rb_for_m (ch_cn_st, cn_del_stack, cn_iter, cn_elem) {
+        L(chirp, "Garbage-collecting: shutdown. ch_connection_t:%p", cn_elem);
+        ch_cn_shutdown(cn_elem, CH_SHUTDOWN);
+    }
+
+    rb_iter_decl_cx_m(ch_rm, rm_iter, rm_elem);
+    rb_for_m (ch_rm, protocol->remotes, rm_iter, rm_elem) {
+        if (!(rm_elem->flags & CH_RM_CONN_BLOCKED) &&
+            rm_elem->timestamp < then) {
+            A(rm_elem->next == NULL, "Should not be in reconnect_remotes");
+            ch_rm_st_push(&rm_del_stack, rm_elem);
+        }
+    }
+    ch_remote_t* free_it = NULL;
+    rb_for_m (ch_rm_st, rm_del_stack, rm_iter, rm_elem) {
+        _ch_pr_abort_all_messages(rm_elem, CH_SHUTDOWN);
+        if (rm_elem->conn != NULL) {
+            L(chirp,
+              "Garbage-collecting: shutdown. ch_connection_t:%p",
+              rm_elem->conn);
+            rm_elem->flags = CH_RM_CONN_BLOCKED;
+            ch_cn_shutdown(rm_elem->conn, CH_SHUTDOWN);
+        }
+        L(chirp, "Garbage-collecting: deleting. ch_remote_t:%p", rm_elem);
+        ch_rm_delete_node(&protocol->remotes, rm_elem);
+        if (free_it != NULL) {
+            ch_free(free_it);
+        }
+        free_it = rm_elem;
+    }
+    if (free_it != NULL) {
+        ch_free(free_it);
+    }
+    uint64_t start = (config->REUSE_TIME * 1000 / 2);
+    start += rand() % start;
+    uv_timer_start(&protocol->gc_timeout, _ch_pr_gc_connections_cb, start, 0);
 }
 
 // .. c:function::
@@ -802,6 +874,15 @@ ch_pr_start(ch_protocol_t* protocol)
         return CH_INIT_FAIL;
     }
     protocol->reconnect_timeout.data = chirp;
+    tmp_err = uv_timer_init(ichirp->loop, &protocol->gc_timeout);
+    if (tmp_err != CH_SUCCESS) {
+        return CH_INIT_FAIL;
+    }
+    protocol->gc_timeout.data = chirp;
+
+    uint64_t start = (config->REUSE_TIME * 1000 / 2);
+    start += rand() % start;
+    uv_timer_start(&protocol->gc_timeout, _ch_pr_gc_connections_cb, start, 0);
     return CH_SUCCESS;
 }
 
@@ -820,7 +901,10 @@ ch_pr_stop(ch_protocol_t* protocol)
     ch_pr_close_free_remotes(chirp, 0);
     uv_close((uv_handle_t*) &protocol->serverv4, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &protocol->serverv6, ch_chirp_close_cb);
+    uv_timer_stop(&protocol->reconnect_timeout);
     uv_close((uv_handle_t*) &protocol->reconnect_timeout, ch_chirp_close_cb);
-    chirp->_->closing_tasks += 3;
+    uv_timer_stop(&protocol->gc_timeout);
+    uv_close((uv_handle_t*) &protocol->gc_timeout, ch_chirp_close_cb);
+    chirp->_->closing_tasks += 4;
     return CH_SUCCESS;
 }

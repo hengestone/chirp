@@ -460,8 +460,8 @@ _ch_chirp_verify_cfg(ch_chirp_t* chirp)
       "Config: timeout must be >= 0.1. (%f)",
       conf->TIMEOUT);
     V(chirp,
-      conf->REUSE_TIME >= 2,
-      "Config: resuse time must be => 2. (%f)",
+      conf->REUSE_TIME >= 0.5,
+      "Config: resuse time must be => 0.5. (%f)",
       conf->REUSE_TIME);
     V(chirp,
       conf->REUSE_TIME <= 3600,

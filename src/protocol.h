@@ -53,6 +53,12 @@
 //
 //       Timeout after which we try to reconnect remotes.
 //
+//    .. c:member:: uv_timer_t gc_timeout
+//
+//       Recurrent timeout garbage-collecting old connections.
+//
+//       Timeout after which we try to reconnect remotes.
+//
 //    .. c:member:: ch_connection_t* old_connections
 //
 //       Pointer to old connections. This is mainly used when there is a
@@ -73,6 +79,7 @@ struct ch_protocol_s {
     ch_remote_t*        remotes;
     ch_remote_t*        reconnect_remotes;
     uv_timer_t          reconnect_timeout;
+    uv_timer_t          gc_timeout;
     ch_connection_t*    old_connections;
     ch_connection_t*    handshake_conns;
     ch_chirp_t*         chirp;

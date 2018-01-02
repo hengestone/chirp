@@ -2,7 +2,7 @@
 
 from hypothesis import settings, unlimited  # noqa
 from hypothesis.strategies import (
-    tuples, sampled_from, just, lists, binary, one_of
+    tuples, sampled_from, just, lists, binary, one_of, floats
 )
 from hypothesis.stateful import GenericStateMachine
 import mpipe
@@ -37,6 +37,7 @@ class GenFunc(GenericStateMachine):
 
     def __init__(self):
         self.shutdown = "0"
+        self.fast = False
         self.etest_ready = False
         self.echo_ready = False
         self.timeout_open = False
@@ -50,10 +51,13 @@ class GenFunc(GenericStateMachine):
             tuples(
                 sampled_from(('0', '1')),
                 sampled_from(('0', '1')),
+                sampled_from((True, True, True, False)),
             )
         )
         self.init_echo_step = tuples(just("init_echo"), just(0))
-        self.x42_step = tuples(just("42"), just(0))
+        self.x42_step = tuples(
+            just("42"), floats(min_value=0.5, max_value=1.2)
+        )
         self.check_step = tuples(just("check_messages"), just(0))
         self.send_message_step = tuples(
             just("send_message"),
@@ -196,6 +200,7 @@ class GenFunc(GenericStateMachine):
         if action == 'init_etest':
             self.enc = str(value[0])
             self.shutdown = str(value[1])
+            self.fast = value[2]
             self.init_etest()
         elif action == 'init_echo':
             self.init_echo()
@@ -203,6 +208,8 @@ class GenFunc(GenericStateMachine):
             self.fuzz_main_port(value)
         elif action == '42':
             mpipe.write(self.proc, (func_42_e, ))
+            if not self.fast:
+                time.sleep(value)
             assert mpipe.read(self.proc) == [42]
         elif action == 'send_message':
             if not self.echo_ready:

@@ -28,6 +28,8 @@
 
 rb_bind_impl_m(ch_cn, ch_connection_t) CH_ALLOW_NL;
 
+qs_stack_bind_impl_m(ch_cn_st, ch_connection_t) CH_ALLOW_NL;
+
 // Declarations
 // ============
 

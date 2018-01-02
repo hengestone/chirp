@@ -66,8 +66,7 @@ _ch_wr_connect_timeout_cb(uv_timer_t* handle);
 //    connecting. The timeout is set by the chirp configuration and is 5 seconds
 //    by default. When this callback is called, the connection is shutdown.
 //
-//    :param uv_timer_t* handle: Pointer to a timer handle to schedule
-//                               callback.
+//    :param uv_timer_t* handle: uv timer handle, data contains chirp
 
 // .. c:function::
 static void
@@ -124,8 +123,7 @@ _ch_wr_write_timeout_cb(uv_timer_t* handle);
 //    by default. When this callback is called, the connection is being shut
 //    down.
 //
-//    :param uv_timer_t* handle: Pointer to a timer handle to schedule
-//                               callback.
+//    :param uv_timer_t* handle: uv timer handle, data contains chirp
 
 // Definitions
 // ===========
