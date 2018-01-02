@@ -124,6 +124,14 @@ _ch_wr_write_timeout_cb(uv_timer_t* handle);
 //    down.
 //
 //    :param uv_timer_t* handle: uv timer handle, data contains chirp
+//
+// .. c:function::
+static void
+_ch_wr_enqeue_noop_if_needed(ch_remote_t* remote);
+//
+//    If remote wasn't use for 3/4 REUSE_TIME, we send a noop message
+//
+//    :param ch_remote_t* remote: Remote to send the noop to.
 
 // Definitions
 // ===========
@@ -303,6 +311,44 @@ _ch_wr_connect_timeout_cb(uv_timer_t* handle)
     ch_rm_init_from_conn(chirp, &key, conn, 1);
     if (ch_rm_find(chirp->_->protocol.remotes, &key, &remote) == CH_SUCCESS) {
         ch_wr_process_queues(remote);
+    }
+}
+
+// .. c:function::
+static void
+_ch_wr_enqeue_noop_if_needed(ch_remote_t* remote)
+//    :noindex:
+//
+//    see: :c:func:`_ch_wr_enqeue_noop_if_needed`
+//
+// .. code-block:: cpp
+//
+{
+    ch_chirp_t*     chirp  = remote->chirp;
+    ch_chirp_int_t* ichirp = chirp->_;
+    ch_config_t*    config = &ichirp->config;
+    uint64_t        now    = uv_hrtime();
+    uint64_t then = now - (1000 * 1000 * 1000 * config->REUSE_TIME / 4 * 3);
+    ch_message_t* noop = remote->noop;
+    if (remote->timestamp < then) {
+        if (noop == NULL) {
+            remote->noop = ch_alloc(sizeof(*remote->noop));
+            if (remote->noop == NULL) {
+                return; /* ENOMEM: Noop are not important, we don't send it. */
+            }
+            noop = remote->noop;
+            memset(noop, 0, sizeof(*noop));
+            memcpy(noop->address, remote->address, CH_IP_ADDR_SIZE);
+            noop->ip_protocol = remote->ip_protocol;
+            noop->port        = remote->port;
+            noop->type        = CH_MSG_NOOP;
+        } else {
+            /* The noop is not enqueued yet, enqueue it */
+            if (!(noop->_flags & CH_MSG_USED) && noop->_next == NULL) {
+                L(chirp, "Sending NOOP. ch_remote_t:%p", remote);
+                ch_msg_enqueue(&remote->cntl_msg_queue, noop);
+            }
+        }
     }
 }
 
@@ -557,7 +603,7 @@ ch_wr_process_queues(ch_remote_t* remote)
             return CH_BUSY;
         } else {
             /* Only connect of the queue is not empty */
-            if (remote->msg_queue != NULL || remote->ack_msg_queue != NULL) {
+            if (remote->msg_queue != NULL || remote->cntl_msg_queue != NULL) {
                 return _ch_wr_connect(remote);
             }
         }
@@ -568,9 +614,10 @@ ch_wr_process_queues(ch_remote_t* remote)
             return CH_BUSY;
         } else if (conn->writer.msg != NULL) {
             return CH_BUSY;
-        } else if (remote->ack_msg_queue != NULL) {
-            ch_msg_dequeue(&remote->ack_msg_queue, &msg);
-            A(msg->type & CH_MSG_ACK, "ACK expected");
+        } else if (remote->cntl_msg_queue != NULL) {
+            ch_msg_dequeue(&remote->cntl_msg_queue, &msg);
+            A(msg->type & CH_MSG_ACK || msg->type & CH_MSG_NOOP,
+              "ACK/NOOP expected");
             ch_wr_write(conn, msg);
             return CH_SUCCESS;
         } else if (remote->msg_queue != NULL) {
@@ -637,11 +684,13 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
     }
     remote->serial += 1;
     msg->serial = remote->serial;
+    /* Remote isn't used for 3/4 REUSE_TIME we send a noop */
+    _ch_wr_enqeue_noop_if_needed(remote);
 
     int queued = 0;
-    if (msg->type & CH_MSG_ACK) {
-        queued = remote->ack_msg_queue != NULL;
-        ch_msg_enqueue(&remote->ack_msg_queue, msg);
+    if (msg->type & CH_MSG_ACK || msg->type & CH_MSG_NOOP) {
+        queued = remote->cntl_msg_queue != NULL;
+        ch_msg_enqueue(&remote->cntl_msg_queue, msg);
     } else {
         queued = remote->msg_queue != NULL;
         ch_msg_enqueue(&remote->msg_queue, msg);

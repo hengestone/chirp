@@ -651,10 +651,10 @@ ch_chirp_release_message(ch_message_t* msg)
             memcpy(ack_msg->identity, msg->identity, CH_ID_SIZE);
             memcpy(ack_msg->address, conn->address, CH_IP_ADDR_SIZE);
             ack_msg->ip_protocol = conn->ip_protocol;
+            ack_msg->port        = conn->port;
             ack_msg->type        = CH_MSG_ACK;
             ack_msg->header_len  = 0;
             ack_msg->data_len    = 0;
-            ack_msg->port        = conn->port;
             ch_wr_send(chirp, ack_msg, NULL);
         }
     }

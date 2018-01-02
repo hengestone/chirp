@@ -56,7 +56,7 @@ class GenFunc(GenericStateMachine):
         )
         self.init_echo_step = tuples(just("init_echo"), just(0))
         self.x42_step = tuples(
-            just("42"), floats(min_value=0.5, max_value=1.2)
+            just("42"), floats(min_value=0.2, max_value=1.2)
         )
         self.check_step = tuples(just("check_messages"), just(0))
         self.send_message_step = tuples(

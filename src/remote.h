@@ -68,10 +68,11 @@ typedef enum {
 //
 //       Queue of messages.
 //
-//    .. c:member:: ch_message_t* ack_msg_queue
+//    .. c:member:: ch_message_t* cntl_msg_queue
 //
-//       Queue of ack messages. There can max be two acks in the queue, one
-//       from the current (new) connection and one from the old connection.
+//       Queue of ack/noop messages. There can max be two acks plus a noop
+//       in the queue, one ack from the current (new) connection and one the
+//       old connection and noop from the remote.
 //
 //    .. c:member:: ch_chirp_t* chirp
 //
@@ -117,8 +118,9 @@ struct ch_remote_s {
     uint8_t          address[CH_IP_ADDR_SIZE];
     int32_t          port;
     ch_connection_t* conn;
+    ch_message_t*    noop;
     ch_message_t*    msg_queue;
-    ch_message_t*    ack_msg_queue;
+    ch_message_t*    cntl_msg_queue;
     ch_message_t*    wait_ack_message;
     ch_chirp_t*      chirp;
     uint32_t         serial;
@@ -138,8 +140,13 @@ struct ch_remote_s {
 //
 #define ch_rm_cmp_m(x, y) ch_remote_cmp(x, y)
 
-// .. code-block:: cpp
+// stack prototypes
+// ----------------
 //
+// .. code-block:: cpp
+
+qs_stack_bind_decl_m(ch_rm_st, ch_remote_t) CH_ALLOW_NL;
+
 rb_bind_decl_m(ch_rm, ch_remote_t) CH_ALLOW_NL;
 
 // .. c:function::
@@ -149,9 +156,10 @@ ch_rm_init_from_msg(
 //
 //    Initialize the remote data-structure from a message.
 //
+//    :param ch_chirp_t*   chirp: Chirp object
 //    :param ch_remote_t* remote: Remote to initialize
-//    :param ch_message_t* msg:   Message to initialize from
-//    :param int           key:   Used as a key only
+//    :param ch_message_t*   msg: Message to initialize from
+//    :param int             key: Used as a key only
 
 // .. c:function::
 void
@@ -160,15 +168,19 @@ ch_rm_init_from_conn(
 //
 //    Initialize the remote data-structure from a connection.
 //
-//    :param ch_remote_t* remote: Remote to initialize
-//    :param ch_connection_t*:   Connection to initialize from
-//    :param int          key:   Used as a key only
+//    :param ch_chirp_t*     chirp: Chirp object
+//    :param ch_remote_t*   remote: Remote to initialize
+//    :param ch_connection_t* conn: Connection to initialize from
+//    :param int               key: Used as a key only
 //
-// stack prototypes
-// ----------------
+// .. c:function::
+void
+ch_rm_free(ch_remote_t* remote);
+//
+//    Free the remote data-structure.
+//
+//    :param ch_remote_t* remote: Remote to initialize
 //
 // .. code-block:: cpp
-
-qs_stack_bind_decl_m(ch_rm_st, ch_remote_t) CH_ALLOW_NL;
-
+//
 #endif // ch_remote_h

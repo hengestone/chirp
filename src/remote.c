@@ -116,3 +116,19 @@ ch_rm_init_from_conn(
     memcpy(&remote->address, &conn->address, CH_IP_ADDR_SIZE);
     remote->conn = NULL;
 }
+
+// .. c:function::
+void
+ch_rm_free(ch_remote_t* remote)
+//    :noindex:
+//
+//    see: :c:func:`ch_rm_free`
+//
+// .. code-block:: cpp
+//
+{
+    if (remote->noop != NULL) {
+        ch_free(remote->noop);
+    }
+    ch_free(remote);
+}

@@ -107,8 +107,8 @@ _ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error)
 //
 {
     ch_message_t* msg = NULL;
-    if (remote->ack_msg_queue != NULL) {
-        ch_msg_dequeue(&remote->ack_msg_queue, &msg);
+    if (remote->cntl_msg_queue != NULL) {
+        ch_msg_dequeue(&remote->cntl_msg_queue, &msg);
     } else if (remote->msg_queue != NULL) {
         ch_msg_dequeue(&remote->msg_queue, &msg);
     }
@@ -673,7 +673,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
             remote->conn = NULL;
         }
         /* Abort all ack messsages */
-        remote->ack_msg_queue = NULL;
+        remote->cntl_msg_queue = NULL;
     }
     if (wam != NULL) {
         wam->_flags |= CH_MSG_FAILURE;

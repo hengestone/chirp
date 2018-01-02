@@ -160,7 +160,7 @@ _ch_pr_abort_all_messages(ch_remote_t* remote, ch_error_t error)
         }
         ch_msg_dequeue(&remote->msg_queue, &msg);
     }
-    remote->ack_msg_queue = NULL;
+    remote->cntl_msg_queue = NULL;
 }
 
 // .. c:function::
@@ -236,7 +236,7 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
             ch_rm_st_push(&rm_del_stack, rm_elem);
         }
     }
-    ch_remote_t* free_it = NULL;
+    ch_remote_t* free_it = NULL; /* Free remote after iterator */
     rb_for_m (ch_rm_st, rm_del_stack, rm_iter, rm_elem) {
         _ch_pr_abort_all_messages(rm_elem, CH_SHUTDOWN);
         if (rm_elem->conn != NULL) {
@@ -249,12 +249,12 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
         L(chirp, "Garbage-collecting: deleting. ch_remote_t:%p", rm_elem);
         ch_rm_delete_node(&protocol->remotes, rm_elem);
         if (free_it != NULL) {
-            ch_free(free_it);
+            ch_rm_free(free_it);
         }
         free_it = rm_elem;
     }
     if (free_it != NULL) {
-        ch_free(free_it);
+        ch_rm_free(free_it);
     }
     uint64_t start = (config->REUSE_TIME * 1000 / 2);
     start += rand() % start;
@@ -519,7 +519,7 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
                 ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
             }
             ch_rm_delete_node(&protocol->remotes, remote);
-            ch_free(remote);
+            ch_rm_free(remote);
         }
         /* Remove all remotes, sync with reconnect_remotes */
         protocol->reconnect_remotes = NULL;
