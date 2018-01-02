@@ -812,7 +812,7 @@ ch_chirp_finish_message(
          * the remote. */
         ch_remote_t  key;
         ch_remote_t* remote = NULL;
-        ch_rm_init_from_conn(chirp, &key, conn);
+        ch_rm_init_from_conn(chirp, &key, conn, 1);
         if (ch_rm_find(chirp->_->protocol.remotes, &key, &remote) ==
             CH_SUCCESS) {
             ch_wr_process_queues(remote);

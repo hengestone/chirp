@@ -64,7 +64,7 @@ qs_stack_bind_impl_m(ch_rm_st, ch_remote_t) CH_ALLOW_NL;
 // .. code-block:: cpp
 
 static void
-_ch_rm_init(ch_chirp_t* chirp, ch_remote_t* remote)
+_ch_rm_init(ch_chirp_t* chirp, ch_remote_t* remote, int key)
 //
 //    Initialize remote
 //
@@ -74,12 +74,17 @@ _ch_rm_init(ch_chirp_t* chirp, ch_remote_t* remote)
     memset(remote, 0, sizeof(*remote));
     ch_rm_node_init(remote);
     remote->chirp = chirp;
-    ch_random_ints_as_bytes((uint8_t*) &remote->serial, sizeof(remote->serial));
+    if (!key) {
+        ch_random_ints_as_bytes(
+                (uint8_t*) &remote->serial, sizeof(remote->serial));
+        remote->timestamp = uv_hrtime();
+    }
 }
 
 // .. c:function::
 void
-ch_rm_init_from_msg(ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg)
+ch_rm_init_from_msg(
+        ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg, int key)
 //    :noindex:
 //
 //    see: :c:func:`ch_rm_init_from_msg`
@@ -87,7 +92,7 @@ ch_rm_init_from_msg(ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg)
 // .. code-block:: cpp
 //
 {
-    _ch_rm_init(chirp, remote);
+    _ch_rm_init(chirp, remote, key);
     remote->ip_protocol = msg->ip_protocol;
     remote->port        = msg->port;
     memcpy(&remote->address, &msg->address, CH_IP_ADDR_SIZE);
@@ -97,7 +102,7 @@ ch_rm_init_from_msg(ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg)
 // .. c:function::
 void
 ch_rm_init_from_conn(
-        ch_chirp_t* chirp, ch_remote_t* remote, ch_connection_t* conn)
+        ch_chirp_t* chirp, ch_remote_t* remote, ch_connection_t* conn, int key)
 //    :noindex:
 //
 //    see: :c:func:`ch_rm_init_from_conn`
@@ -105,7 +110,7 @@ ch_rm_init_from_conn(
 // .. code-block:: cpp
 //
 {
-    _ch_rm_init(chirp, remote);
+    _ch_rm_init(chirp, remote, key);
     remote->ip_protocol = conn->ip_protocol;
     remote->port        = conn->port;
     memcpy(&remote->address, &conn->address, CH_IP_ADDR_SIZE);

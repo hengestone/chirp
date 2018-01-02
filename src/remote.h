@@ -77,9 +77,14 @@ typedef enum {
 //
 //       The current serial number for this remote
 //
-//    .. c:member:: uint8_t serial
+//    .. c:member:: uint8_t flags
 //
 //       Flags of the remote
+//
+//    .. c:member:: uint64_t timestamp
+//
+//       Timestamp when the connection was last used. Used to determine
+//       garbage-collection.
 //
 //    .. c:member:: char color
 //
@@ -114,6 +119,7 @@ struct ch_remote_s {
     ch_chirp_t*      chirp;
     uint32_t         serial;
     uint8_t          flags;
+    uint64_t         timestamp;
     char             color;
     ch_remote_t*     parent;
     ch_remote_t*     left;
@@ -134,22 +140,25 @@ rb_bind_decl_m(ch_rm, ch_remote_t) CH_ALLOW_NL;
 
 // .. c:function::
 void
-ch_rm_init_from_msg(ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg);
+ch_rm_init_from_msg(
+        ch_chirp_t* chirp, ch_remote_t* remote, ch_message_t* msg, int key);
 //
 //    Initialize the remote data-structure from a message.
 //
 //    :param ch_remote_t* remote: Remote to initialize
 //    :param ch_message_t* msg:   Message to initialize from
+//    :param int           key:   Used as a key only
 
 // .. c:function::
 void
 ch_rm_init_from_conn(
-        ch_chirp_t* chirp, ch_remote_t* remote, ch_connection_t* conn);
+        ch_chirp_t* chirp, ch_remote_t* remote, ch_connection_t* conn, int key);
 //
 //    Initialize the remote data-structure from a connection.
 //
 //    :param ch_remote_t* remote: Remote to initialize
 //    :param ch_connection_t*:   Connection to initialize from
+//    :param int          key:   Used as a key only
 //
 // stack prototypes
 // ----------------

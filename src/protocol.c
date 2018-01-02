@@ -475,7 +475,7 @@ ch_pr_debounce_connection(ch_connection_t* conn)
     ch_chirp_int_t* ichirp   = chirp->_;
     ch_remote_t*    remote   = NULL;
     ch_protocol_t*  protocol = &ichirp->protocol;
-    ch_rm_init_from_conn(chirp, &key, conn);
+    ch_rm_init_from_conn(chirp, &key, conn, 1);
     if (ch_rm_find(protocol->remotes, &key, &remote) == CH_SUCCESS) {
         if (protocol->reconnect_remotes == NULL) {
             uv_timer_start(

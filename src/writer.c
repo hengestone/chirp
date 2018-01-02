@@ -302,7 +302,7 @@ _ch_wr_connect_timeout_cb(uv_timer_t* handle)
     /* We have waited long enough, we send the next message */
     ch_remote_t  key;
     ch_remote_t* remote = NULL;
-    ch_rm_init_from_conn(chirp, &key, conn);
+    ch_rm_init_from_conn(chirp, &key, conn, 1);
     if (ch_rm_find(chirp->_->protocol.remotes, &key, &remote) == CH_SUCCESS) {
         ch_wr_process_queues(remote);
     }
@@ -395,7 +395,11 @@ _ch_wr_write_finish(
         msg->_flags |= CH_MSG_ACK_RECEIVED; /* Emulate ACK */
     }
     msg->_flags |= CH_MSG_WRITE_DONE;
-    writer->msg = NULL;
+    writer->msg     = NULL;
+    conn->timestamp = uv_hrtime();
+    if (conn->remote != NULL) {
+        conn->remote->timestamp = conn->timestamp;
+    }
     ch_chirp_finish_message(chirp, conn, msg, CH_SUCCESS);
 }
 
@@ -619,7 +623,7 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
     msg->_flags |= CH_MSG_USED;
     ch_protocol_t* protocol = &ichirp->protocol;
 
-    ch_rm_init_from_msg(chirp, &search_remote, msg);
+    ch_rm_init_from_msg(chirp, &search_remote, msg, 0);
     if (ch_rm_find(protocol->remotes, &search_remote, &remote) != CH_SUCCESS) {
         remote = ch_alloc(sizeof(*remote));
         if (remote == NULL) {

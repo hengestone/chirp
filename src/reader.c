@@ -182,7 +182,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
     ch_sr_buf_to_hs(buf, &hs_tmp);
     conn->port = hs_tmp.port;
     memcpy(conn->remote_identity, hs_tmp.identity, CH_ID_SIZE);
-    ch_rm_init_from_conn(chirp, &search_remote, conn);
+    ch_rm_init_from_conn(chirp, &search_remote, conn, 0);
     if (ch_rm_find(protocol->remotes, &search_remote, &remote) != CH_SUCCESS) {
         remote = ch_alloc(sizeof(*remote));
         if (remote == NULL) {
@@ -273,6 +273,10 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
 
     reader->state   = CH_RD_WAIT;
     reader->handler = NULL;
+    conn->timestamp = uv_hrtime();
+    if (conn->remote != NULL) {
+        conn->remote->timestamp = conn->timestamp;
+    }
 
     if (ichirp->recv_cb != NULL) {
         ichirp->recv_cb(chirp, msg);
