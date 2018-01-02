@@ -7,7 +7,7 @@ from hypothesis.strategies import (
 from hypothesis.stateful import GenericStateMachine
 import mpipe
 import socket
-from subprocess import Popen, TimeoutExpired
+from subprocess import Popen, TimeoutExpired, PIPE
 import time
 import signal
 import os
@@ -22,9 +22,9 @@ func_shutdown_conns_e = 5
 def close(proc : Popen):
     """Close the subprocess."""
     try:
-        # Kill process group because we sometimes attach valgrind or rr
-        os.killpg(os.getpgid(proc.pid), signal.SIGINT)
-        proc.wait(2)
+        proc.stdin.write(b"\n")
+        proc.stdin.flush()
+        proc.wait(4)
     except TimeoutExpired:
         print("Doing kill")
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
@@ -109,7 +109,7 @@ class GenFunc(GenericStateMachine):
     def init_echo(self):
         self.echo_ready = True
         args = ["./src/echo_etest", "2997", self.enc]
-        self.echo = Popen(args, preexec_fn=os.setsid)
+        self.echo = Popen(args, stdin=PIPE, preexec_fn=os.setsid)
         time.sleep(0.1)
         check = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         check.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

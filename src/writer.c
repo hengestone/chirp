@@ -432,10 +432,9 @@ _ch_wr_write_finish(
 // .. code-block:: cpp
 //
 {
-    ch_chirp_int_t* ichirp = chirp->_;
-    ch_message_t*   msg    = writer->msg;
+    ch_message_t* msg = writer->msg;
     A(msg != NULL, "Writer has no message");
-    if ((ichirp->config.ACKNOWLEDGE == 0 || !(msg->type & CH_MSG_REQ_ACK))) {
+    if (!(msg->type & CH_MSG_REQ_ACK)) {
         msg->_flags |= CH_MSG_ACK_RECEIVED; /* Emulate ACK */
     }
     msg->_flags |= CH_MSG_WRITE_DONE;

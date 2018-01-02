@@ -25,7 +25,9 @@
 // .. code-block:: cpp
 
 static ch_chirp_t* _ch_tst_chirp;
+static uv_tty_t    _ch_tst_tty;
 static int         _ch_tst_always_encrypt = 0;
+static char        _ch_tst_buf[1024];
 
 // Internal for checks
 // ===================
@@ -42,12 +44,46 @@ static int         _ch_tst_always_encrypt = 0;
 //
 //
 static void
+_ch_tst_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
+{
+    (void) (handle);
+    (void) (suggested_size);
+    buf->base = _ch_tst_buf;
+    buf->len  = 1024;
+}
+
+static void
+_ch_tst_close_stdin_cb(uv_handle_t* handle)
+{
+    ch_chirp_t* chirp = handle->data;
+    ch_chirp_close_ts(chirp);
+}
+
+static void
+_ch_tst_read_stdin_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
+{
+    (void) (nread);
+    (void) (buf);
+    uv_read_stop(stream);
+    uv_close((uv_handle_t*) stream, _ch_tst_close_stdin_cb);
+}
+
+static void
 _ch_tst_start(ch_chirp_t* chirp)
 {
     CH_WRITE_LOG(chirp, "Echo server started", CH_NO_ARG);
     if (_ch_tst_always_encrypt) {
         ch_chirp_set_always_encrypt(chirp);
     }
+    if (uv_tty_init(ch_chirp_get_loop(chirp), &_ch_tst_tty, 0, 1) != 0) {
+        fprintf(stderr, "failed to open stdin\n");
+        exit(1);
+    }
+    uv_read_start(
+            (uv_stream_t*) &_ch_tst_tty,
+            _ch_tst_alloc_cb,
+            _ch_tst_read_stdin_cb);
+    _ch_tst_tty.data = chirp;
 }
 
 static void
