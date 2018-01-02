@@ -680,7 +680,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         ch_chirp_finish_message(chirp, conn, wam, reason);
     }
     if (msg != NULL && msg != wam) {
-        wam->_flags |= CH_MSG_FAILURE;
+        msg->_flags |= CH_MSG_FAILURE;
         ch_chirp_finish_message(chirp, conn, msg, reason);
     }
     if (wam == NULL && msg == NULL && remote != NULL) {
