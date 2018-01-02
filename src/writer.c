@@ -345,7 +345,7 @@ _ch_wr_enqeue_noop_if_needed(ch_remote_t* remote)
         } else {
             /* The noop is not enqueued yet, enqueue it */
             if (!(noop->_flags & CH_MSG_USED) && noop->_next == NULL) {
-                L(chirp, "Sending NOOP. ch_remote_t:%p", remote);
+                LC(chirp, "Sending NOOP.", "ch_remote_t:%p", remote);
                 ch_msg_enqueue(&remote->cntl_msg_queue, noop);
             }
         }

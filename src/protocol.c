@@ -224,7 +224,10 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
         }
     }
     rb_for_m (ch_cn_st, cn_del_stack, cn_iter, cn_elem) {
-        L(chirp, "Garbage-collecting: shutdown. ch_connection_t:%p", cn_elem);
+        LC(chirp,
+           "Garbage-collecting: shutdown.",
+           "ch_connection_t:%p",
+           cn_elem);
         ch_cn_shutdown(cn_elem, CH_SHUTDOWN);
     }
 
@@ -240,13 +243,14 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
     rb_for_m (ch_rm_st, rm_del_stack, rm_iter, rm_elem) {
         _ch_pr_abort_all_messages(rm_elem, CH_SHUTDOWN);
         if (rm_elem->conn != NULL) {
-            L(chirp,
-              "Garbage-collecting: shutdown. ch_connection_t:%p",
-              rm_elem->conn);
+            LC(chirp,
+               "Garbage-collecting: shutdown.",
+               "ch_connection_t:%p",
+               rm_elem->conn);
             rm_elem->flags = CH_RM_CONN_BLOCKED;
             ch_cn_shutdown(rm_elem->conn, CH_SHUTDOWN);
         }
-        L(chirp, "Garbage-collecting: deleting. ch_remote_t:%p", rm_elem);
+        LC(chirp, "Garbage-collecting: deleting.", "ch_remote_t:%p", rm_elem);
         ch_rm_delete_node(&protocol->remotes, rm_elem);
         if (free_it != NULL) {
             ch_rm_free(free_it);

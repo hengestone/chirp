@@ -394,6 +394,7 @@ _ch_rd_read_step(
             return -1; /* Shutdown */
         }
         if (wire_msg->type & CH_MSG_NOOP) {
+            LC(chirp, "Received NOOP.", "ch_connection_t", conn);
             break;
         } else if (wire_msg->type & CH_MSG_ACK) {
             ch_message_t* wam = conn->remote->wait_ack_message;
