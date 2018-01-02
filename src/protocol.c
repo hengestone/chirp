@@ -461,6 +461,37 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
 }
 
 // .. c:function::
+void
+ch_pr_debounce_connection(ch_connection_t* conn)
+//    :noindex:
+//
+//    see: :c:func:`ch_pr_conn_start`
+//
+// .. code-block:: cpp
+//
+{
+    ch_remote_t     key;
+    ch_chirp_t*     chirp    = conn->chirp;
+    ch_chirp_int_t* ichirp   = chirp->_;
+    ch_remote_t*    remote   = NULL;
+    ch_protocol_t*  protocol = &ichirp->protocol;
+    ch_rm_init_from_conn(chirp, &key, conn);
+    if (ch_rm_find(protocol->remotes, &key, &remote) == CH_SUCCESS) {
+        if (protocol->reconnect_remotes == NULL) {
+            uv_timer_start(
+                    &protocol->reconnect_timeout,
+                    ch_pr_reconnect_remotes_cb,
+                    50 + (rand() % 500),
+                    0);
+        }
+        if (!(remote->flags & CH_RM_CONN_BLOCKED)) {
+            remote->flags |= CH_RM_CONN_BLOCKED;
+            ch_rm_st_push(&protocol->reconnect_remotes, remote);
+        }
+    }
+}
+
+// .. c:function::
 static int
 _ch_pr_decrypt_feed(ch_connection_t* conn, ch_buf* buf, size_t nread, int* stop)
 //    :noindex:

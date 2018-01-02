@@ -101,6 +101,17 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns);
 //    :param ch_chirpt_t* chirp: Chrip object
 //    :paramint only_conns: (bool) Only close / free connections. Do not touch
 //                          remotes
+//
+
+// .. c:function::
+void
+ch_pr_debounce_connection(ch_connection_t* conn);
+//
+//    Disallow reconnect for 50 - 550ms, in order to prevent network races and
+//    give the remote time to recover.
+//
+//    :param ch_connection_t* conn: Connection object
+//
 
 // .. c:function::
 void

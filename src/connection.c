@@ -642,6 +642,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     }
     LC(chirp, "Shutdown connection. ", "ch_connection_t:%p", (void*) conn);
     conn->flags |= CH_CN_SHUTTING_DOWN;
+    ch_pr_debounce_connection(conn);
     ch_chirp_int_t*  ichirp = chirp->_;
     ch_writer_t*     writer = &conn->writer;
     ch_remote_t*     remote = conn->remote;
