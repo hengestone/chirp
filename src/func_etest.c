@@ -346,8 +346,8 @@ main(int argc, char* argv[])
     config.ACKNOWLEDGE     = _ch_tst_acknowledge;
     _ch_tst_mpp_mc         = getenv("MPP_MC");
     if (_ch_tst_mpp_mc == NULL) {
-        config.TIMEOUT    = 0.25;
-        config.REUSE_TIME = 0.50;
+        config.TIMEOUT    = 0.50;
+        config.REUSE_TIME = 0.80;
     } else {
         /* If memcheck is enabled everything takes much longer */
         config.TIMEOUT    = 1.0;
