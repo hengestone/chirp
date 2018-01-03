@@ -4,13 +4,16 @@ from hypothesis import settings, unlimited  # noqa
 from hypothesis.strategies import (
     tuples, sampled_from, just, lists, binary, one_of, floats
 )
-from hypothesis.stateful import GenericStateMachine
+from hypothesis.stateful import (
+    GenericStateMachine, run_state_machine_as_test
+)
 import mpipe
 import socket
 from subprocess import Popen, TimeoutExpired, PIPE
 import time
 import signal
 import os
+import sys
 
 func_42_e             = 1
 func_cleanup_e        = 2
@@ -35,7 +38,11 @@ def close(proc : Popen):
 class GenFunc(GenericStateMachine):
     """Test if the stays consistent."""
 
-    def __init__(self):
+    def __init__(self, capsys):
+        with capsys.disabled():
+            sys.stdout.write(".")
+            sys.stdout.flush()
+        self.capsys = capsys
         self.enc = "0"
         self.shutdown = "0"
         self.acknowledge = "0"
@@ -269,7 +276,12 @@ class GenFunc(GenericStateMachine):
         self.timeout_open = False
 
 
-# with settings(deadline=None, timeout=unlimited, max_examples=1000,
-#               max_iterations=10000):
-with settings(deadline=None, timeout=unlimited):
-    TestFunc = GenFunc.TestCase
+def test_func(capsys):
+    """Functional test of chirp."""
+    def init_with_capsys():
+        return GenFunc(capsys)
+
+    # with settings(deadline=None, timeout=unlimited, max_examples=1000,
+    #              max_iterations=10000):
+    with settings(deadline=None, timeout=unlimited):
+        run_state_machine_as_test(init_with_capsys)
