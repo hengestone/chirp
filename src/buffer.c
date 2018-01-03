@@ -158,9 +158,9 @@ ch_bf_release(ch_buffer_pool_t* pool, int id)
                 (void*) pool);
         return;
     }
-    ch_bf_free(pool);
     pool->used_buffers -= 1;
     /* Release the buffer. */
     handler_buf->used = 0;
     pool->free_buffers |= (1 << (31 - id));
+    ch_bf_free(pool);
 }
