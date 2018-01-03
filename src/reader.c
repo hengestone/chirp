@@ -395,6 +395,10 @@ _ch_rd_read_step(
         }
         if (wire_msg->type & CH_MSG_NOOP) {
             LC(chirp, "Received NOOP.", "ch_connection_t", conn);
+            conn->timestamp = uv_hrtime();
+            if (conn->remote != NULL) {
+                conn->remote->timestamp = conn->timestamp;
+            }
             break;
         } else if (wire_msg->type & CH_MSG_ACK) {
             ch_message_t* wam = conn->remote->wait_ack_message;

@@ -15,8 +15,8 @@ Message-passing for everyone
 
 .. _`Read the Docs`: http://1042.ch/chirp/
 
-WORK IN PROGRESS
-================
+BETA-RELEASE: 0.2.0
+===================
 
 Features
 ========
@@ -41,8 +41,15 @@ Features
 
 * Fast
 
-  * Up to 50'000 msg/s on a single-connection (encrypted 35'000 msg/s)
-  * Up to 100'000 msg/s in star-topology (encrypted same)
+  * Up to 150'000 msg/s on a single-connection, in a totally unrealistic test:
+
+    * Run on loopback
+
+    * Nothing was executed
+
+    * No encryption
+
+    * No acknowledge
 
     * Which shows that chirp is highly optimized, but still if the network delay
       is bigger star-topology is the way to go.
@@ -282,6 +289,18 @@ If you use clang complete, we recommend
    let g:clang_auto_select     = 1
    let g:clang_snippets        = 1
    let g:clang_snippets_engine = 'clang_complete'
+
+Changes
+=======
+
+2017-01-03 - 0.2.0-beta
+-----------------------
+
+* Initial public beta release
+
+* All functional features implemented
+
+* Some performance/build features missing
 
 Thanks
 ======
