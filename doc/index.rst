@@ -39,11 +39,18 @@ Features
 
 * Fast
 
-  * Up to 50'000 msg/s on a single-connection (encrypted 35'000 msg/s)
-  * Up to 100'000 msg/s in star-topology (encrypted same)
+  * Up to 150'000 msg/s on a single-connection, in a totally unrealistic test:
 
-    * Which shows that chirp is highly optimized, but still if the network delay
-      is bigger star-topology is the way to go.
+    * Run on loopback
+
+    * Nothing was executed
+
+    * No encryption
+
+    * No acknowledge
+
+    * But it shows that chirp is highly optimized, but still if the network
+      delay is bigger star- or mesh-topology is the way to go.
 
 .. _modes-of-operation:
 
