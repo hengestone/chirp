@@ -50,4 +50,4 @@ Windows
 -------
 
 We want to support Windows, but we are currently not building on Windows. VS
-2013 or newer should support all C99 feature we use.
+2015 or newer should support all C99 feature we use.
