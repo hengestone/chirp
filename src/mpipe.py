@@ -64,9 +64,9 @@ def close(proc : Popen):
     write(proc, (0,))
     try:
         if mc:
-            proc.wait(4)
+            proc.wait(6)
         else:
-            proc.wait(1)
+            proc.wait(3)
     except TimeoutExpired:
         # Kill process group because we sometimes attach valgrind or rr
         os.killpg(os.getpgid(proc.pid), signal.SIGINT)
