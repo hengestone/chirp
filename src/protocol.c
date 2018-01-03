@@ -506,6 +506,12 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
 {
     ch_chirp_int_t* ichirp   = chirp->_;
     ch_protocol_t*  protocol = &ichirp->protocol;
+    while (protocol->old_connections != ch_cn_nil_ptr) {
+        ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
+    }
+    while (protocol->handshake_conns != ch_cn_nil_ptr) {
+        ch_cn_shutdown(protocol->handshake_conns, CH_SHUTDOWN);
+    }
     if (only_conns) {
         rb_iter_decl_cx_m(ch_rm, rm_iter, rm_elem);
         rb_for_m (ch_rm, protocol->remotes, rm_iter, rm_elem) {
@@ -527,12 +533,6 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
         }
         /* Remove all remotes, sync with reconnect_remotes */
         protocol->reconnect_remotes = NULL;
-    }
-    while (protocol->old_connections != ch_cn_nil_ptr) {
-        ch_cn_shutdown(protocol->old_connections, CH_SHUTDOWN);
-    }
-    while (protocol->handshake_conns != ch_cn_nil_ptr) {
-        ch_cn_shutdown(protocol->handshake_conns, CH_SHUTDOWN);
     }
 }
 
