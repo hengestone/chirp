@@ -26,6 +26,7 @@
 
 static ch_chirp_t* _ch_tst_chirp;
 static uv_tty_t    _ch_tst_tty;
+static int         _ch_tst_tty_init       = 0;
 static int         _ch_tst_always_encrypt = 0;
 static char        _ch_tst_buf[1024];
 
@@ -53,10 +54,13 @@ _ch_tst_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 }
 
 static void
-_ch_tst_close_stdin_cb(uv_handle_t* handle)
+_ch_tst_done_cb(ch_chirp_t* chirp)
 {
-    ch_chirp_t* chirp = handle->data;
-    ch_chirp_close_ts(chirp);
+    (void) (chirp);
+    if (_ch_tst_tty_init) {
+        uv_read_stop((uv_stream_t*) &_ch_tst_tty);
+        uv_close((uv_handle_t*) &_ch_tst_tty, NULL);
+    }
 }
 
 static void
@@ -64,8 +68,8 @@ _ch_tst_read_stdin_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
 {
     (void) (nread);
     (void) (buf);
-    uv_read_stop(stream);
-    uv_close((uv_handle_t*) stream, _ch_tst_close_stdin_cb);
+    ch_chirp_t* chirp = stream->data;
+    ch_chirp_close_ts(chirp);
 }
 
 static void
@@ -78,6 +82,7 @@ _ch_tst_start(ch_chirp_t* chirp)
     if (uv_tty_init(ch_chirp_get_loop(chirp), &_ch_tst_tty, 0, 1) != 0) {
         return;
     }
+    _ch_tst_tty_init = 1;
     uv_read_start(
             (uv_stream_t*) &_ch_tst_tty,
             _ch_tst_alloc_cb,
@@ -146,7 +151,7 @@ main(int argc, char* argv[])
             &_ch_tst_chirp,
             _ch_tst_recv_message_cb,
             _ch_tst_start,
-            NULL,
+            _ch_tst_done_cb,
             NULL);
     ch_libchirp_cleanup();
     fprintf(stderr, "Closing echo_etest\n");

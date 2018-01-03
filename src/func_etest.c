@@ -277,6 +277,7 @@ _ch_tst_recv_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
     (void) (chirp);
     ch_chirp_release_message(msg);
 }
+
 int
 main(int argc, char* argv[])
 {
