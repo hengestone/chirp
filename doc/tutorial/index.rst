@@ -93,15 +93,21 @@ How to get libchirp
 
 Either download a release of libchirp or see README.rst_ in the git repository.
 
-If you want full debug output, you can run the following in build of libchirp,
-which will give you a source distribution, but the full debug logging still in
-place.
+To build the source distribution from git call:
 
 .. _README.rst: https://github.com/concretecloud/chirp#how-to-create-a-source-distribution
 
 .. code-block:: bash
 
-   make clean dist NO_UNIFDEF=True
+   make clean dist
+
+In libchirp-config.h you can enable logging and asserts uncommenting the
+following two defines.
+
+.. code-block:: bash
+
+   /* #define CH_ENABLE_LOGGING */
+   /* #define CH_ENABLE_ASSERTS */
 
 Making a plan
 =============
