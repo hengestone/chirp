@@ -31,10 +31,11 @@ check: chirp_test echo_test send_test
 	@cat .keys/dh.pem | tr '%' 'a' > dh.pem
 	@cat .keys/cert.pem | tr '%' 'a' > cert.pem
 	@LD_LIBRARY_PATH="." ./chirp_test
-	TMPOUT=$$(mktemp); \
+	@TMPOUT=$$(mktemp); \
 	LD_LIBRARY_PATH="." ./echo_test 3000 1 2> $$TMPOUT & \
 	PID=$$!; \
 	sleep 1; \
+	cat $$TMPOUT; \
 	LD_LIBRARY_PATH="." ./send_test 1 2 127.0.0.1:3000 || exit 1; \
 	sleep 1; \
 	kill $$PID; \

@@ -76,8 +76,7 @@ _ch_tst_start(ch_chirp_t* chirp)
         ch_chirp_set_always_encrypt(chirp);
     }
     if (uv_tty_init(ch_chirp_get_loop(chirp), &_ch_tst_tty, 0, 1) != 0) {
-        fprintf(stderr, "failed to open stdin\n");
-        exit(1);
+        return;
     }
     uv_read_start(
             (uv_stream_t*) &_ch_tst_tty,
