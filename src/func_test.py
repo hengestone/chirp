@@ -108,7 +108,9 @@ class GenFunc(GenericStateMachine):
 
     def init_echo(self):
         self.echo_ready = True
-        args = ["./src/echo_etest", "2997", self.enc]
+        args = [
+            "./src/echo_etest", "2997", self.enc
+        ]
         self.echo = Popen(args, stdin=PIPE, preexec_fn=os.setsid)
         time.sleep(0.1)
         check = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -122,7 +124,7 @@ class GenFunc(GenericStateMachine):
                     connected = True
                 except (ConnectionRefusedError, OSError):
                     count += 1
-                    if count > 4:
+                    if count > 8:
                         raise
                     else:
                         time.sleep(0.2)
@@ -245,7 +247,7 @@ class GenFunc(GenericStateMachine):
                     connected = True
                 except (ConnectionRefusedError, OSError):
                     count += 1
-                    if count > 7:
+                    if count > 8:
                         raise
                     else:
                         time.sleep(0.2)
