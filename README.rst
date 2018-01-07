@@ -43,7 +43,7 @@ Features
 
 * Fast
 
-  * Up to 150'000 msg/s on a single-connection, in a totally unrealistic test:
+  * Up to 150'000 msg/s on a single-connection, in an unrealistic test:
 
     * Run on loopback
 
