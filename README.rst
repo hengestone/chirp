@@ -297,7 +297,7 @@ If you use clang complete, we recommend
 Changes
 =======
 
-2017-01-03 - 0.2.0-beta
+2018-01-03 - 0.2.0-beta
 -----------------------
 
 * Initial public beta release
