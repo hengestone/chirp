@@ -53,8 +53,8 @@ Features
 
     * No acknowledge
 
-    * But it shows that chirp is highly optimized, but still if the network
-      delay is bigger star- or mesh-topology is the way to go.
+    * The test shows that chirp is highly optimized, but if the network
+      delay is bigger star- or mesh-topology can improve throughput.
 
 Install
 =======
