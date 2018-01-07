@@ -4,7 +4,7 @@ libchirp
 
 Message-passing for everyone
 
-|travis| |rtd|
+|travis| |rtd| |mpl|
 
 .. |travis|  image:: https://travis-ci.org/concretecloud/chirp.svg?branch=master
    :target: https://travis-ci.org/concretecloud/chirp
