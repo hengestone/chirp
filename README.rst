@@ -34,7 +34,7 @@ Features
 
 * Robust
 
-  * No message can be lost without an error (or it is a bug)
+  * No message can be lost without an error (in sync mode)
 
 * Very thin API
 

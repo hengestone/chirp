@@ -30,7 +30,7 @@ Features
 
 * Robust
 
-  * No message can be lost without an error (or it is a bug)
+  * No message can be lost without an error (in sync mode)
 
 * Very thin API
 
@@ -39,7 +39,7 @@ Features
 
 * Fast
 
-  * Up to 150'000 msg/s on a single-connection, in a totally unrealistic test:
+  * Up to 150'000 msg/s on a single-connection, in an unrealistic test:
 
     * Run on loopback
 
@@ -49,8 +49,8 @@ Features
 
     * No acknowledge
 
-    * But it shows that chirp is highly optimized, but still if the network
-      delay is bigger star- or mesh-topology is the way to go.
+    * The test shows that chirp is highly optimized, but if the network
+      delay is bigger star- or mesh-topology can improve throughput.
 
 .. _modes-of-operation:
 
