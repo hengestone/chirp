@@ -695,28 +695,13 @@ ch_pr_reconnect_remotes_cb(uv_timer_t* handle)
     ch_protocol_t* protocol = &chirp->_->protocol;
     ch_chirp_check_m(chirp);
     if (protocol->reconnect_remotes != NULL) {
-        int count = 0;
-        rb_iter_decl_cx_m(ch_rm_st, rm_iter, rm_elem);
-        rb_for_m (ch_rm_st, protocol->reconnect_remotes, rm_iter, rm_elem) {
-            count += 1;
-        }
-        ch_remote_t** remotes = ch_alloc(count * sizeof(remotes));
-        ch_remote_t*  remote;
-        /* ch_wr_process_queues can add remotes to protocol->reconnect_remotes
-         * so we need to copy it first */
-        int idx = 0;
+        ch_remote_t* remote;
         ch_rm_st_pop(&protocol->reconnect_remotes, &remote);
         while (remote != NULL) {
             remote->flags &= ~CH_RM_CONN_BLOCKED;
-            remotes[idx] = remote;
-            idx += 1;
+            ch_wr_process_queues(remote);
             ch_rm_st_pop(&protocol->reconnect_remotes, &remote);
         }
-        A(idx == count, "Index error while copying remotes");
-        for (idx = 0; idx < count; idx++) {
-            ch_wr_process_queues(remotes[idx]);
-        }
-        ch_free(remotes);
     }
 }
 
