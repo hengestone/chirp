@@ -10,6 +10,8 @@ Message-passing for everyone
    :target: https://travis-ci.org/concretecloud/chirp
 .. |rtd| image:: https://1042.ch/ganwell/docs-master.svg
    :target: https://1042.ch/chirp/
+.. |mpl| image:: https://img.shields.io/badge/License-MPL%202.0-blue.svg
+   :target: http://mozilla.org/MPL/2.0/
 
 `Read the Docs`_
 
