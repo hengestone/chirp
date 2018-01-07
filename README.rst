@@ -4,14 +4,16 @@ libchirp
 
 Message-passing for everyone
 
-|travis| |rtd| |mpl|
+|travis| |rtd| |mpl| |works|
 
 .. |travis|  image:: https://travis-ci.org/concretecloud/chirp.svg?branch=master
    :target: https://travis-ci.org/concretecloud/chirp
 .. |rtd| image:: https://1042.ch/ganwell/docs-master.svg
    :target: https://1042.ch/chirp/
-.. |mpl| image:: https://img.shields.io/badge/License-MPL%202.0-blue.svg
+.. |mpl| image:: https://img.shields.io/badge/license-MPL%202.0-blue.svg
    :target: http://mozilla.org/MPL/2.0/
+.. |works| image:: https://img.shields.io/badge/hypothesis-works-blue.svg
+   :target: http://hypothesis.works
 
 `Read the Docs`_
 
