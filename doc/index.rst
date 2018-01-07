@@ -69,10 +69,10 @@ Connection-synchronous (config.ACKNOWLEDGE=1)
   ch_chirp_release message. Then the application has to take care that the
   copied message is not lost
 
-* If the application call ch_chirp_release_message after the operation is
+* If the application calls ch_chirp_release_message after the operation is
   finished, messages will automatically be throttled. Be aware of the timeout:
   if the applications operation takes longer either increase the timeout or copy
-  the message (where by you lose the throttling)
+  the message (with copying you lose the throttling)
 
 * Slower
 
@@ -82,7 +82,7 @@ Connection-asynchronous (config.ACKNOWLEDGE=0)
 * The send callback returns a success when the message is successfully written to
   the operating system
 
-* Message can be lost by chirp
+* If unexpected errors (ie. remote dies) happen, message can be lost in the TCP buffer
 
 * Automatic concurrency, by default chirp uses 16 concurrent handlers 
 
