@@ -239,26 +239,24 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
             ch_rm_st_push(&rm_del_stack, rm_elem);
         }
     }
-    ch_remote_t* free_it = NULL; /* Free remote after iterator */
-    rb_for_m (ch_rm_st, rm_del_stack, rm_iter, rm_elem) {
-        _ch_pr_abort_all_messages(rm_elem, CH_SHUTDOWN);
-        if (rm_elem->conn != NULL) {
+    ch_remote_t* remote     = NULL;
+    ch_remote_t* tmp_remote = NULL;
+    ch_rm_st_pop(&rm_del_stack, &remote);
+    while (remote != NULL) {
+        _ch_pr_abort_all_messages(remote, CH_SHUTDOWN);
+        if (remote->conn != NULL) {
             LC(chirp,
                "Garbage-collecting: shutdown.",
                "ch_connection_t:%p",
-               rm_elem->conn);
-            rm_elem->flags = CH_RM_CONN_BLOCKED;
-            ch_cn_shutdown(rm_elem->conn, CH_SHUTDOWN);
+               remote->conn);
+            remote->flags = CH_RM_CONN_BLOCKED;
+            ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
         }
-        LC(chirp, "Garbage-collecting: deleting.", "ch_remote_t:%p", rm_elem);
-        ch_rm_delete_node(&protocol->remotes, rm_elem);
-        if (free_it != NULL) {
-            ch_rm_free(free_it);
-        }
-        free_it = rm_elem;
-    }
-    if (free_it != NULL) {
-        ch_rm_free(free_it);
+        LC(chirp, "Garbage-collecting: deleting.", "ch_remote_t:%p", remote);
+        ch_rm_delete_node(&protocol->remotes, remote);
+        tmp_remote = remote;
+        ch_rm_st_pop(&rm_del_stack, &remote);
+        ch_rm_free(tmp_remote);
     }
     uint64_t start = (config->REUSE_TIME * 1000 / 2);
     start += rand() % start;
