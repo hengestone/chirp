@@ -781,7 +781,7 @@ ch_chirp_finish_message(
                    (void*) msg);
             } else if (msg->type & CH_MSG_NOOP) {
                 LC(chirp,
-                   "%s: sending NOOP message id\n",
+                   "%s: sending NOOP\n",
                    "ch_message_t:%p",
                    action,
                    (void*) msg);
