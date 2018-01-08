@@ -342,12 +342,11 @@ _ch_wr_enqeue_noop_if_needed(ch_remote_t* remote)
             noop->ip_protocol = remote->ip_protocol;
             noop->port        = remote->port;
             noop->type        = CH_MSG_NOOP;
-        } else {
-            /* The noop is not enqueued yet, enqueue it */
-            if (!(noop->_flags & CH_MSG_USED) && noop->_next == NULL) {
-                LC(chirp, "Sending NOOP.", "ch_remote_t:%p", remote);
-                ch_msg_enqueue(&remote->cntl_msg_queue, noop);
-            }
+        }
+        /* The noop is not enqueued yet, enqueue it */
+        if (!(noop->_flags & CH_MSG_USED) && noop->_next == NULL) {
+            LC(chirp, "Sending NOOP.", "ch_remote_t:%p", remote);
+            ch_msg_enqueue(&remote->cntl_msg_queue, noop);
         }
     }
 }
