@@ -263,7 +263,7 @@ class GenFunc(GenericStateMachine):
                 for msg in data:
                     fuzz.send(msg)
                     time.sleep(0.1)
-            except BrokenPipeError:
+            except (BrokenPipeError, ConnectionResetError):
                 pass
         finally:
             fuzz.close()
