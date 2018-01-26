@@ -19,7 +19,7 @@ else
 fi
 apk update
 apk upgrade
-apk add \
+apk add --no-progress \
     sudo \
     sed \
     alpine-sdk \
@@ -38,5 +38,5 @@ pip3 install \
     sphinx \
     sphinx_rtd_theme
 if [ "$TESTSHELL" = "True" ]; then
-    apk add gdb
+    apk add --no-progress gdb
 fi
