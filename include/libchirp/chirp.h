@@ -355,7 +355,7 @@ ch_chirp_send_ts(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb);
 // .. c:function::
 CH_EXPORT
 void
-ch_chirp_set_always_encrypt();
+ch_chirp_set_always_encrypt(void);
 //
 //    Also encrypt local connections.
 

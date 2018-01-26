@@ -77,7 +77,7 @@ _ch_tst_start(ch_chirp_t* chirp)
 {
     CH_WRITE_LOG(chirp, "Echo server started", CH_NO_ARG);
     if (_ch_tst_always_encrypt) {
-        ch_chirp_set_always_encrypt(chirp);
+        ch_chirp_set_always_encrypt();
     }
     if (uv_tty_init(ch_chirp_get_loop(chirp), &_ch_tst_tty, 0, 1) != 0) {
         return;

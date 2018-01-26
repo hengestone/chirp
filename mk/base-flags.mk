@@ -7,6 +7,7 @@ CFLAGS += \
 	-Wall \
 	-Wextra \
 	-Werror \
+	-Wstrict-prototypes \
 	-pedantic \
 	-Wno-unused-function \
 	$(VISIBLITYFLAG)

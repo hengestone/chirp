@@ -147,7 +147,7 @@ ch_tst_send(int argc, char* argv[])
         return 1;
     }
     if (_ch_tst_always_encrypt) {
-        ch_chirp_set_always_encrypt(chirp);
+        ch_chirp_set_always_encrypt();
     }
     chirp.user_data = msgs;
     for (int i = 0; i < count; i++) {

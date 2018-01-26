@@ -28,7 +28,7 @@ ch_tst_start(ch_chirp_t* chirp)
 
 // .. c:function::
 int
-main()
+main(void)
 //    :noindex:
 //
 //    Run chirp

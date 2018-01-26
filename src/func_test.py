@@ -282,6 +282,6 @@ def test_func(capsys):
         return GenFunc(capsys)
 
     # with settings(deadline=None, timeout=unlimited, max_examples=1000,
-    #              max_iterations=10000):
+    #             max_iterations=10000):
     with settings(deadline=None, timeout=unlimited):
         run_state_machine_as_test(init_with_capsys)

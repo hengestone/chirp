@@ -74,7 +74,7 @@ _ch_tst_check_messages(mpack_writer_t* writer);
 // .. code-block:: cpp
 //
 static void
-_ch_tst_next()
+_ch_tst_next(void)
 {
     uv_sem_post(&_ch_tst_sem);
 }
@@ -256,7 +256,7 @@ _ch_tst_start_cb(ch_chirp_t* chirp)
     uv_async_init(loop, &_ch_tst_async_handler, _ch_tst_async_mpack_handler_cb);
     uv_timer_init(loop, &_ch_tst_wait_msgs);
     if (_ch_tst_always_encrypt) {
-        ch_chirp_set_always_encrypt(chirp);
+        ch_chirp_set_always_encrypt();
     }
     uv_thread_create(&_ch_tst_runner, _ch_tst_run_runner, chirp);
 }

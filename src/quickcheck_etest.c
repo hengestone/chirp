@@ -31,7 +31,7 @@ ch_tst_is_ascii_string(ch_qc_mem_track_t* item, char* string)
 // .. code-block:: cpp
 //
 int
-main()
+main(void)
 {
     ch_libchirp_init();
     int i;
