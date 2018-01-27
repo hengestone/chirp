@@ -115,7 +115,6 @@ ch_bf_acquire(ch_buffer_pool_t* pool)
     if (pool->used_buffers < pool->max_buffers) {
         int free;
         pool->used_buffers += 1;
-        pool->refcnt += 1;
         free = ch_msb32(pool->free_buffers);
         /* Reserve the buffer. */
         pool->free_buffers &= ~(1 << (free - 1));
@@ -162,5 +161,4 @@ ch_bf_release(ch_buffer_pool_t* pool, int id)
     /* Release the buffer. */
     handler_buf->used = 0;
     pool->free_buffers |= (1 << (31 - id));
-    ch_bf_free(pool);
 }

@@ -278,6 +278,8 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
         conn->remote->timestamp = conn->timestamp;
     }
 
+    /* Only increase refcnt if we know ch_chirp_release_message is called */
+    reader->pool->refcnt += 1;
     if (ichirp->recv_cb != NULL) {
         ichirp->recv_cb(chirp, msg);
     } else {
@@ -671,6 +673,8 @@ ch_chirp_release_message(ch_message_t* msg)
     }
     int pool_is_empty = ch_bf_is_exhausted(pool);
     ch_bf_release(pool, msg->_handler);
+    /* Decrement refcnt and free if zero */
+    ch_bf_free(pool);
     if (pool_is_empty && conn) {
         ch_pr_restart_stream(conn);
     }
