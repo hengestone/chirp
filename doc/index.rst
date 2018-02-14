@@ -24,7 +24,7 @@ Features
 * TLS support
 
   * Connections to 127.0.0.1 and ::1 aren't encrypted
-  * We support and test with OpenSSL, but we prefer LibreSSL
+  * We support and test with OpenSSL and LibreSSL
 
 * Easy message routing
 
