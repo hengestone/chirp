@@ -2,8 +2,8 @@
 
 set -e
 
-pacman -Syu --noconfirm 2> /dev/null
-pacman -S --noconfirm \
+pacman -Syu --noconfirm --noprogressbar 2> /dev/null
+pacman -S --noconfirm --noprogressbar \
     sudo \
     base-devel \
     python-pip \
@@ -13,9 +13,11 @@ pacman -S --noconfirm \
     cppcheck \
     openssl \
     libuv \
-    valgrind \
     clang
+if [ "$NO_MEMCHECK" != "True" ]; then
+    pacman -S --noconfirm --noprogressbar valgrind
+fi
 if [ "$TESTSHELL" = "True" ]; then
-    pacman -S --noconfirm gdb 2> /dev/null
+    pacman -S --noconfirm --noprogressbar gdb 2> /dev/null
 fi
 pip3 install pytest hypothesis u-msgpack-python

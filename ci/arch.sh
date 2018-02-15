@@ -22,6 +22,7 @@ sudo docker run -it \
     -e "HUID=$(id -u)" \
     -e "CC=$CC" \
     -e "TESTSHELL=$TESTSHELL" \
+    -e "NO_MEMCHECK=$NO_MEMCHECK" \
     -v "$(pwd -P)/..":/outside \
     -v "$(pwd -P)/arch/.cache":/var/cache/pacman/pkg \
     --rm \

@@ -32,6 +32,7 @@ sudo docker run -it \
     -e "VERBOSE=$VERBOSE" \
     -e "DOC_FORMAT=$DOC_FORMAT" \
     -e "IS_ALPINE_CI=True" \
+    -e "NO_MEMCHECK=$NO_MEMCHECK" \
     -v "$(pwd -P)/..":/outside \
     --rm \
     alpine:3.7 \

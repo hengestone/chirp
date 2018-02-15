@@ -11,6 +11,9 @@ LDFLAGS += -L"$(BUILD)" \
 
 # Memcheck settings
 # =================
+ifeq ($(NO_MEMCHECK),True)
+	MEMCHECK :=
+else
 ifneq ($(TLS),openssl)
 	MEMCHECK := valgrind \
 		--tool=memcheck \
@@ -23,6 +26,7 @@ else
 	MEMCHECK := valgrind \
 		--tool=memcheck \
 		--suppressions=$(BASE)/ci/memcheck-musl.supp
+endif
 endif
 
 # Binary tests to run
@@ -42,11 +46,8 @@ etests: stest  ## Run binary tests
 	$(MEMCHECK) $(BUILD)/src/quickcheck_etest
 	$(BUILD)/src/serializer_etest
 	$(MEMCHECK) $(BUILD)/src/serializer_etest
-	$(BUILD)/src/message_etest \
-			2> message_etest.log || \
-		(cat message_etest.log; false)
-	!$(BUILD)/src/message_etest --max-msg-size 4 \
-			2> message_etest.log || \
+	$(BUILD)/src/message_etest
+	$(BUILD)/src/message_etest --max-msg-size 4 2> /dev/null; [ $$? -ne 0 ]
 	$(MEMCHECK) $(BUILD)/src/message_etest --no-ack --always-encrypt \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
@@ -96,6 +97,7 @@ etests: stest  ## Run binary tests
 	$(MEMCHECK) $(BUILD)/src/message_etest \
 			--always-encrypt \
 			--buffer-size 1024 \
+			--timeout 30 \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 
@@ -132,9 +134,11 @@ $(BUILD)/abi_dumps/chirp/$(VERSION)/ABI.dump: libchirp.so
 # =============
 pytest: all  ## Run pytests
 	pytest $(BASE)/src
+ifneq ($(NO_MEMCHECK),True)
 ifneq ($(TLS),openssl)
 ifeq ($(CI_DISTRO),alpine)
 	MPP_MC="$(BASE)/ci/memcheck-musl.supp" pytest $(BASE)/src
+endif
 endif
 endif
 

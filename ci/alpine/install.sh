@@ -25,9 +25,11 @@ apk add --no-progress \
     cppcheck \
     libuv-dev \
     abi-compliance-checker \
-    valgrind \
     clang \
     $ITLS
+if [ "$NO_MEMCHECK" != "True" ]; then
+    apk add --no-progress valgrind
+fi
 pip3 install \
     pytest \
     hypothesis \
