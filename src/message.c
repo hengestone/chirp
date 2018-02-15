@@ -24,7 +24,8 @@ qs_queue_bind_impl_cx_m(ch_msg, ch_message_t) CH_ALLOW_NL;
 // ---------------------
 
 // .. c:function::
-CH_EXPORT ch_error_t
+CH_EXPORT
+ch_error_t
 ch_msg_get_address(const ch_message_t* message, ch_text_address_t* address)
 //    :noindex:
 //

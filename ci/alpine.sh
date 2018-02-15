@@ -34,5 +34,5 @@ sudo docker run -it \
     -e "IS_ALPINE_CI=True" \
     -v "$(pwd -P)/..":/outside \
     --rm \
-    alpine:3.6 \
+    alpine:3.7 \
     /outside/ci/alpine/run.sh

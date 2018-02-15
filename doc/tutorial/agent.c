@@ -133,7 +133,7 @@ poll_connected_cb(uv_connect_t* conn, int status)
     notify_status(status == 0, 1);
 
     /* Also stop the timer - No need for waiting to see if the connection
-    * times out anymore. */
+     * times out anymore. */
     uv_timer_stop(&poll_timeout_timer);
 
     /* We don't really want to talk to the service, so immediately request a
