@@ -312,7 +312,7 @@ Changes
 
 * Remove unnecessary copy of reconnect_remotes datastructure
 
-* Simplify iterations gc_connections
+* Simplify iterations in gc_connections
 
 * Send noop message the first it is needed
 
