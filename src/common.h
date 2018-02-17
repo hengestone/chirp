@@ -190,9 +190,6 @@ typedef struct ch_protocol_s ch_protocol_t;
 //
 //    Be aware of :ref:`double-eval`
 //
-//    The assert macro A(condition, ...) behaves like printf and allows to
-//    print a arbitrary arguments when the given assertion fails.
-//
 //    :param condition: A boolean condition to check.
 //    :param message:   Message to display
 //
@@ -205,6 +202,28 @@ typedef struct ch_protocol_s ch_protocol_t;
                 __FILE__,                                                      \
                 __LINE__,                                                      \
                 message);                                                      \
+        exit(1);                                                               \
+    }
+
+// .. c:macro:: AP
+//
+//    Validates the given condition and reports arbitrary arguments when the
+//    condition is not met in debug-/development-mode.
+//
+//    Be aware of :ref:`double-eval`
+//
+//    The assert macro AP(condition, ...) behaves like printf and allows to
+//    print a arbitrary arguments when the given assertion fails.
+//
+//    :param condition: A boolean condition to check.
+//    :param message:   Message to display
+//
+// .. code-block:: cpp
+//
+#define AP(condition, message, ...)                                            \
+    if (!(condition)) {                                                        \
+        fprintf(stderr, "%s:%d: Assert failed: ", __FILE__, __LINE__);         \
+        fprintf(stderr, message "\n", __VA_ARGS__);                            \
         exit(1);                                                               \
     }
 
@@ -235,12 +254,25 @@ typedef struct ch_protocol_s ch_protocol_t;
 //
 #define A(condition, message) (void) 0
 
+//.. c:macro:: AP
+//
+//    See :c:macro:`AP`. Does nothing in release-mode.
+//
+//    Be aware of :ref:`double-eval`
+//
+// .. code-block:: cpp
+//
+#define AP(condition, message, ...) (void) 0
+
 #define ch_chirp_check_m(chirp) (void) (chirp)
 
 #endif
 
 #ifndef A
 #error Assert macro not defined
+#endif
+#ifndef AP
+#error Assert print macro not defined
 #endif
 #ifndef ch_chirp_check_m
 #error ch_chirp_check_m macro not defined

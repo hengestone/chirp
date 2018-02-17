@@ -46,7 +46,9 @@ etests: stest  ## Run binary tests
 	$(MEMCHECK) $(BUILD)/src/quickcheck_etest
 	$(BUILD)/src/serializer_etest
 	$(MEMCHECK) $(BUILD)/src/serializer_etest
-	$(BUILD)/src/message_etest
+	$(BUILD)/src/message_etest \
+			2> message_etest.log || \
+		(cat message_etest.log; false)
 	$(BUILD)/src/message_etest --max-msg-size 4 2> /dev/null; [ $$? -ne 0 ]
 	$(MEMCHECK) $(BUILD)/src/message_etest --no-ack --always-encrypt \
 			2> message_etest.log || \

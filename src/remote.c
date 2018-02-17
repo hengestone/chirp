@@ -77,7 +77,7 @@ _ch_rm_init(ch_chirp_t* chirp, ch_remote_t* remote, int key)
     if (!key) {
         ch_random_ints_as_bytes(
                 (uint8_t*) &remote->serial, sizeof(remote->serial));
-        remote->timestamp = uv_hrtime();
+        remote->timestamp = uv_now(chirp->_->loop);
     }
 }
 
@@ -127,6 +127,7 @@ ch_rm_free(ch_remote_t* remote)
 // .. code-block:: cpp
 //
 {
+    LC(remote->chirp, "Remote freed", "ch_remote_t:%p", remote);
     if (remote->noop != NULL) {
         ch_free(remote->noop);
     }

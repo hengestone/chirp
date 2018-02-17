@@ -488,7 +488,8 @@ ch_cn_init(ch_chirp_t* chirp, ch_connection_t* conn, uint8_t flags)
     conn->chirp            = chirp;
     conn->write_req.data   = conn;
     conn->flags |= flags;
-    tmp_err = ch_rd_init(&conn->reader, conn, ichirp);
+    conn->timestamp = uv_now(ichirp->loop);
+    tmp_err         = ch_rd_init(&conn->reader, conn, ichirp);
     if (tmp_err != CH_SUCCESS) {
         return tmp_err;
     }

@@ -185,6 +185,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
     ch_rm_init_from_conn(chirp, &search_remote, conn, 0);
     if (ch_rm_find(protocol->remotes, &search_remote, &remote) != CH_SUCCESS) {
         remote = ch_alloc(sizeof(*remote));
+        LC(chirp, "Remote allocated", "ch_remote_t:%p", remote);
         if (remote == NULL) {
             ch_cn_shutdown(conn, CH_ENOMEM);
             return;
@@ -273,7 +274,7 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
 
     reader->state   = CH_RD_WAIT;
     reader->handler = NULL;
-    conn->timestamp = uv_hrtime();
+    conn->timestamp = uv_now(ichirp->loop);
     if (conn->remote != NULL) {
         conn->remote->timestamp = conn->timestamp;
     }
@@ -397,7 +398,7 @@ _ch_rd_read_step(
         }
         if (wire_msg->type & CH_MSG_NOOP) {
             LC(chirp, "Received NOOP.", "ch_connection_t", conn);
-            conn->timestamp = uv_hrtime();
+            conn->timestamp = uv_now(ichirp->loop);
             if (conn->remote != NULL) {
                 conn->remote->timestamp = conn->timestamp;
             }

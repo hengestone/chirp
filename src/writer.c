@@ -327,10 +327,10 @@ _ch_wr_enqeue_noop_if_needed(ch_remote_t* remote)
     ch_chirp_t*     chirp  = remote->chirp;
     ch_chirp_int_t* ichirp = chirp->_;
     ch_config_t*    config = &ichirp->config;
-    uint64_t        now    = uv_hrtime();
-    uint64_t then = now - (1000 * 1000 * 1000 * config->REUSE_TIME / 4 * 3);
-    ch_message_t* noop = remote->noop;
-    if (remote->timestamp < then) {
+    ch_message_t*   noop   = remote->noop;
+    uint64_t        now    = uv_now(ichirp->loop);
+    uint64_t        delta  = (1000 * config->REUSE_TIME / 4 * 3);
+    if (now - remote->timestamp > delta) {
         if (noop == NULL) {
             remote->noop = ch_alloc(sizeof(*remote->noop));
             if (remote->noop == NULL) {
@@ -438,7 +438,7 @@ _ch_wr_write_finish(
     }
     msg->_flags |= CH_MSG_WRITE_DONE;
     writer->msg     = NULL;
-    conn->timestamp = uv_hrtime();
+    conn->timestamp = uv_now(chirp->_->loop);
     if (conn->remote != NULL) {
         conn->remote->timestamp = conn->timestamp;
     }
@@ -591,7 +591,7 @@ ch_wr_process_queues(ch_remote_t* remote)
 // .. code-block:: cpp
 //
 {
-    A(ch_at_allocated(remote), "Remote not allocated");
+    AP(ch_at_allocated(remote), "Remote (%p) not allocated", (void*) remote);
     ch_chirp_t* chirp = remote->chirp;
     ch_chirp_check_m(chirp);
     ch_connection_t* conn = remote->conn;
@@ -606,7 +606,7 @@ ch_wr_process_queues(ch_remote_t* remote)
             }
         }
     } else {
-        A(ch_at_allocated(conn), "Conn not allocated");
+        AP(ch_at_allocated(conn), "Conn (%p) not allocated", (void*) conn);
         if (!(conn->flags & CH_CN_CONNECTED) ||
             conn->flags & CH_CN_SHUTTING_DOWN) {
             return CH_BUSY;
@@ -669,6 +669,7 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
     ch_rm_init_from_msg(chirp, &search_remote, msg, 0);
     if (ch_rm_find(protocol->remotes, &search_remote, &remote) != CH_SUCCESS) {
         remote = ch_alloc(sizeof(*remote));
+        LC(chirp, "Remote allocated", "ch_remote_t:%p", remote);
         if (remote == NULL) {
             if (send_cb != NULL) {
                 send_cb(chirp, msg, CH_ENOMEM);

@@ -208,18 +208,18 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
 {
     ch_chirp_t* chirp = handle->data;
     ch_chirp_check_m(chirp);
-    ch_chirp_int_t*  ichirp   = chirp->_;
-    ch_protocol_t*   protocol = &ichirp->protocol;
-    ch_config_t*     config   = &ichirp->config;
-    uint64_t         now      = uv_hrtime();
-    uint64_t         then     = now - (1000 * 1000 * 1000 * config->REUSE_TIME);
+    ch_chirp_int_t*  ichirp       = chirp->_;
+    ch_protocol_t*   protocol     = &ichirp->protocol;
+    ch_config_t*     config       = &ichirp->config;
+    uint64_t         now          = uv_now(ichirp->loop);
+    uint64_t         delta        = (1000 * config->REUSE_TIME);
     ch_remote_t*     rm_del_stack = NULL;
     ch_connection_t* cn_del_stack = NULL;
 
     L(chirp, "Garbage-collecting connections and remotes", CH_NO_ARG);
     rb_iter_decl_cx_m(ch_cn, cn_iter, cn_elem);
     rb_for_m (ch_cn, protocol->old_connections, cn_iter, cn_elem) {
-        if (cn_elem->timestamp < then) {
+        if (now - cn_elem->timestamp > delta) {
             ch_cn_st_push(&cn_del_stack, cn_elem);
         }
     }
@@ -234,7 +234,7 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
     rb_iter_decl_cx_m(ch_rm, rm_iter, rm_elem);
     rb_for_m (ch_rm, protocol->remotes, rm_iter, rm_elem) {
         if (!(rm_elem->flags & CH_RM_CONN_BLOCKED) &&
-            rm_elem->timestamp < then) {
+            now - rm_elem->timestamp > delta) {
             A(rm_elem->next == NULL, "Should not be in reconnect_remotes");
             ch_rm_st_push(&rm_del_stack, rm_elem);
         }
