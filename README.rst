@@ -19,7 +19,7 @@ Message-passing for everyone
 
 .. _`Read the Docs`: http://1042.ch/chirp/
 
-BETA-RELEASE: 0.2.0
+BETA-RELEASE: 0.2.1
 ===================
 
 Features
@@ -305,6 +305,20 @@ Changes
 * All functional features implemented
 
 * Some performance/build features missing
+
+
+2018-02-17 - 0.2.1-beta
+-----------------------
+
+* Remove unnecessary copy of reconnect_remotes datastructure
+
+* Simplify iterations gc_connections
+
+* Send noop message the first it is needed
+
+* Fix memory leak in buffer pool
+
+* Switch from uv_hrtime to uv_now
 
 Thanks
 ======
