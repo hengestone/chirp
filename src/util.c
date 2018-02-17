@@ -99,7 +99,10 @@ ch_at_allocated(void* buf)
     ch_alloc_track_t  key;
     ch_alloc_track_t* value;
     key.buf = buf;
-    return _ch_at_find(_ch_alloc_tree, &key, &value) == CH_SUCCESS;
+    uv_mutex_lock(&_ch_at_lock);
+    int ret = _ch_at_find(_ch_alloc_tree, &key, &value) == CH_SUCCESS;
+    uv_mutex_unlock(&_ch_at_lock);
+    return ret;
 }
 
 // .. c:function::
