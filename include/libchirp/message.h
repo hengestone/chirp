@@ -139,6 +139,19 @@ struct ch_message_s {
 
 // .. c:function::
 CH_EXPORT
+void
+ch_msg_free_data(ch_message_t* message);
+//
+//    Frees data attached to the message. This function is mostly intended to
+//    implement bindings, where you can to copy the data into memory provided
+//    by the host language, so it can freely garbage-collect the data.
+//
+//    After calling this the data field will be NULL.
+//
+//    :param ch_message_t* message: Pointer to the message
+
+// .. c:function::
+CH_EXPORT
 ch_error_t
 ch_msg_get_address(const ch_message_t* message, ch_text_address_t* address);
 //

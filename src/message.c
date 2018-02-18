@@ -25,6 +25,24 @@ qs_queue_bind_impl_cx_m(ch_msg, ch_message_t) CH_ALLOW_NL;
 
 // .. c:function::
 CH_EXPORT
+void
+ch_msg_free_data(ch_message_t* message)
+//    :noindex:
+//
+//    see: :c:func:`ch_msg_get_address`
+//
+// .. code-block:: cpp
+//
+{
+    if (message->_flags & CH_MSG_FREE_DATA) {
+        ch_free(message->data);
+        message->_flags &= ~CH_MSG_FREE_DATA;
+    }
+    message->data = NULL;
+}
+
+// .. c:function::
+CH_EXPORT
 ch_error_t
 ch_msg_get_address(const ch_message_t* message, ch_text_address_t* address)
 //    :noindex:
