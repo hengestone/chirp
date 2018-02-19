@@ -34,6 +34,11 @@ ch_msg_free_data(ch_message_t* message)
 // .. code-block:: cpp
 //
 {
+    if (message->_flags & CH_MSG_FREE_HEADER) {
+        ch_free(message->header);
+        message->_flags &= ~CH_MSG_FREE_HEADER;
+    }
+    message->header = NULL;
     if (message->_flags & CH_MSG_FREE_DATA) {
         ch_free(message->data);
         message->_flags &= ~CH_MSG_FREE_DATA;

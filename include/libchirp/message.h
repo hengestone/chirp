@@ -146,7 +146,7 @@ ch_msg_free_data(ch_message_t* message);
 //    implement bindings, where you can to copy the data into memory provided
 //    by the host language, so it can freely garbage-collect the data.
 //
-//    After calling this the data field will be NULL.
+//    After calling this the data/header fields will be NULL.
 //
 //    :param ch_message_t* message: Pointer to the message
 

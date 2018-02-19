@@ -649,7 +649,6 @@ ch_chirp_init(
         ch_chirp_set_log_callback(chirp, log_cb);
     }
 
-    srand(((unsigned int) time(NULL)) | ((unsigned int) uv_hrtime()));
     unsigned int i = 0;
     while (i < (sizeof(tmp_conf->IDENTITY) - 1) && tmp_conf->IDENTITY[i] == 0)
         i += 1;
@@ -1002,6 +1001,7 @@ ch_libchirp_init(void)
                 __LINE__);
         return CH_VALUE_ERROR;
     }
+    srand(((unsigned int) time(NULL)) | ((unsigned int) uv_hrtime()));
     _ch_libchirp_initialized = 1;
     uv_mutex_init(&_ch_chirp_init_lock);
 #ifdef CH_ENABLE_ASSERTS
