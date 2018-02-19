@@ -314,7 +314,7 @@ Changes
 
 * Simplify iterations in gc_connections
 
-* Send noop message the first it is needed
+* Send probe message the first time it is needed
 
 * Fix memory leak in buffer pool
 
