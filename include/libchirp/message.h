@@ -51,7 +51,7 @@
 //    .. c:member:: ch_buf* header
 //
 //       Header of the message defined as (char-) buffer. Used by upper-layer
-//       protocols. Users should not use it, except you know what you are
+//       protocols. Users should not use it, except if you know what you are
 //       doing.
 //
 //    .. c:member:: ch_buf* data
