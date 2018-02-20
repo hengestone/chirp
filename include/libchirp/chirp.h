@@ -28,12 +28,12 @@
 //
 //    .. c:member:: float REUSE_TIME
 //
-//       Time until a connection gets garbage collected. After this the
+//       Time until a connection gets garbage collected. Until then the
 //       connection will be reused.
 //
 //    .. c:member:: float TIMEOUT
 //
-//       General IO related timeout.
+//       IO related timeout: Sending messages, connecting to remotes.
 //
 //    .. c:member:: uint16_t PORT
 //
@@ -78,7 +78,7 @@
 //
 //       conn_size = conn_buffers_size + config.MAX_MSG_SIZE
 //
-//       With the default config and LibreSSL conn_buffers_size should be about
+//       With the default config and SSL conn_buffers_size should be about
 //       64k + 16k + 2k + 32k -> 114k. Derived from documentation, no
 //       measurement done.
 //
@@ -92,16 +92,16 @@
 //
 //    .. c:member:: uint8_t[16] IDENTITY
 //
-//       Override the IDENTITY. By default all chars are 0, which means chirp
-//       will generate a IDENTITY.
+//       Override the chirp-nodes IDENTITY (this chirp instance). By default
+//       all chars are 0, which means chirp will generate a IDENTITY.
 //
 //    .. c:member:: char* CERT_CHAIN_PEM
 //
-//       Holds the verification certificate.
+//       Path to the verification certificate.
 //
 //    .. c:member:: char* DH_PARAMS_PEM
 //
-//       Holds the path to the file containing DH parameters.
+//       Path to the file containing DH parameters.
 //
 //    .. c:member:: char DISABLE_ENCRYPTION
 //
