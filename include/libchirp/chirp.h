@@ -43,11 +43,11 @@
 //
 //       TCP-listen socket backlog.
 //
-//    .. c:member:: uint8_t MAX_HANDLERS
+//    .. c:member:: uint8_t MAX_SLOTS
 //
-//       Count of handlers used. Allowed values are values between 1 and 32.
-//       The default is 0: Use 16 handlers of ACKNOWLEDGE=0 and 1 handler if
-//       ACKNOWLEDGE=1.
+//       The count of message-slots used. Allowed values are values between 1
+//       and 32. The default is 0: Use 16 slots if ACKNOWLEDGE=0 and 1
+//       slot if ACKNOWLEDGE=1.
 //
 //    .. c:member:: char ACKNOWLEDGE
 //
@@ -66,7 +66,7 @@
 //    .. c:member:: uint32_t MAX_MSG_SIZE
 //
 //       Max message size accepted by chirp. If you are concerned about memory
-//       usage set config.MAX_HANDLERS=1 and config.MAX_MSG_SIZE to something
+//       usage set config.MAX_SLOTS=1 and config.MAX_MSG_SIZE to something
 //       small, depending on your use-case. If you do this, a connection will
 //       use about:
 //
@@ -115,7 +115,7 @@ struct ch_config_s {
     float    TIMEOUT;
     uint16_t PORT;
     uint8_t  BACKLOG;
-    uint8_t  MAX_HANDLERS;
+    uint8_t  MAX_SLOTS;
     char     ACKNOWLEDGE;
     char     DISABLE_SIGNALS;
     uint32_t BUFFER_SIZE;
@@ -248,14 +248,16 @@ ch_chirp_init(
 // .. c:function::
 CH_EXPORT
 void
-ch_chirp_release_message(ch_message_t* msg);
+ch_chirp_release_msg_slot(ch_message_t* msg);
 //
-//    Release the internal receive handler and acknowledge the message. Must be
-//    called when the message isn't needed anymore. IMPORTANT: Neglecting to
-//    release the handler will lockup chirp. Never ever change a messages
-//    identity.
+//    Release the internal message-slot and acknowledge the message (if
+//    ACKNOWLEDGE=1). Must be called when the message isn't needed anymore,
+//    afterwards the message may NOT be used anymore.
 //
-//    :param ch_message_t* msg: The message representing the handler.
+//    IMPORTANT: Neglecting to release the slot will lockup chirp. Never ever
+//    change a messages identity.
+//
+//    :param ch_message_t* msg: The message representing the slot.
 //
 
 // .. c:function::

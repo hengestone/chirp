@@ -84,8 +84,8 @@ If the user hits ctrl-c, the main-loop will close and we cleanup libchirp using
    }
 
 The memory reserved for the message has to be retained till the message is sent
-or has failed, so we release the receive handler after message is successfully
-send. :c:func:`ch_chirp_release_message`
+or has failed, so we release the slot after message is successfully sent.
+:c:func:`ch_chirp_release_msg_slot`
 
 .. code-block:: cpp
 
@@ -93,7 +93,7 @@ send. :c:func:`ch_chirp_release_message`
    void
    sent_cb(ch_chirp_t* chirp, ch_message_t* msg, int status)
    {
-       ch_chirp_release_message(msg);
+       ch_chirp_release_msg_slot(msg);
    }
 
 .. vim: set spell spelllang=en foldmethod=marker sw=2 ts=2 et tw=76: .. }}}

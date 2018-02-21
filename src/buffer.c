@@ -58,14 +58,14 @@ ch_bf_free(ch_buffer_pool_t* pool)
 {
     pool->refcnt -= 1;
     if (pool->refcnt == 0) {
-        ch_free(pool->handlers);
+        ch_free(pool->slots);
         ch_free(pool);
     }
 }
 
 // .. c:function::
 ch_error_t
-ch_bf_init(ch_buffer_pool_t* pool, ch_connection_t* conn, uint8_t max_buffers)
+ch_bf_init(ch_buffer_pool_t* pool, ch_connection_t* conn, uint8_t max_slots)
 //    :noindex:
 //
 //    See: :c:func:`ch_bf_init`
@@ -74,35 +74,35 @@ ch_bf_init(ch_buffer_pool_t* pool, ch_connection_t* conn, uint8_t max_buffers)
 //
 {
     int i;
-    A(max_buffers <= 32, "buffer.c can't handle more than 32 handlers");
+    A(max_slots <= 32, "can't handle more than 32 slots");
     memset(pool, 0, sizeof(*pool));
-    pool->conn         = conn;
-    pool->refcnt       = 1;
-    size_t pool_mem    = max_buffers * sizeof(ch_bf_handler_t);
-    pool->used_buffers = 0;
-    pool->max_buffers  = max_buffers;
-    pool->handlers     = ch_alloc(pool_mem);
-    if (!pool->handlers) {
+    pool->conn       = conn;
+    pool->refcnt     = 1;
+    size_t pool_mem  = max_slots * sizeof(ch_bf_slot_t);
+    pool->used_slots = 0;
+    pool->max_slots  = max_slots;
+    pool->slots      = ch_alloc(pool_mem);
+    if (!pool->slots) {
         fprintf(stderr,
-                "%s:%d Fatal: Could not allocate memory fo r buffers. "
+                "%s:%d Fatal: Could not allocate memory for buffers. "
                 "ch_buffer_pool_t:%p\n",
                 __FILE__,
                 __LINE__,
                 (void*) pool);
         return CH_ENOMEM;
     }
-    memset(pool->handlers, 0, pool_mem);
-    pool->free_buffers = 0xFFFFFFFFU;
-    pool->free_buffers <<= (32 - max_buffers);
-    for (i = 0; i < max_buffers; ++i) {
-        pool->handlers[i].id   = i;
-        pool->handlers[i].used = 0;
+    memset(pool->slots, 0, pool_mem);
+    pool->free_slots = 0xFFFFFFFFU;
+    pool->free_slots <<= (32 - max_slots);
+    for (i = 0; i < max_slots; ++i) {
+        pool->slots[i].id   = i;
+        pool->slots[i].used = 0;
     }
     return CH_SUCCESS;
 }
 
 // .. c:function::
-ch_bf_handler_t*
+ch_bf_slot_t*
 ch_bf_acquire(ch_buffer_pool_t* pool)
 //    :noindex:
 //
@@ -111,22 +111,22 @@ ch_bf_acquire(ch_buffer_pool_t* pool)
 // .. code-block:: cpp
 //
 {
-    ch_bf_handler_t* handler_buf;
-    if (pool->used_buffers < pool->max_buffers) {
+    ch_bf_slot_t* slot_buf;
+    if (pool->used_slots < pool->max_slots) {
         int free;
-        pool->used_buffers += 1;
-        free = ch_msb32(pool->free_buffers);
+        pool->used_slots += 1;
+        free = ch_msb32(pool->free_slots);
         /* Reserve the buffer. */
-        pool->free_buffers &= ~(1 << (free - 1));
+        pool->free_slots &= ~(1 << (free - 1));
         /* The msb represents the first buffer. So the value is inverted. */
-        handler_buf = &pool->handlers[32 - free];
-        A(handler_buf->used == 0, "Handler buffer already used.");
-        handler_buf->used = 1;
-        memset(&handler_buf->msg, 0, sizeof(handler_buf->msg));
-        handler_buf->msg._handler = handler_buf->id;
-        handler_buf->msg._pool    = pool;
-        handler_buf->msg._flags   = CH_MSG_IS_HANDLER;
-        return handler_buf;
+        slot_buf = &pool->slots[32 - free];
+        A(slot_buf->used == 0, "Slot already used.");
+        slot_buf->used = 1;
+        memset(&slot_buf->msg, 0, sizeof(slot_buf->msg));
+        slot_buf->msg._slot  = slot_buf->id;
+        slot_buf->msg._pool  = pool;
+        slot_buf->msg._flags = CH_MSG_HAS_SLOT;
+        return slot_buf;
     }
     return NULL;
 }
@@ -141,24 +141,24 @@ ch_bf_release(ch_buffer_pool_t* pool, int id)
 // .. code-block:: cpp
 //
 {
-    ch_bf_handler_t* handler_buf = &pool->handlers[id];
-    A(handler_buf->used == 1, "Double release of buffer.");
-    A(pool->used_buffers > 0, "Buffer pool inconsistent.");
-    A(handler_buf->id == id, "Id changed.");
-    A(handler_buf->msg._handler == id, "Id changed.");
-    int in_pool = pool->free_buffers & (1 << (31 - id));
+    ch_bf_slot_t* slot_buf = &pool->slots[id];
+    A(slot_buf->used == 1, "Double release of slot.");
+    A(pool->used_slots > 0, "Buffer pool inconsistent.");
+    A(slot_buf->id == id, "Id changed.");
+    A(slot_buf->msg._slot == id, "Id changed.");
+    int in_pool = pool->free_slots & (1 << (31 - id));
     A(!in_pool, "Buffer already in pool");
     if (in_pool) {
         fprintf(stderr,
-                "%s:%d Fatal: Double release of handler buffer. "
+                "%s:%d Fatal: Double release of slot. "
                 "ch_buffer_pool_t:%p\n",
                 __FILE__,
                 __LINE__,
                 (void*) pool);
         return;
     }
-    pool->used_buffers -= 1;
+    pool->used_slots -= 1;
     /* Release the buffer. */
-    handler_buf->used = 0;
-    pool->free_buffers |= (1 << (31 - id));
+    slot_buf->used = 0;
+    pool->free_slots |= (1 << (31 - id));
 }

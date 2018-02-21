@@ -101,7 +101,7 @@ static int
 _ch_pr_resume(ch_connection_t* conn);
 //
 //    Resume partial read when the connection was stopped because the last
-//    buffer was used. Returns 1 if it ok to restart the reader.
+//    message-slot was used. Returns 1 if it ok to restart the reader.
 //
 //    :param ch_connection_t* conn: Pointer to a connection handle.
 
@@ -127,9 +127,9 @@ _ch_pr_update_resume(
         ssize_t            bytes_handled);
 //
 //    Update the resume state. Checks if reading was partial and sets resume
-//    state that points to the remaining data. If the last buffer was used, it
-//    is possible that all that has been read and we can just stop or that
-//    there is still a message in the buffer.
+//    state that points to the remaining data. If the last message-slot was
+//    used, it is possible that all that has been read and we can just stop or
+//    that there is still a message in the buffer.
 //
 //    :param ch_resume_state_t* resume: Pointer to resume state.
 //    :param ch_buf* buf: Pointer to buffer being checked.

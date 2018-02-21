@@ -108,15 +108,15 @@ ch_msg_get_remote_identity(ch_message_t* message)
 // .. c:function::
 CH_EXPORT
 int
-ch_msg_has_recv_handler(ch_message_t* message)
+ch_msg_has_slot(ch_message_t* message)
 //    :noindex:
 //
-//    see: :c:func:`ch_msg_has_recv_handler`
+//    see: :c:func:`ch_msg_has_slot`
 //
 // .. code-block:: cpp
 //
 {
-    return message->_flags & CH_MSG_IS_HANDLER;
+    return message->_flags & CH_MSG_HAS_SLOT;
 }
 
 // .. c:function::

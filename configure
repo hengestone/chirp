@@ -18,7 +18,7 @@ import sys
 import shutil
 
 _project = "libchirp"
-_version_long = "0.2.1-beta"
+_version_long = "1.0.0-beta"
 _version = _version_long.split('-')[0]
 
 _base = path.dirname(path.realpath(__file__))

@@ -87,13 +87,13 @@ etests: stest  ## Run binary tests
 			--no-ack \
 			--always-encrypt \
 			--slow \
-			--min-handlers \
+			--min-slots \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(MEMCHECK) $(BUILD)/src/message_etest \
 			--no-ack \
 			--always-encrypt \
-			--min-handlers \
+			--min-slots \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(MEMCHECK) $(BUILD)/src/message_etest \

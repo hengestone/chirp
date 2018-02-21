@@ -23,7 +23,7 @@ Message-passing for everyone
 
     <img alt="chirp" src="https://raw.githubusercontent.com/concretecloud/chirp/master/doc/_static/chirp.png" width="33%" style="float: left;">
 
-BETA-RELEASE: 0.2.1
+BETA-RELEASE: 1.0.0
 ===================
 
 Features
@@ -323,6 +323,21 @@ Changes
 * Fix memory leak in buffer pool
 
 * Switch from uv_hrtime to uv_now
+
+2018-??-?? - 1.0.0-beta
+-----------------------
+
+Not yet released
+
+* Renaming buffer-handlers to message-slots (ABI break)
+
+* Add _ssl_context to message for future use (ABI break)
+
+* Move srand() to ch_libchirp_init
+
+* ch_msg_free_data now also frees the upper-layer protocol header
+
+* Missing lock in ch_at_allocated
 
 Thanks
 ======

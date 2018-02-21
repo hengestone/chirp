@@ -59,7 +59,7 @@ static ch_config_t _ch_config_defaults = {
         .TIMEOUT            = 5.0,
         .PORT               = 2998,
         .BACKLOG            = 100,
-        .MAX_HANDLERS       = 0,
+        .MAX_SLOTS          = 0,
         .ACKNOWLEDGE        = 1,
         .DISABLE_SIGNALS    = 0,
         .BUFFER_SIZE        = 0,
@@ -474,13 +474,13 @@ _ch_chirp_verify_cfg(ch_chirp_t* chirp)
       conf->REUSE_TIME);
     if (conf->ACKNOWLEDGE == 1) {
         V(chirp,
-          conf->MAX_HANDLERS == 1,
-          "Config: if acknowledge is enabled max handlers must be 1.",
+          conf->MAX_SLOTS == 1,
+          "Config: if acknowledge is enabled max slots must be 1.",
           CH_NO_ARG);
     }
     V(chirp,
-      conf->MAX_HANDLERS <= 32,
-      "Config: max handlers must be <= 1.",
+      conf->MAX_SLOTS <= 32,
+      "Config: max slots must be <= 1.",
       CH_NO_ARG);
     V(chirp,
       conf->BUFFER_SIZE >= CH_MIN_BUFFER_SIZE || conf->BUFFER_SIZE == 0,
@@ -658,11 +658,11 @@ ch_chirp_init(
         *ichirp->identity = *tmp_conf->IDENTITY;
     }
 
-    if (tmp_conf->MAX_HANDLERS == 0) {
+    if (tmp_conf->MAX_SLOTS == 0) {
         if (tmp_conf->ACKNOWLEDGE) {
-            tmp_conf->MAX_HANDLERS = 1;
+            tmp_conf->MAX_SLOTS = 1;
         } else {
-            tmp_conf->MAX_HANDLERS = 16;
+            tmp_conf->MAX_SLOTS = 16;
         }
     }
 

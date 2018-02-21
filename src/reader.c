@@ -113,7 +113,7 @@ _ch_rd_read_step(
 //    :param ch_connection_t* conn: Connection the data was read from.
 //    :param void* buffer:          The buffer containing ``read`` bytes read.
 //    :param size_t bytes_read:     The bytes read.
-//    :param size_t bytes_handler:  The bytes handled in the last step
+//    :param size_t bytes_handled:  The bytes handled in the last step
 //    :param int* stop:             (Out) Stop the reading process.
 //    :param int* cont:             (Out) Request continuation
 //
@@ -141,7 +141,7 @@ char* _ch_rd_state_names[] = {
         "CH_RD_START",
         "CH_RD_HANDSHAKE",
         "CH_RD_WAIT",
-        "CH_RD_HANDLER",
+        "CH_RD_SLOT",
         "CH_RD_HEADER",
         "CH_RD_DATA",
 };
@@ -273,19 +273,19 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
 #endif
 
     reader->state   = CH_RD_WAIT;
-    reader->handler = NULL;
+    reader->slot    = NULL;
     conn->timestamp = uv_now(ichirp->loop);
     if (conn->remote != NULL) {
         conn->remote->timestamp = conn->timestamp;
     }
 
-    /* Only increase refcnt if we know ch_chirp_release_message is called */
+    /* Only increase refcnt if we know ch_chirp_release_msg_slot is called */
     reader->pool->refcnt += 1;
     if (ichirp->recv_cb != NULL) {
         ichirp->recv_cb(chirp, msg);
     } else {
         E(chirp, "No receiving callback function registered", CH_NO_ARG);
-        ch_chirp_release_message(msg);
+        ch_chirp_release_msg_slot(msg);
     }
 }
 
@@ -336,12 +336,12 @@ _ch_rd_read_step(
 // .. code-block:: cpp
 //
 {
-    ch_message_t*    msg;
-    ch_bf_handler_t* handler;
-    ch_chirp_t*      chirp   = conn->chirp;
-    ch_chirp_int_t*  ichirp  = chirp->_;
-    ch_reader_t*     reader  = &conn->reader;
-    int              to_read = bytes_read - bytes_handled;
+    ch_message_t*   msg;
+    ch_bf_slot_t*   slot;
+    ch_chirp_t*     chirp   = conn->chirp;
+    ch_chirp_int_t* ichirp  = chirp->_;
+    ch_reader_t*    reader  = &conn->reader;
+    int             to_read = bytes_read - bytes_handled;
 
     LC(chirp,
        "Reader state: %s. ",
@@ -417,19 +417,19 @@ _ch_rd_read_step(
             }
             break;
         } else {
-            reader->state = CH_RD_HANDLER;
+            reader->state = CH_RD_SLOT;
         }
-        /* Since we do not read any data in CH_RD_HANDLER, we need to ask for
+        /* Since we do not read any data in CH_RD_SLOT, we need to ask for
          * continuation. I wanted to solve this with a fall-though-case, but
          * linters and compilers are complaining. */
         *cont = 1;
         break;
     }
-    case CH_RD_HANDLER: {
+    case CH_RD_SLOT: {
         ch_message_t* wire_msg = &reader->wire_msg;
-        if (reader->handler == NULL) {
-            reader->handler = ch_bf_acquire(reader->pool);
-            if (reader->handler == NULL) {
+        if (reader->slot == NULL) {
+            reader->slot = ch_bf_acquire(reader->pool);
+            if (reader->slot == NULL) {
                 LC(chirp, "Stop reading", "ch_connection_t:%p", conn);
                 if (!(conn->flags & CH_CN_STOPPED)) {
                     LC(chirp, "Stop stream", "ch_connection_t:%p", conn);
@@ -440,8 +440,8 @@ _ch_rd_read_step(
                 return bytes_handled;
             }
         }
-        handler = reader->handler;
-        msg     = &handler->msg;
+        slot = reader->slot;
+        msg  = &slot->msg;
         /* Copy the wire message */
         memcpy(msg, wire_msg, ((char*) &wire_msg->header) - ((char*) wire_msg));
         msg->ip_protocol = conn->ip_protocol;
@@ -464,8 +464,8 @@ _ch_rd_read_step(
     case CH_RD_HEADER: {
         if (bytes_read == 0)
             return -1;
-        handler = reader->handler;
-        msg     = &handler->msg;
+        slot = reader->slot;
+        msg  = &slot->msg;
         if (_ch_rd_read_buffer(
                     conn,
                     reader,
@@ -473,7 +473,7 @@ _ch_rd_read_step(
                     buf + bytes_handled,
                     to_read,
                     &msg->header,
-                    handler->header,
+                    slot->header,
                     CH_BF_PREALLOC_HEADER,
                     msg->header_len,
                     CH_MSG_FREE_HEADER,
@@ -491,8 +491,8 @@ _ch_rd_read_step(
     case CH_RD_DATA: {
         if (bytes_read == 0)
             return -1;
-        handler = reader->handler;
-        msg     = &handler->msg;
+        slot = reader->slot;
+        msg  = &slot->msg;
         if (_ch_rd_read_buffer(
                     conn,
                     reader,
@@ -500,7 +500,7 @@ _ch_rd_read_step(
                     buf + bytes_handled,
                     to_read,
                     &msg->data,
-                    handler->data,
+                    slot->data,
                     CH_BF_PREALLOC_DATA,
                     msg->data_len,
                     CH_MSG_FREE_DATA,
@@ -586,7 +586,7 @@ ch_rd_init(ch_reader_t* reader, ch_connection_t* conn, ch_chirp_int_t* ichirp)
     if (reader->pool == NULL) {
         return CH_ENOMEM;
     }
-    return ch_bf_init(reader->pool, conn, ichirp->config.MAX_HANDLERS);
+    return ch_bf_init(reader->pool, conn, ichirp->config.MAX_SLOTS);
 }
 
 // .. c:function::
@@ -625,19 +625,19 @@ ch_rd_read(ch_connection_t* conn, ch_buf* buf, size_t bytes_read, int* stop)
 
 CH_EXPORT
 void
-ch_chirp_release_message(ch_message_t* msg)
+ch_chirp_release_msg_slot(ch_message_t* msg)
 //    :noindex:
 //
-//    see: :c:func:`ch_chirp_release_message`
+//    see: :c:func:`ch_chirp_release_msg_slot`
 //
 // .. code-block:: cpp
 //
 {
     ch_buffer_pool_t* pool = msg->_pool;
     ch_connection_t*  conn = pool->conn;
-    if (!(msg->_flags & CH_MSG_IS_HANDLER)) {
+    if (!(msg->_flags & CH_MSG_HAS_SLOT)) {
         fprintf(stderr,
-                "%s:%d Fatal: Release of non handler message. "
+                "%s:%d Fatal: Message does not have a slot. "
                 "ch_buffer_pool_t:%p\n",
                 __FILE__,
                 __LINE__,
@@ -673,7 +673,7 @@ ch_chirp_release_message(ch_message_t* msg)
         ch_free(msg->header);
     }
     int pool_is_empty = ch_bf_is_exhausted(pool);
-    ch_bf_release(pool, msg->_handler);
+    ch_bf_release(pool, msg->_slot);
     /* Decrement refcnt and free if zero */
     ch_bf_free(pool);
     if (pool_is_empty && conn) {

@@ -1,4 +1,4 @@
-"""Test chirp buffers/handlers."""
+"""Test chirp buffers."""
 import mpipe
 
 from hypothesis.strategies import tuples, sampled_from, just, integers

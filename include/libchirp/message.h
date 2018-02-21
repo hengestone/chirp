@@ -146,7 +146,7 @@ struct ch_message_s {
     void*         user_data;
     uint8_t       _flags;
     ch_send_cb_t  _send_cb;
-    uint8_t       _handler;
+    uint8_t       _slot;
     void*         _pool;
     void*         _ssl_context;
     ch_message_t* _next;
@@ -167,8 +167,8 @@ struct ch_message_s {
 //        recv_exactly(buffer=msg.data, msg.data_len)
 //    }
 //
-// * Please use MAX_HANDLERS preallocated buffers of size 32 for header
-// * Please use MAX_HANDLERS preallocated buffers of size 512 for data
+// * Please use MAX_SLOTS preallocated buffers of size 32 for header
+// * Please use MAX_SLOTS preallocated buffers of size 512 for data
 //
 // Either fields may exceed the limit, in which case you have to alloc and set
 // the free_* field.
@@ -231,10 +231,10 @@ ch_msg_get_remote_identity(ch_message_t* message);
 // .. c:function::
 CH_EXPORT
 int
-ch_msg_has_recv_handler(ch_message_t* message);
+ch_msg_has_slot(ch_message_t* message);
 //
-//    Returns 1 if the message has a recv handler and therefore you have to
-//    call ch_chirp_release_message.
+//    Returns 1 if the message has a slot and therefore you have to call
+//    ch_chirp_release_msg_slot.
 //
 //    :param ch_message_t* message: Pointer to the message
 //

@@ -231,7 +231,7 @@ static void
 new_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 {
     (void) (chirp);
-    ch_chirp_release_message(msg);
+    ch_chirp_release_msg_slot(msg);
 }
 
 // Sent callback

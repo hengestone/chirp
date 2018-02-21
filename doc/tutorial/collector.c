@@ -46,7 +46,7 @@ static int   upstream_port;
 // -------------
 //
 // This is needed to clean up after a message has been sent upstream.
-// We use it to release the recv handler from the message that we received.
+// We use it to release the slot from the message that we received.
 //
 // .. code-block:: cpp
 
@@ -55,7 +55,7 @@ sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
     (void) (chirp);
     (void) (status);
-    ch_chirp_release_message(msg);
+    ch_chirp_release_msg_slot(msg);
 }
 
 // Listening for incoming messages
@@ -66,7 +66,7 @@ sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 //
 // We just forward the message to our upstream and declare our work done.
 //
-// But take note: Chrip expects us to release the recv handler when done, so
+// But take note: Chrip expects us to release the message-slot when done, so
 // don't forget that! We're doing this only after forwarding the message, so
 // check ``sent_cb`` to see it.
 //

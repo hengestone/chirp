@@ -61,7 +61,7 @@ Connection-synchronous (config.ACKNOWLEDGE=1)
 ---------------------------------------------
 
 * The send callback only returns a success when the remote has called
-  ch_chirp_release_message
+  ch_chirp_release_msg_slot
 
 * No message can be lost by chirp
 
@@ -69,7 +69,7 @@ Connection-synchronous (config.ACKNOWLEDGE=1)
   ch_chirp_release message. Then the application has to take care that the
   copied message is not lost
 
-* If the application calls ch_chirp_release_message after the operation is
+* If the application calls ch_chirp_release_msg_slot after the operation is
   finished, messages will automatically be throttled. Be aware of the timeout:
   if the applications operation takes longer either increase the timeout or copy
   the message (with copying you lose the throttling)
@@ -84,7 +84,7 @@ Connection-asynchronous (config.ACKNOWLEDGE=0)
 
 * If unexpected errors (ie. remote dies) happen, message can be lost in the TCP buffer
 
-* Automatic concurrency, by default chirp uses 16 concurrent handlers 
+* Automatic concurrency, by default chirp uses 16 concurrent message-slots
 
 * The application needs a scheduler that periodically checks that operations
   have completed

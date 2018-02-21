@@ -2,8 +2,8 @@
 // Buffer header
 // =============
 //
-// Implements a buffer pool. There is header and data buffer per chrip
-// handler.
+// Implements a buffer pool. There is header and data buffer per chirp
+// message-slot.
 //
 // .. code-block:: cpp
 //
@@ -22,9 +22,9 @@
 // Declarations
 // ============
 
-// .. c:type:: ch_bf_handler_t
+// .. c:type:: ch_bf_slot_t
 //
-//    Preallocated buffer for a chirp handler.
+//    Preallocated buffer for a chirp message-slot.
 //
 //    .. c:member:: ch_message_t
 //
@@ -48,39 +48,38 @@
 //
 // .. code-block:: cpp
 //
-typedef struct ch_bf_handler_s {
+typedef struct ch_bf_slot_s {
     ch_message_t msg;
     ch_buf       header[CH_BF_PREALLOC_HEADER];
     ch_buf       data[CH_BF_PREALLOC_DATA];
     uint8_t      id;
     uint8_t      used;
-} ch_bf_handler_t;
+} ch_bf_slot_t;
 
 // .. c:type:: ch_buffer_pool_t
 //
-//    Contains the preallocated buffers for the chirp handlers.
+//    Contains the preallocated buffers for the chirp message-slot.
 //
 //    .. c:member:: unsigned int refcnf
 //
 //       Reference count
 //
-//    .. c:member:: uint8_t max_buffers
+//    .. c:member:: uint8_t max_slots
 //
-//       Defines the maximum number of buffers.
+//       The maximum number of buffers (slots).
 //
-//    .. c:member:: uint8_t used_buffers
+//    .. c:member:: uint8_t used_slots
 //
-//       Defines how many buffers are currently used.
+//       How many slots are currently used.
 //
-//    .. c:member:: uint32_t free_buffers
+//    .. c:member:: uint32_t free_slots
 //
-//       Defeines how many buffers are currently free (and therefore may be
-//       used).
+//       Bit mask of slots that are currently free (and therefore may be used).
 //
-//    .. c:member:: ch_bf_handler_t* handlers
+//    .. c:member:: ch_bf_slot_t* slots
 //
-//       Pointer of type ch_bf_handler_t to the actual handlers. See
-//       :c:type:`ch_bf_handler_t`.
+//       Pointer of type ch_bf_slot_t to the actual slots. See
+//       :c:type:`ch_bf_slot_t`.
 //
 //    .. c:member:: ch_connection_t*
 //
@@ -90,10 +89,10 @@ typedef struct ch_bf_handler_s {
 //
 typedef struct ch_buffer_pool_s {
     unsigned int     refcnt;
-    uint8_t          max_buffers;
-    uint8_t          used_buffers;
-    uint32_t         free_buffers;
-    ch_bf_handler_t* handlers;
+    uint8_t          max_slots;
+    uint8_t          used_slots;
+    uint32_t         free_slots;
+    ch_bf_slot_t*    slots;
     ch_connection_t* conn;
 } ch_buffer_pool_t;
 
@@ -108,27 +107,27 @@ ch_bf_free(ch_buffer_pool_t* pool);
 
 // .. c:function::
 ch_error_t
-ch_bf_init(ch_buffer_pool_t* pool, ch_connection_t* conn, uint8_t max_buffers);
+ch_bf_init(ch_buffer_pool_t* pool, ch_connection_t* conn, uint8_t max_slots);
 //
-//    Initialize the given buffer pool structure using given max. buffers.
+//    Initialize the given buffer pool structure using given max slots.
 //
 //    :param ch_buffer_pool_t* pool: The buffer pool object
 //    :param ch_connection_t* conn: Connection that owns the pool
-//    :param uint8_t max_buffers: Buffers to allocate
+//    :param uint8_t max_slots: Slots to allocate
 //
 
 // .. c:function::
-ch_bf_handler_t*
+ch_bf_slot_t*
 ch_bf_acquire(ch_buffer_pool_t* pool);
 //
-//    Acquire and return a new handler buffer from the pool. If no handler can
+//    Acquire and return a new buffer from the pool. If no slot can
 //    be reserved NULL is returned.
 //
 //    :param ch_buffer_pool_t* pool: The buffer pool structure which the
 //                                   reservation shall be made from.
-//    :return: a pointer to a reserved handler buffer from the given buffer
-//            pool. See :c:type:`ch_bf_handler_t`
-//    :rtype:  ch_bf_handler_t
+//    :return: a pointer to a reserved buffer from the given buffer
+//            pool. See :c:type:`ch_bf_slot_t`
+//    :rtype:  ch_bf_slot_t
 //
 // .. c:function::
 static inline int
@@ -141,17 +140,17 @@ ch_bf_is_exhausted(ch_buffer_pool_t* pool)
 // .. code-block:: cpp
 //
 {
-    return pool->used_buffers >= pool->max_buffers;
+    return pool->used_slots >= pool->max_slots;
 }
 
 // .. c:function::
 void
 ch_bf_release(ch_buffer_pool_t* pool, int id);
 //
-//    Set given handler buffer as unused in the buffer pool structure and
-//    (re-)add it to the list of free buffers.
+//    Set given slot as unused in the buffer pool structure and (re-)add it to
+//    the list of free slots.
 //
-//    :param int id: The id of the buffer that should be marked free
+//    :param int id: The id of the slot that should be marked free
 //
 // .. code-block:: cpp
 //

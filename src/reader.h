@@ -35,9 +35,9 @@
 //
 //       Wait for the next message.
 //
-//    .. c:member:: CH_RD_HANDLER
+//    .. c:member:: CH_RD_SLOT
 //
-//       Acquire a handler.
+//       Acquire a slot.
 //
 //    .. c:member:: CH_RD_HEADER
 //
@@ -53,7 +53,7 @@ typedef enum {
     CH_RD_START     = 0,
     CH_RD_HANDSHAKE = 1,
     CH_RD_WAIT      = 2,
-    CH_RD_HANDLER   = 3,
+    CH_RD_SLOT      = 3,
     CH_RD_HEADER    = 4,
     CH_RD_DATA      = 5,
 } ch_rd_state_t;
@@ -70,9 +70,9 @@ typedef enum {
 //
 //       Current message
 //
-//    .. c:member:: ch_bf_handler_t* handler
+//    .. c:member:: ch_bf_slot_t* slot
 //
-//       Current handler buffer
+//       Current message-slot
 //
 //    .. c:member:: ch_message_t ack_msg
 //
@@ -91,13 +91,14 @@ typedef enum {
 //
 //    .. c:member:: ch_buffer_pool_t pool
 //
-//       Data structure containing preallocated buffers for the chirp handlers.
+//       Data structure containing preallocated buffers for the chirp
+//       message-slots.
 //
 // .. code-block:: cpp
 //
 typedef struct ch_reader_s {
     ch_rd_state_t     state;
-    ch_bf_handler_t*  handler;
+    ch_bf_slot_t*     slot;
     ch_message_t      ack_msg;
     ch_message_t      wire_msg;
     size_t            bytes_read;
@@ -121,7 +122,7 @@ ch_rd_init(ch_reader_t* reader, ch_connection_t* conn, ch_chirp_int_t* ichirp);
 //    Initialize the reader structure.
 //
 //    :param ch_reader_t* reader: The reader instance whose buffer pool shall
-//                                be initialized with ``max_buffers``.
+//                                be initialized with ``max_slots``.
 //    :param ch_connection_t* conn: Connection that owns the reader
 //    :param ch_chirp_int_t ichirp: Internal chirp instance
 //    :rtype: ch_error_t
