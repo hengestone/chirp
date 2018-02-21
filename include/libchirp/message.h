@@ -148,6 +148,7 @@ struct ch_message_s {
     ch_send_cb_t  _send_cb;
     uint8_t       _handler;
     void*         _pool;
+    void*         _ssl_context;
     ch_message_t* _next;
 };
 
