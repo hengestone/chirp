@@ -29,12 +29,18 @@
 //
 //    .. c:member:: uint8_t[16] identity
 //
-//       The identity of the message. Never change the identity of message.
+//       Identify the message and answers to it. Never change the identity of
+//       message. The identity can be used to find answers to a message, since
+//       replying to message won't change the identity.
+//
+//       If you need to uniquely identify the message, use the identity/serial
+//       pair, since the serial will change when replying to messages.
 //
 //    .. c:member:: uint32_t serial
 //
-//       The serial number of the message. Represents to order they are sent.
-//       Be aware of overflows.
+//       The serial number of the message. Increases monotonic. Be aware of
+//       overflows, if want to use it for ordering use the delta: serialA -
+//       serialB.
 //
 //    .. c:member:: uint8_t type
 //
@@ -50,9 +56,9 @@
 //
 //    .. c:member:: ch_buf* header
 //
-//       Header of the message defined as (char-) buffer. Used by upper-layer
-//       protocols. Users should not use it, except if you know what you are
-//       doing.
+//       Header used by upper-layer protocols. Users should not use it, except
+//       if you know what you are doing. ch_buf* is an alias for char* and
+//       denotes to binary buffer: the length has to be supplied (header_len)
 //
 //    .. c:member:: ch_buf* data
 //
@@ -62,25 +68,54 @@
 //
 //    .. c:member:: uint8_t ip_protocol
 //
-//       The IP protocol which was / shall be used for this message. This may
-//       either be IPv4 or IPv6. See :c:type:`ch_ip_protocol_t`.
+//       The IP protocol which was / shall be used for this message.
+//
+//       If the message was received: The protocol of the remote the message
+//       was received from.
+//
+//       If the message will be sent: The protocol to send the message to.
+//
+//       This allows to reply to messages just by replacing the data
+//       :c:func:`ch_msg_set_data`.
+//
+//       This may either be IPv4 or IPv6. See :c:type:`ch_ip_protocol_t`.
+//       Please use :c:func:`ch_msg_set_address` to set this.
 //
 //    .. c:member:: uint8_t[16] address
 //
-//       IPv4/6 address of the sender if the message was received. IPv4/6
-//       address of the recipient if the message is going to be sent.
+//       IPv4/6 address.
+//
+//       If the message was received: The address of the remote the message was
+//       received from.
+//
+//       If the message will be sent: The address to send the message to.
+//
+//       This allows to reply to messages just by replacing the data
+//       :c:func:`ch_msg_set_data`.
+//
+//       Please use :c:func:`ch_msg_set_address` to set and
+//       :c:func:`ch_msg_get_address` to get the address.
 //
 //    .. c:member:: int32_t port
 //
-//       The port that the will be used reading/writing a message over a
-//       connection.
+//       The port.
+//
+//       If the message was received: The port of the remote the message was
+//       received from.
+//
+//       If the message will be sent: The port to send the message to.
+//
+//       This allows to reply to messages just by replacing the data
+//       :c:func:`ch_msg_set_data`.
+//
+//       Please use :c:func:`ch_msg_set_address` to set the port.
 //
 //    .. c:member:: uint8_t remote_identity[CH_ID_SIZE]
 //
-//       Used to detect the remote instance. By default the remote_identity
-//       will change on each start of chirp. If multiple peers share state,
-//       a change in the remote_identity should trigger a reset of the state.
-//       Simply use the remote_identity as key in a dictionary of shared state.
+//       Detect the remote instance. By default a node's identity will change
+//       on each start of chirp. If multiple peers share state, a change in the
+//       remote_identity should trigger a reset of the state. Simply use the
+//       remote_identity as key in a dictionary of shared state.
 //
 //    .. c:member:: ch_chirp_t* chirp
 //
