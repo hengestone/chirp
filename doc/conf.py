@@ -315,7 +315,6 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-#    'https://docs.python.org/': None,
-# TODO reenable: We have a segfault on 1042.ch because of that
+    'https://docs.python.org/': None,
     'http://docs.libuv.org/en/v1.x/': None,
 }
