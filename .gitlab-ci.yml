@@ -1,0 +1,18 @@
+image: acr.run/concretecloud/chirp/sphinx
+
+stages:
+  - docs
+
+make-docs:
+  only:
+    - master
+  stage: docs
+  script:
+    - cd build
+    - apt-get update
+    - apt-get -y install python3 python3-sphinx python3-sphinx-rtd-theme graphviz build-essential
+    - ../configure --doc
+    - make doc
+  artifacts:
+    paths:
+      - build/doc/html/*

@@ -9,7 +9,7 @@ Message-passing for everyone
 .. |travis|  image:: https://travis-ci.org/concretecloud/chirp.svg?branch=master
    :target: https://travis-ci.org/concretecloud/chirp
 .. |rtd| image:: https://1042.ch/ganwell/docs-master.svg
-   :target: https://1042.ch/chirp/
+   :target: https://docs.adfinis-sygroup.ch/public/chirp/
 .. |mpl| image:: https://img.shields.io/badge/license-MPL%202.0-blue.svg
    :target: http://mozilla.org/MPL/2.0/
 .. |works| image:: https://img.shields.io/badge/hypothesis-works-blue.svg
@@ -17,7 +17,7 @@ Message-passing for everyone
 
 `Read the Docs`_
 
-.. _`Read the Docs`: http://1042.ch/chirp/
+.. _`Read the Docs`: https://docs.adfinis-sygroup.ch/public/chirp/
 
 BETA-RELEASE: 0.2.1
 ===================
