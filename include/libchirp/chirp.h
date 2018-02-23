@@ -33,7 +33,8 @@
 //
 //    .. c:member:: float TIMEOUT
 //
-//       IO related timeout: Sending messages, connecting to remotes.
+//       IO related timeout in seconds: Sending messages, connecting to
+//       remotes.
 //
 //    .. c:member:: uint16_t PORT
 //
@@ -56,7 +57,7 @@
 //
 //    .. c:member:: char DISABLE_SIGNALS
 //
-//       By default chirp closes on SIGINT (Ctrl-C) and SIGTERM.
+//       By default chirp closes on SIGINT (Ctrl-C) and SIGTERM. Defaults to 0.
 //
 //    .. c:member:: uint32_t BUFFER_SIZE
 //
@@ -74,7 +75,7 @@
 //          min(config.BUFFER_SIZE, CH_ENC_BUFFER_SIZE) +
 //          sizeof(ch_connection_t) +
 //          sizeof(ch_message_t) +
-//          $(memory allocated by TLS implementation)
+//          (memory allocated by TLS implementation)
 //
 //       conn_size = conn_buffers_size + config.MAX_MSG_SIZE
 //
@@ -107,6 +108,7 @@
 //
 //       Disables encryption. Only use if you know what you are doing.
 //       Connections to "127.0.0.1" and "::1" aren't encrypted anyways.
+//       Defaults to 0.
 //
 // .. code-block:: cpp
 //
