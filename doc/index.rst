@@ -90,7 +90,8 @@ Connection-asynchronous (config.ACKNOWLEDGE=0)
 * The send callback returns a success when the message is successfully written to
   the operating system
 
-* If unexpected errors (ie. remote dies) happen, message can be lost in the TCP buffer
+* If unexpected errors (ie. remote dies) happen, the message can be lost in the
+  TCP-buffer
 
 * Automatic concurrency, by default chirp uses 16 concurrent message-slots
 
