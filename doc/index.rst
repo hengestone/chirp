@@ -2,6 +2,14 @@
 libchirp
 ========
 
+.. image:: https://raw.githubusercontent.com/concretecloud/chirp/master/doc/_static/chirp.png
+   :width: 30%
+
+Supported by |adsy|
+
+.. |adsy| image:: https://1042.ch/ganwell/adsy-logo.svg
+   :target: https://adfinis-sygroup.ch/
+
 Message-passing for everyone
 ============================
 
