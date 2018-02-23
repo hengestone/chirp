@@ -21,10 +21,9 @@ Message-passing for everyone
 
 .. raw:: html
 
-    <a ref="https://github.com/concretecloud/chirp">
     <img alt="chirp"
     src="https://raw.githubusercontent.com/concretecloud/chirp/master/doc/_static/chirp.png"
-    width="33%"></a>
+    width="33%">
 
 BETA-RELEASE: 1.0.0
 ===================
