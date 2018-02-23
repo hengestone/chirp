@@ -19,6 +19,10 @@ Message-passing for everyone
 
 .. _`Read the Docs`: https://docs.adfinis-sygroup.ch/public/chirp/
 
+.. raw:: html
+
+    <img alt="chirp" src="https://raw.githubusercontent.com/concretecloud/chirp/master/doc/_static/chirp.png" width="33%" style="float: left;">
+
 BETA-RELEASE: 0.2.1
 ===================
 
