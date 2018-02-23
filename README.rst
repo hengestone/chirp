@@ -6,7 +6,7 @@ Message-passing for everyone
 
 |travis| |rtd| |mpl| |works|
 
-.. |travis|  image:: https://travis-ci.org/concretecloud/chirp.svg?branch=master
+.. |travis| image:: https://travis-ci.org/concretecloud/chirp.svg?branch=master
    :target: https://travis-ci.org/concretecloud/chirp
 .. |rtd| image:: https://1042.ch/ganwell/docs-master.svg
    :target: https://docs.adfinis-sygroup.ch/public/chirp/
@@ -24,6 +24,12 @@ Message-passing for everyone
     <img alt="chirp"
     src="https://raw.githubusercontent.com/concretecloud/chirp/master/doc/_static/chirp.png"
     width="33%">
+
+Supported by |adsy|
+
+.. |adsy| image:: https://1042.ch/ganwell/adsy-logo.svg
+   :target: https://adfinis-sygroup.ch/
+
 
 BETA-RELEASE: 1.0.0
 ===================
