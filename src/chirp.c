@@ -1071,7 +1071,7 @@ ch_run(uv_loop_t* loop)
          * This is clearly a bug in chirp or user code, we try to recover with
          * a warning. */
         fprintf(stderr, "WARNING: Cannot close all uv-handles/requests.\n");
-        tmp_err = uv_run(loop, UV_RUN_ONCE);
+        tmp_err = uv_run(loop, UV_RUN_NOWAIT);
         /* Now we have serious a problem */
         if (tmp_err != 0) {
             fprintf(stderr, "FATAL: Cannot close all uv-handles/requests.\n");
