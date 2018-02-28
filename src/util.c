@@ -172,7 +172,7 @@ ch_at_init(void)
 // .. code-block:: cpp
 //
 {
-    uv_mutex_init(&_ch_at_lock);
+    A(uv_mutex_init(&_ch_at_lock) == 0, "Failed to initialize mutex");
     _ch_at_tree_init(&_ch_alloc_tree);
 }
 

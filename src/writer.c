@@ -202,6 +202,7 @@ _ch_wr_connect(ch_remote_t* remote)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
+        ch_free(conn);
         return CH_INIT_FAIL;
     }
     conn->connect_timeout.data = conn;
@@ -217,7 +218,8 @@ _ch_wr_connect(ch_remote_t* remote)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        return CH_FATAL;
+        ch_free(conn);
+        return CH_UV_ERROR;
     }
 
     ch_text_address_t taddr;
@@ -230,7 +232,14 @@ _ch_wr_connect(ch_remote_t* remote)
         conn->flags |= CH_CN_ENCRYPTED;
     }
     memcpy(&conn->address, &remote->address, CH_IP_ADDR_SIZE);
-    uv_tcp_init(ichirp->loop, &conn->client);
+    if (uv_tcp_init(ichirp->loop, &conn->client) < 0) {
+        EC(chirp,
+           "Could not initialize tcp. ",
+           "ch_connection_t:%p",
+           (void*) conn);
+        ch_free(conn);
+        return CH_INIT_FAIL;
+    }
     conn->flags |= CH_CN_INIT_CLIENT;
     struct sockaddr_storage addr;
     /* No error can happen, the address was taken from a binary format */
@@ -246,6 +255,7 @@ _ch_wr_connect(ch_remote_t* remote)
           taddr.data,
           remote->port,
           tmp_err);
+        ch_free(conn);
         return CH_CANNOT_CONNECT;
     }
     LC(chirp,
@@ -544,7 +554,10 @@ ch_chirp_send_ts(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
     msg->_send_cb = send_cb;
     ch_msg_enqueue(&ichirp->send_ts_queue, msg);
     uv_mutex_unlock(&ichirp->send_ts_queue_lock);
-    uv_async_send(&ichirp->send_ts);
+    if (uv_async_send(&ichirp->send_ts) < 0) {
+        E(chirp, "Could not call send_ts callback", CH_NO_ARG);
+        return CH_UV_ERROR;
+    }
     return CH_SUCCESS;
 }
 

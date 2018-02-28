@@ -292,7 +292,9 @@ _ch_chirp_closing_down_cb(uv_handle_t* handle)
 {
     ch_chirp_t* chirp = handle->data;
     ch_chirp_check_m(chirp);
-    uv_async_send(&chirp->_->done);
+    if (uv_async_send(&chirp->_->done) < 0) {
+        E(chirp, "Could not call done callback", CH_NO_ARG);
+    }
 }
 // .. c:function::
 static void
@@ -678,14 +680,14 @@ ch_chirp_init(
         ch_free(ichirp);
         chirp->_init = 0;
         uv_mutex_unlock(&_ch_chirp_init_lock);
-        return CH_UV_ERROR;
+        return CH_INIT_FAIL;
     }
     if (uv_async_init(loop, &ichirp->done, _ch_chirp_done_cb) < 0) {
         E(chirp, "Could not initialize done handler", CH_NO_ARG);
         ch_free(ichirp);
         chirp->_init = 0;
         uv_mutex_unlock(&_ch_chirp_init_lock);
-        return CH_UV_ERROR;
+        return CH_INIT_FAIL;
     }
     ichirp->done.data = chirp;
     if (uv_async_init(loop, &ichirp->start, _ch_chirp_start_cb) < 0) {
@@ -693,7 +695,7 @@ ch_chirp_init(
         ch_free(ichirp);
         chirp->_init = 0;
         uv_mutex_unlock(&_ch_chirp_init_lock);
-        return CH_UV_ERROR;
+        return CH_INIT_FAIL;
     }
     ichirp->start.data = chirp;
     if (uv_async_init(loop, &ichirp->send_ts, _ch_wr_send_ts_cb) < 0) {
@@ -701,7 +703,7 @@ ch_chirp_init(
         ch_free(ichirp);
         chirp->_init = 0;
         uv_mutex_unlock(&_ch_chirp_init_lock);
-        return CH_UV_ERROR;
+        return CH_INIT_FAIL;
     }
     ichirp->send_ts.data = chirp;
     uv_mutex_init(&ichirp->send_ts_queue_lock);
@@ -740,7 +742,11 @@ ch_chirp_init(
        (void*) loop);
 #endif
     _ch_chirp_init_signals(chirp);
-    uv_async_send(&ichirp->start);
+    if (uv_async_send(&ichirp->start) < 0) {
+        E(chirp, "Could not call start callback", CH_NO_ARG);
+        uv_mutex_unlock(&_ch_chirp_init_lock);
+        return CH_UV_ERROR;
+    }
     uv_mutex_unlock(&_ch_chirp_init_lock);
     return CH_SUCCESS;
 }
@@ -1003,7 +1009,9 @@ ch_libchirp_init(void)
     }
     srand(((unsigned int) time(NULL)) | ((unsigned int) uv_hrtime()));
     _ch_libchirp_initialized = 1;
-    uv_mutex_init(&_ch_chirp_init_lock);
+    if (uv_mutex_init(&_ch_chirp_init_lock) < 0) {
+        return CH_INIT_FAIL;
+    }
 #ifdef CH_ENABLE_ASSERTS
     ch_at_init();
 #endif

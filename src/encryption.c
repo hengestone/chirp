@@ -205,8 +205,9 @@ ch_en_tls_threading_cleanup(void)
     }
     CRYPTO_set_id_callback(NULL);
     CRYPTO_set_locking_callback(NULL);
-    for (int i = 0; i < _ch_en_lock_count; i++)
+    for (int i = 0; i < _ch_en_lock_count; i++) {
         uv_rwlock_destroy(&_ch_en_lock_list[i]);
+    }
     ch_free(_ch_en_lock_list);
     _ch_en_lock_list = NULL;
 #else
@@ -245,8 +246,12 @@ ch_en_tls_threading_setup(void)
         return CH_ENOMEM;
     }
     _ch_en_lock_count = lock_count;
-    for (int i = 0; i < lock_count; i++)
-        uv_rwlock_init(&_ch_en_lock_list[i]);
+    for (int i = 0; i < lock_count; i++) {
+        if (uv_rwlock_init(&_ch_en_lock_list[i]) < 0) {
+            ch_free(_ch_en_lock_list);
+            return CH_INIT_FAIL;
+        }
+    }
     CRYPTO_set_id_callback(_ch_en_thread_id_function);
     CRYPTO_set_locking_callback(_ch_en_locking_function);
 #endif // CH_OPENSSL_10_API

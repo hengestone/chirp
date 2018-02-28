@@ -298,7 +298,14 @@ _ch_pr_new_connection_cb(uv_stream_t* server, int status)
     conn->chirp       = chirp;
     conn->client.data = conn;
     uv_tcp_t* client  = &conn->client;
-    uv_tcp_init(server->loop, client);
+    if (uv_tcp_init(server->loop, client) < 0) {
+        EC(chirp,
+           "Could not initialize tcp. ",
+           "ch_connection_t:%p",
+           (void*) conn);
+        ch_cn_shutdown(conn, CH_FATAL);
+        return;
+    }
     conn->flags |= CH_CN_INIT_CLIENT | CH_CN_INCOMING;
 
     if (uv_accept(server, (uv_stream_t*) client) == 0) {
@@ -378,7 +385,9 @@ _ch_pr_start_socket(
     int               tmp_err;
     ch_chirp_int_t*   ichirp = chirp->_;
     ch_config_t*      config = &ichirp->config;
-    uv_tcp_init(ichirp->loop, server);
+    if (uv_tcp_init(ichirp->loop, server)) {
+        return CH_INIT_FAIL;
+    }
     server->data = chirp;
 
     tmp_err = uv_inet_ntop(af, bind, tmp_addr.data, sizeof(tmp_addr.data));
