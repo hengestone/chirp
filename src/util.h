@@ -17,6 +17,15 @@
 #include "common.h"
 #include "libchirp/callbacks.h"
 
+#ifndef NDEBUG
+#ifndef CH_ENABLE_LOGGING
+#define CH_ENABLE_LOGGING
+#endif
+#ifndef CH_ENABLE_ASSERTS
+#define CH_ENABLE_ASSERTS
+#endif
+#endif
+
 // Declarations
 // ============
 
