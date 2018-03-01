@@ -33,7 +33,7 @@ ch_alloc(size_t size);
 //
 // .. code-block:: cpp
 
-#ifndef CH_ENABLE_ASSERTS
+#ifdef CH_ENABLE_ASSERTS
 // .. c:function::
 int
 ch_at_allocated(void* buf);
