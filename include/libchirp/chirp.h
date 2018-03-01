@@ -232,6 +232,9 @@ ch_chirp_init(
 //    callback has been called or if chirp is set to auto-stop, after the loop
 //    has finished.
 //
+//    For any other return value than CH_ENOMEM, please await the done_cb
+//    before freeing chirp. Config can be freed after ch_chirp_init returns.
+//
 //    Please call `ch_loop_close(loop)` before freeing the loop. Of course if
 //    the loop will continue to run, feel free not to close/free the loop.
 //

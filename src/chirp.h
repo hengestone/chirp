@@ -205,6 +205,10 @@ struct ch_chirp_int_s {
     ch_done_cb_t    done_cb;
 };
 
+#ifndef NDEBUG
+extern int _ch_tst_fail_init_at_end;
+#endif
+
 // .. c:function::
 void
 ch_chirp_close_cb(uv_handle_t* handle);

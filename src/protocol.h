@@ -148,11 +148,12 @@ ch_pr_restart_stream(ch_connection_t* conn);
 
 // .. c:function::
 ch_error_t
-ch_pr_start(ch_protocol_t* protocol);
+ch_pr_start(ch_protocol_t* protocol, uint16_t* uninit);
 //
 //    Start the given protocol.
 //
-//    :param ch_protocol_t* protocol: Protocol which shall be started..
+//    :param ch_protocol_t* protocol: Protocol which shall be started
+//    :param uint16_t uninit: Track initialization state
 //
 //    :return: A chirp error. see: :c:type:`ch_error_t`
 //    :rtype:  ch_error_t

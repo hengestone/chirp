@@ -72,6 +72,10 @@ static ch_config_t _ch_config_defaults = {
         .DISABLE_ENCRYPTION = 0,
 };
 
+#ifndef NDEBUG
+int _ch_tst_fail_init_at_end = 0;
+#endif
+
 // .. c:function::
 static void
 _ch_chirp_check_closing_cb(uv_prepare_t* handle);
@@ -150,17 +154,27 @@ _ch_chirp_stop_cb(uv_handle_t* handle);
 //
 //    :param uv_handle_t* handle: handle just closed
 //
+//
+// .. c:function::
+static void
+_ch_chirp_uninit(ch_chirp_t* chirp, uint16_t uninit);
+//
+//    Uninitializes resources on failed ch_chirp_init.
+//
+//    :param ch_chirp_t* chirp: Instance of a chirp object
+//    :param uint16_t   uninit: Initialization state
+//
 
 // .. c:function::
 static ch_error_t
 _ch_chirp_verify_cfg(ch_chirp_t* chirp);
 //
-//   Verifies the configuration.
+//    Verifies the configuration.
 //
-//   :param   ch_chirp_t* chrip: Instance of a chirp object
+//    :param   ch_chirp_t* chirp: Instance of a chirp object
 //
-//   :return: A chirp error. see: :c:type:`ch_error_t`
-//   :rtype:  ch_error_t
+//    :return: A chirp error. see: :c:type:`ch_error_t`
+//    :rtype:  ch_error_t
 
 // .. c:var:: extern char* ch_version
 //    :noindex:
@@ -306,20 +320,86 @@ _ch_chirp_stop_cb(uv_handle_t* handle)
 // .. code-block:: cpp
 //
 {
-    ch_chirp_t*     chirp  = handle->data;
-    ch_chirp_int_t* ichirp = chirp->_;
-    ch_chirp_check_m(chirp);
+    ch_chirp_int_t* ichirp = handle->data;
     if (ichirp->flags & CH_CHIRP_AUTO_STOP) {
         uv_stop(ichirp->loop);
-        LC(chirp,
-           "UV-Loop stopped by chirp. ",
-           "uv_loop_t:%p",
-           (void*) ichirp->loop);
     }
     uv_mutex_destroy(&ichirp->send_ts_queue_lock);
-    L(chirp, "Closed.", CH_NO_ARG);
-    chirp->_ = NULL;
     ch_free(ichirp);
+}
+
+// .. c:function::
+static void
+_ch_chirp_uninit(ch_chirp_t* chirp, uint16_t uninit)
+//    :noindex:
+//
+//    see: :c:func:`_ch_chirp_uninit`
+//
+// .. code-block:: cpp
+//
+{
+    /* The existence of this function shows a little technical dept. Classes
+     * like chirp/protocol/encryption only know how to close themselves when
+     * they are fully initialized. This should be streamlined one day. */
+    if (uninit & CH_UNINIT_ASYNC_DONE) {
+        ch_chirp_int_t* ichirp   = chirp->_;
+        ch_protocol_t*  protocol = &ichirp->protocol;
+
+        if (uninit & CH_UNINIT_ASYNC_SEND_TS) {
+            uv_close((uv_handle_t*) &ichirp->send_ts, ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
+        if (uninit & CH_UNINIT_ASYNC_CLOSE) {
+            uv_close((uv_handle_t*) &ichirp->close, ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
+        if (uninit & CH_UNINIT_ASYNC_START) {
+            uv_close((uv_handle_t*) &ichirp->start, ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
+        if (uninit & CH_UNINIT_SEND_TS_LOCK) {
+            uv_mutex_destroy(&ichirp->send_ts_queue_lock);
+        }
+        if (uninit & CH_UNINIT_SERVERV4) {
+            uv_close((uv_handle_t*) &protocol->serverv4, ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
+        if (uninit & CH_UNINIT_SERVERV6) {
+            uv_close((uv_handle_t*) &protocol->serverv6, ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
+        if (uninit & CH_UNINIT_TIMER_GC) {
+            uv_timer_stop(&protocol->gc_timeout);
+            uv_close((uv_handle_t*) &protocol->gc_timeout, ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
+        if (uninit & CH_UNINIT_TIMER_RECON) {
+            uv_timer_stop(&protocol->reconnect_timeout);
+            uv_close(
+                    (uv_handle_t*) &protocol->reconnect_timeout,
+                    ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
+        if (uninit & CH_UNINIT_SIGNAL) {
+            uv_signal_stop(&ichirp->signals[0]);
+            uv_signal_stop(&ichirp->signals[1]);
+            uv_close((uv_handle_t*) &ichirp->signals[0], ch_chirp_close_cb);
+            uv_close((uv_handle_t*) &ichirp->signals[1], ch_chirp_close_cb);
+            ichirp->closing_tasks += 2;
+        }
+
+        uv_prepare_init(ichirp->loop, &ichirp->close_check);
+        ichirp->close_check.data = chirp;
+        uv_prepare_start(&ichirp->close_check, _ch_chirp_check_closing_cb);
+    } else {
+        chirp->_init = 0;
+        if (uninit & CH_UNINIT_ICHIRP) {
+            ch_free(chirp->_);
+        }
+    }
+    if (uninit & CH_UNINIT_INIT_LOCK) {
+        uv_mutex_unlock(&_ch_chirp_init_lock);
+    }
 }
 
 // .. c:function::
@@ -334,8 +414,16 @@ _ch_chirp_done_cb(uv_async_t* handle)
 {
     ch_chirp_t* chirp = handle->data;
     ch_chirp_check_m(chirp);
-    uv_close((uv_handle_t*) handle, _ch_chirp_stop_cb);
     ch_chirp_int_t* ichirp = chirp->_;
+    handle->data           = ichirp;
+    uv_close((uv_handle_t*) handle, _ch_chirp_stop_cb);
+    L(chirp, "Closed.", CH_NO_ARG);
+    if (ichirp->flags & CH_CHIRP_AUTO_STOP) {
+        LC(chirp,
+           "UV-Loop stopped by chirp. ",
+           "uv_loop_t:%p",
+           (void*) ichirp->loop);
+    }
     if (ichirp->done_cb != NULL) {
         ichirp->done_cb(chirp);
     }
@@ -523,7 +611,7 @@ ch_chirp_close_ts(ch_chirp_t* chirp)
                 __FILE__,
                 __LINE__,
                 (void*) chirp);
-        return CH_UNINIT;
+        return CH_NOT_INITIALIZED;
     }
     A(chirp->_init == CH_CHIRP_MAGIC, "Not a ch_chirp_t*");
     if (chirp->_ != NULL) {
@@ -620,8 +708,10 @@ ch_chirp_init(
 // .. code-block:: cpp
 //
 {
-    int tmp_err;
+    int      tmp_err;
+    uint16_t uninit = 0;
     uv_mutex_lock(&_ch_chirp_init_lock);
+    uninit |= CH_UNINIT_INIT_LOCK;
     memset(chirp, 0, sizeof(*chirp));
     chirp->_init           = CH_CHIRP_MAGIC;
     chirp->_thread         = uv_thread_self();
@@ -636,6 +726,7 @@ ch_chirp_init(
         uv_mutex_unlock(&_ch_chirp_init_lock);
         return CH_ENOMEM;
     }
+    uninit |= CH_UNINIT_ICHIRP;
     memset(ichirp, 0, sizeof(*ichirp));
     ichirp->done_cb           = done_cb;
     ichirp->config            = *config;
@@ -668,53 +759,51 @@ ch_chirp_init(
         }
     }
 
+    if (uv_async_init(loop, &ichirp->done, _ch_chirp_done_cb) < 0) {
+        E(chirp, "Could not initialize done handler", CH_NO_ARG);
+        _ch_chirp_uninit(chirp, uninit);
+        /* Small inaccuracy for ease of use. The user can await the done_cb,
+         * except if we return CH_ENOMEM */
+        return CH_ENOMEM;
+    }
+    ichirp->done.data = chirp;
+    uninit |= CH_UNINIT_ASYNC_DONE;
+
     tmp_err = _ch_chirp_verify_cfg(chirp);
     if (tmp_err != CH_SUCCESS) {
-        chirp->_init = 0;
-        uv_mutex_unlock(&_ch_chirp_init_lock);
+        _ch_chirp_uninit(chirp, uninit);
         return tmp_err;
     }
 
     if (uv_async_init(loop, &ichirp->close, _ch_chirp_close_async_cb) < 0) {
         E(chirp, "Could not initialize close callback", CH_NO_ARG);
-        ch_free(ichirp);
-        chirp->_init = 0;
-        uv_mutex_unlock(&_ch_chirp_init_lock);
+        _ch_chirp_uninit(chirp, uninit);
         return CH_INIT_FAIL;
     }
-    if (uv_async_init(loop, &ichirp->done, _ch_chirp_done_cb) < 0) {
-        E(chirp, "Could not initialize done handler", CH_NO_ARG);
-        ch_free(ichirp);
-        chirp->_init = 0;
-        uv_mutex_unlock(&_ch_chirp_init_lock);
-        return CH_INIT_FAIL;
-    }
-    ichirp->done.data = chirp;
+    ichirp->close.data = chirp;
+    uninit |= CH_UNINIT_ASYNC_CLOSE;
     if (uv_async_init(loop, &ichirp->start, _ch_chirp_start_cb) < 0) {
         E(chirp, "Could not initialize done handler", CH_NO_ARG);
-        ch_free(ichirp);
-        chirp->_init = 0;
-        uv_mutex_unlock(&_ch_chirp_init_lock);
+        _ch_chirp_uninit(chirp, uninit);
         return CH_INIT_FAIL;
     }
     ichirp->start.data = chirp;
+    uninit |= CH_UNINIT_ASYNC_START;
     if (uv_async_init(loop, &ichirp->send_ts, _ch_wr_send_ts_cb) < 0) {
         E(chirp, "Could not initialize send_ts handler", CH_NO_ARG);
-        ch_free(ichirp);
-        chirp->_init = 0;
-        uv_mutex_unlock(&_ch_chirp_init_lock);
+        _ch_chirp_uninit(chirp, uninit);
         return CH_INIT_FAIL;
     }
     ichirp->send_ts.data = chirp;
+    uninit |= CH_UNINIT_ASYNC_SEND_TS;
     uv_mutex_init(&ichirp->send_ts_queue_lock);
+    uninit |= CH_UNINIT_SEND_TS_LOCK;
 
     ch_pr_init(chirp, protocol);
-    tmp_err = ch_pr_start(protocol);
+    tmp_err = ch_pr_start(protocol, &uninit);
     if (tmp_err != CH_SUCCESS) {
         E(chirp, "Could not start protocol: %d", tmp_err);
-        ch_free(ichirp);
-        chirp->_init = 0;
-        uv_mutex_unlock(&_ch_chirp_init_lock);
+        _ch_chirp_uninit(chirp, uninit);
         return tmp_err;
     }
     if (!tmp_conf->DISABLE_ENCRYPTION) {
@@ -725,9 +814,7 @@ ch_chirp_init(
             ERR_print_errors_fp(stderr);
 #endif
             E(chirp, "Could not start encryption: %d", tmp_err);
-            ch_free(ichirp);
-            chirp->_init = 0;
-            uv_mutex_unlock(&_ch_chirp_init_lock);
+            _ch_chirp_uninit(chirp, uninit);
             return tmp_err;
         }
     }
@@ -742,13 +829,24 @@ ch_chirp_init(
        (void*) loop);
 #endif
     _ch_chirp_init_signals(chirp);
+    uninit |= CH_UNINIT_SIGNAL;
     if (uv_async_send(&ichirp->start) < 0) {
         E(chirp, "Could not call start callback", CH_NO_ARG);
-        uv_mutex_unlock(&_ch_chirp_init_lock);
+        _ch_chirp_uninit(chirp, uninit);
         return CH_UV_ERROR;
     }
+#ifndef NDEBUG
+    if (_ch_tst_fail_init_at_end) {
+        _ch_chirp_uninit(chirp, uninit);
+        return CH_INIT_FAIL;
+    } else {
+        uv_mutex_unlock(&_ch_chirp_init_lock);
+        return CH_SUCCESS;
+    }
+#else
     uv_mutex_unlock(&_ch_chirp_init_lock);
     return CH_SUCCESS;
+#endif
 }
 
 // .. c:function::
@@ -852,7 +950,7 @@ ch_chirp_run(
     uv_loop_t  loop;
     ch_error_t tmp_err;
     if (chirp_out == NULL) {
-        return CH_UNINIT;
+        return CH_NOT_INITIALIZED;
     }
     *chirp_out = NULL;
 

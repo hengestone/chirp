@@ -78,6 +78,27 @@ typedef struct ch_protocol_s ch_protocol_t;
 // Definitions
 // ===========
 
+// .. c:type:: ch_chirp_uninit_t
+//
+//    Used to uninitialize on ch_chirp_init failure.
+//
+// .. code-block:: cpp
+//
+typedef enum {
+    CH_UNINIT_INIT_LOCK     = 1 << 0,
+    CH_UNINIT_ICHIRP        = 1 << 1,
+    CH_UNINIT_ASYNC_CLOSE   = 1 << 2,
+    CH_UNINIT_ASYNC_DONE    = 1 << 3,
+    CH_UNINIT_ASYNC_START   = 1 << 4,
+    CH_UNINIT_ASYNC_SEND_TS = 1 << 5,
+    CH_UNINIT_SEND_TS_LOCK  = 1 << 6,
+    CH_UNINIT_SERVERV4      = 1 << 7,
+    CH_UNINIT_SERVERV6      = 1 << 8,
+    CH_UNINIT_TIMER_GC      = 1 << 9,
+    CH_UNINIT_TIMER_RECON   = 1 << 10,
+    CH_UNINIT_SIGNAL        = 1 << 11,
+} ch_chirp_uninit_t;
+
 #ifndef NDEBUG
 #ifndef CH_ENABLE_LOGGING
 #define CH_ENABLE_LOGGING

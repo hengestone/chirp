@@ -113,7 +113,8 @@ _ch_pr_start_socket(
         uv_tcp_t*        server,
         uint8_t*         bind,
         struct sockaddr* addr,
-        int              v6only);
+        int              v6only,
+        char*            needs_uninit);
 //
 //    Since dual stack sockets don't work on all platforms we start a IPv4 and
 //    IPv6 socket.
@@ -373,7 +374,8 @@ _ch_pr_start_socket(
         uv_tcp_t*        server,
         uint8_t*         bind,
         struct sockaddr* addr,
-        int              v6only)
+        int              v6only,
+        char*            needs_uninit)
 //    :noindex:
 //
 //    see: :c:func:`_ch_pr_start_socket`
@@ -385,10 +387,12 @@ _ch_pr_start_socket(
     int               tmp_err;
     ch_chirp_int_t*   ichirp = chirp->_;
     ch_config_t*      config = &ichirp->config;
+    *needs_uninit            = 0;
     if (uv_tcp_init(ichirp->loop, server)) {
         return CH_INIT_FAIL;
     }
-    server->data = chirp;
+    *needs_uninit = 1;
+    server->data  = chirp;
 
     tmp_err = uv_inet_ntop(af, bind, tmp_addr.data, sizeof(tmp_addr.data));
     if (tmp_err != CH_SUCCESS) {
@@ -833,7 +837,7 @@ _ch_pr_read_data_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
 
 // .. c:function::
 ch_error_t
-ch_pr_start(ch_protocol_t* protocol)
+ch_pr_start(ch_protocol_t* protocol, uint16_t* uninit)
 //    :noindex:
 //
 //    see: :c:func:`ch_pr_start`
@@ -845,13 +849,18 @@ ch_pr_start(ch_protocol_t* protocol)
     ch_chirp_int_t* ichirp = chirp->_;
     ch_config_t*    config = &ichirp->config;
     int             tmp_err;
+    char            needs_uninit;
     tmp_err = _ch_pr_start_socket(
             chirp,
             AF_INET,
             &protocol->serverv4,
             config->BIND_V4,
             (struct sockaddr*) &protocol->addrv4,
-            0);
+            0,
+            &needs_uninit);
+    if (needs_uninit) {
+        *uninit |= CH_UNINIT_SERVERV4;
+    }
     if (tmp_err != CH_SUCCESS) {
         return tmp_err;
     }
@@ -861,7 +870,11 @@ ch_pr_start(ch_protocol_t* protocol)
             &protocol->serverv6,
             config->BIND_V6,
             (struct sockaddr*) &protocol->addrv6,
-            UV_TCP_IPV6ONLY);
+            UV_TCP_IPV6ONLY,
+            &needs_uninit);
+    if (needs_uninit) {
+        *uninit |= CH_UNINIT_SERVERV6;
+    }
     if (tmp_err != CH_SUCCESS) {
         return tmp_err;
     }
@@ -869,12 +882,14 @@ ch_pr_start(ch_protocol_t* protocol)
     if (tmp_err != CH_SUCCESS) {
         return CH_INIT_FAIL;
     }
+    *uninit |= CH_UNINIT_TIMER_RECON;
     protocol->reconnect_timeout.data = chirp;
     tmp_err = uv_timer_init(ichirp->loop, &protocol->gc_timeout);
     if (tmp_err != CH_SUCCESS) {
         return CH_INIT_FAIL;
     }
     protocol->gc_timeout.data = chirp;
+    *uninit |= CH_UNINIT_TIMER_GC;
 
     uint64_t start = (config->REUSE_TIME * 1000 / 2);
     start += rand() % start;

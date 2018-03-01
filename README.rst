@@ -337,6 +337,8 @@ Changes
 
 Not yet released
 
+* Recover from partial ch_chirp_init() properly
+
 * Renaming buffer-handlers to message-slots (ABI break)
 
 * Add _ssl_context to message for future use (ABI break)

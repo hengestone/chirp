@@ -44,6 +44,8 @@ etests: stest  ## Run binary tests
 	LD_LIBRARY_PATH="$(BUILD)" $(BUILD)/src/chirp_etest
 	$(BUILD)/src/quickcheck_etest
 	$(MEMCHECK) $(BUILD)/src/quickcheck_etest
+	$(BUILD)/src/uninit_etest
+	$(MEMCHECK) $(BUILD)/src/uninit_etest
 	$(BUILD)/src/serializer_etest
 	$(MEMCHECK) $(BUILD)/src/serializer_etest
 	$(BUILD)/src/message_etest \

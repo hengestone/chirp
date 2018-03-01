@@ -67,6 +67,7 @@ Test binaries
    src/quickcheck_etest.c.rst
    src/send_etest.c.rst
    src/serializer_etest.c.rst
+   src/uninit_etest.c.rst
    src/uv_error_etest.c.rst
    src/write_log_etest.c.rst
 

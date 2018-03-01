@@ -393,7 +393,9 @@ ch_en_stop(ch_encryption_t* enc)
 // .. code-block:: cpp
 //
 {
-    SSL_CTX_free(enc->ssl_ctx);
+    if (enc->ssl_ctx) {
+        SSL_CTX_free(enc->ssl_ctx);
+    }
     ERR_clear_error();
 #ifdef CH_OPENSSL_10_API
     CRYPTO_THREADID id;
