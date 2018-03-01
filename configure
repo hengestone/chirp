@@ -455,10 +455,10 @@ def write_makefile(args):
             path.splitext(lib_objs[-1])[0]
         ))
         f.write("LIB_CFILES := \\\n")
-        lib_objs = [
+        lib_objs = sorted([
             file_ for file_, _ in depends
             if not file_.endswith("test.c")
-        ]
+        ])
         for file_ in lib_objs[:-1]:
             f.write("\t\t%s \\\n" % replace_base_base(file_))
         f.write("\t\t%s \n\n" % replace_base_base(lib_objs[-1]))
