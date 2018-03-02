@@ -138,9 +138,8 @@ ch_en_tls_init(void)
     }
 #ifdef CH_OPENSSL_10_API
     SSL_library_init();
-    OpenSSL_add_all_algorithms();
+    OPENSSL_add_all_algorithms_noconf();
     SSL_load_error_strings();
-    OPENSSL_config("chirp");
 
     return ch_en_tls_threading_setup();
 #else
