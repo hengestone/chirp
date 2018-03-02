@@ -258,6 +258,7 @@ _ch_chirp_close_async_cb(uv_async_t* handle)
     uv_close((uv_handle_t*) &ichirp->send_ts, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &ichirp->close, ch_chirp_close_cb);
     ichirp->closing_tasks += 2;
+    uv_mutex_destroy(&ichirp->send_ts_queue_lock);
     tmp_err = uv_prepare_init(ichirp->loop, &ichirp->close_check);
     A(tmp_err == CH_SUCCESS, "Could not init prepare callback");
     ichirp->close_check.data = chirp;
@@ -324,7 +325,6 @@ _ch_chirp_stop_cb(uv_handle_t* handle)
     if (ichirp->flags & CH_CHIRP_AUTO_STOP) {
         uv_stop(ichirp->loop);
     }
-    uv_mutex_destroy(&ichirp->send_ts_queue_lock);
     ch_free(ichirp);
 }
 

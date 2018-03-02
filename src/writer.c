@@ -384,6 +384,9 @@ _ch_wr_send_ts_cb(uv_async_t* handle)
     ch_chirp_t* chirp = handle->data;
     ch_chirp_check_m(chirp);
     ch_chirp_int_t* ichirp = chirp->_;
+    if (ichirp->flags & CH_CHIRP_CLOSING) {
+        return;
+    }
     uv_mutex_lock(&ichirp->send_ts_queue_lock);
 
     ch_message_t* cur;
