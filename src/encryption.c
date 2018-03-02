@@ -137,9 +137,14 @@ ch_en_tls_init(void)
         return CH_SUCCESS;
     }
 #ifdef CH_OPENSSL_10_API
-    SSL_library_init();
+    /* Detect if ssl is already initialized by host program */
+    if (CRYPTO_get_locking_callback() != NULL) {
+        _ch_en_manual_tls = 1;
+        return CH_SUCCESS;
+    }
     OPENSSL_add_all_algorithms_noconf();
     SSL_load_error_strings();
+    SSL_library_init();
 
     return ch_en_tls_threading_setup();
 #else
