@@ -133,6 +133,9 @@ ch_en_tls_init(void)
 // .. code-block:: cpp
 //
 {
+    if (_ch_en_manual_tls) {
+        return CH_SUCCESS;
+    }
 #ifdef CH_OPENSSL_10_API
     SSL_library_init();
     OpenSSL_add_all_algorithms();
