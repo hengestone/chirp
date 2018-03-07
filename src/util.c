@@ -425,7 +425,7 @@ ch_textaddr_to_sockaddr(
     if (af == AF_INET6) {
         return uv_ip6_addr(text->data, port, (struct sockaddr_in6*) addr);
     } else {
-        A(af, "Unknown IP protocol");
+        A(af == AF_INET, "Unknown IP protocol");
         return uv_ip4_addr(text->data, port, (struct sockaddr_in*) addr);
     }
 }
