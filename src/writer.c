@@ -202,7 +202,7 @@ _ch_wr_connect(ch_remote_t* remote)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        ch_free(conn);
+        ch_cn_shutdown(conn, CH_UV_ERROR);
         return CH_INIT_FAIL;
     }
     conn->connect_timeout.data = conn;
@@ -218,7 +218,7 @@ _ch_wr_connect(ch_remote_t* remote)
            "ch_connection_t:%p",
            tmp_err,
            (void*) conn);
-        ch_free(conn);
+        ch_cn_shutdown(conn, CH_UV_ERROR);
         return CH_UV_ERROR;
     }
 
@@ -237,7 +237,7 @@ _ch_wr_connect(ch_remote_t* remote)
            "Could not initialize tcp. ",
            "ch_connection_t:%p",
            (void*) conn);
-        ch_free(conn);
+        ch_cn_shutdown(conn, CH_CANNOT_CONNECT);
         return CH_INIT_FAIL;
     }
     conn->flags |= CH_CN_INIT_CLIENT;
@@ -255,7 +255,7 @@ _ch_wr_connect(ch_remote_t* remote)
           taddr.data,
           remote->port,
           tmp_err);
-        ch_free(conn);
+        ch_cn_shutdown(conn, CH_CANNOT_CONNECT);
         return CH_CANNOT_CONNECT;
     }
     LC(chirp,
@@ -722,7 +722,9 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
         ch_msg_enqueue(&remote->msg_queue, msg);
     }
 
-    ch_wr_process_queues(remote);
+    if (ch_wr_process_queues(remote) == CH_ENOMEM) {
+        return CH_ENOMEM;
+    }
     if (queued)
         return CH_QUEUED;
     else
