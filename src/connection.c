@@ -34,15 +34,6 @@ qs_stack_bind_impl_m(ch_cn_st, ch_connection_t) CH_ALLOW_NL;
 // ============
 
 // .. c:function::
-static void
-_ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error);
-//
-//    Abort one message in queue, because connecting failed.
-//
-//    :param ch_remote_t* remote: Remote failed to connect.
-//    :param ch_error_t error: Status returned by connect.
-
-// .. c:function::
 static ch_error_t
 _ch_cn_allocate_buffers(ch_connection_t* conn);
 //
@@ -97,11 +88,11 @@ _ch_cn_write_cb(uv_write_t* req, int status);
 MINMAX_FUNCS(size_t)
 
 // .. c:function::
-static void
-_ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error)
+void
+ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error)
 //    :noindex:
 //
-//    see: :c:func:`_ch_cn_abort_one_message`
+//    see: :c:func:`ch_cn_abort_one_message`
 //
 // .. code-block:: cpp
 //
@@ -686,7 +677,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     }
     if (wam == NULL && msg == NULL && remote != NULL) {
         /* If we have not finished a message we abort one on the remote. */
-        _ch_cn_abort_one_message(remote, reason);
+        ch_cn_abort_one_message(remote, reason);
     }
     /* finish vs abort - finish: cancel a message on the current connection.
      * abort: means canceling a message that hasn't been queued yet. If

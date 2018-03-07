@@ -628,7 +628,12 @@ ch_wr_process_queues(ch_remote_t* remote)
         } else {
             /* Only connect of the queue is not empty */
             if (remote->msg_queue != NULL || remote->cntl_msg_queue != NULL) {
-                return _ch_wr_connect(remote);
+                ch_error_t tmp_err;
+                tmp_err = _ch_wr_connect(remote);
+                if (tmp_err == CH_ENOMEM) {
+                    ch_cn_abort_one_message(remote, CH_ENOMEM);
+                }
+                return tmp_err;
             }
         }
     } else {
@@ -722,9 +727,7 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
         ch_msg_enqueue(&remote->msg_queue, msg);
     }
 
-    if (ch_wr_process_queues(remote) == CH_ENOMEM) {
-        return CH_ENOMEM;
-    }
+    ch_wr_process_queues(remote);
     if (queued)
         return CH_QUEUED;
     else

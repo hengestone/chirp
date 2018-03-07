@@ -487,6 +487,15 @@ qs_stack_bind_decl_m(ch_cn_st, ch_connection_t) CH_ALLOW_NL;
 
 // .. c:function::
 void
+ch_cn_abort_one_message(ch_remote_t* remote, ch_error_t error);
+//
+//    Abort one message in queue, because connecting failed.
+//
+//    :param ch_remote_t* remote: Remote failed to connect.
+//    :param ch_error_t error: Status returned by connect.
+
+// .. c:function::
+void
 ch_cn_close_cb(uv_handle_t* handle);
 //
 //    Called by libuv after closing a connection handle.
