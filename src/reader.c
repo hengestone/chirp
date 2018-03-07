@@ -284,7 +284,6 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
     if (ichirp->recv_cb != NULL) {
         ichirp->recv_cb(chirp, msg);
     } else {
-        E(chirp, "No receiving callback function registered", CH_NO_ARG);
         ch_chirp_release_msg_slot(msg);
     }
 }
