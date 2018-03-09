@@ -1,7 +1,7 @@
 "" # noqa
 """
-mpipe 0.6
-=========
+mpipe for chirp
+===============
 
 Send message-pack messages to subprocess.
 

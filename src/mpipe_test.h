@@ -1,5 +1,5 @@
 // =========
-// mpipe 0.6
+// mpipe 0.7
 // =========
 //
 // Send message-packs over a pipe. Meant as a very simple RPC. It is compatible

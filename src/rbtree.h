@@ -2,7 +2,7 @@
 //    :target: https://travis-ci.org/concretecloud/rbtree/
 //
 // ==================
-// Red-Black Tree 0.6
+// Red-Black Tree 0.7
 // ==================
 //
 // * Bonus: `qs.h`_ (Queue / Stack), mpipe_ (message-pack over pipe)
@@ -53,6 +53,13 @@
 //
 // * Use same code-guidelines as libchirp
 // * Allow msgpack or umsgpack in mpipe.py
+//
+// 0.6 -> 0.7
+// ----------
+//
+// * Remove next from _qs_queue_bind_decl_tr_m and renaming it to
+//   qs_queue_bind_decl_m
+// * Document bind shortcuts for rb and qs
 //
 // Development
 // ===========
@@ -267,6 +274,9 @@
 //    Bind the rbtree function implementations for *type* to *context*. Usually
 //    used in a c-file. This variant uses cx##_*_m traits, which means you have
 //    to define them.
+//
+// rb_bind_cx_m/rb_bind_m(context, type)
+//    Shortcut to bind declaration and implementation at once.
 //
 // rb_safe_value_cmp_m(x, y)
 //    Basis for safe value comparators. *x* and *y* are comparable values of
@@ -499,8 +509,12 @@
 // possible.
 //
 // With the right mindset, generic and composable programming in C is awesome.
-// Well, you need my rgc preprocessor (readable generic C) or debugging is
-// almost impossible. But rgc is just 60 lines of Python and very simple.
+// Well, you need to expand the macros to debug. The following command will do
+// that:
+//
+// .. code-block:: bash
+//
+//    $CC $CFLAGS -E -P infile.c | clang-format > outfile.c
 //
 // .. _pyrsistent: https://github.com/tobgu/pyrsistent/blob/master/pvectorcmodule.c
 //

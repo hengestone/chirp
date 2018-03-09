@@ -1,5 +1,5 @@
 // =================
-// Queue / Stack 0.6
+// Queue / Stack 0.7
 // =================
 //
 // Queue and stack with a rbtree-style interface. Both queue and stack use one
@@ -36,6 +36,9 @@
 //    Bind the qs_queue function implementations for *type* to *context*.
 //    Usually used in a c-file. This variant uses cx##_*_m traits, which means
 //    you have to define them.
+//
+// qs_queue_bind_cx_m/qs_queue_bind_m(context, type)
+//    Shortcut to bind declaration and implementation at once.
 //
 // Then the following functions will be available.
 //
@@ -83,6 +86,9 @@
 //    Bind the qs_stack function implementations for *type* to *context*.
 //    Usually used in a c-file. This variant uses cx##_*_m traits, which means
 //    you have to define them.
+//
+// qs_stack_bind_cx_m/qs_stack_bind_m(context, type)
+//    Shortcut to bind declaration and implementation at once.
 //
 // Then the following functions will be available.
 //
@@ -225,7 +231,7 @@
 //
 // .. code-block:: cpp
 //
-#define _qs_queue_bind_decl_tr_m(cx, type, next) \
+#define qs_queue_bind_decl_m(cx, type) \
     typedef type cx##_iter_t; \
     typedef type cx##_type_t; \
     void \
@@ -262,11 +268,7 @@
 
 
 #define qs_queue_bind_decl_cx_m(cx, type) \
-    _qs_queue_bind_decl_tr_m(cx, type, cx##_next_m) \
-
-
-#define qs_queue_bind_decl_m(cx, type) \
-    _qs_queue_bind_decl_tr_m(cx, type, qs_next_m) \
+    qs_queue_bind_decl_m(cx, type) \
 
 
 // qs_queue_bind_impl_m
