@@ -40,7 +40,8 @@
 //
 //       The serial number of the message. Increases monotonic. Be aware of
 //       overflows, if want to use it for ordering use the delta: serialA -
-//       serialB.
+//       serialB. Only received messages have a serial. But also received
+//       messages can have the serial 0.
 //
 //    .. c:member:: uint8_t type
 //
@@ -139,17 +140,18 @@ struct ch_message_s {
     ch_buf* header;
     ch_buf* data;
     // Local       only data
-    uint8_t       ip_protocol;
-    uint8_t       address[CH_IP_ADDR_SIZE]; // 16
-    int32_t       port;
-    uint8_t       remote_identity[CH_ID_SIZE];
-    void*         user_data;
-    uint8_t       _flags;
-    ch_send_cb_t  _send_cb;
-    uint8_t       _slot;
-    void*         _pool;
-    void*         _ssl_context;
-    ch_message_t* _next;
+    uint8_t         ip_protocol;
+    uint8_t         address[CH_IP_ADDR_SIZE]; // 16
+    int32_t         port;
+    uint8_t         remote_identity[CH_ID_SIZE];
+    void*           user_data;
+    uint8_t         _flags;
+    ch_send_cb_t    _send_cb;
+    ch_release_cb_t _release_cb;
+    uint8_t         _slot;
+    void*           _pool;
+    void*           _ssl_context;
+    ch_message_t*   _next;
 };
 
 // Protocol receiver /Pseudo code/

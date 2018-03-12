@@ -38,7 +38,7 @@ ch_sr_buf_to_msg(ch_buf* buf, ch_message_t* msg)
 
 // .. c:function::
 int
-ch_sr_msg_to_buf(ch_message_t* msg, ch_buf* buf)
+ch_sr_msg_to_buf(ch_message_t* msg, ch_buf* buf, uint32_t msg_serial)
 //    :noindex:
 //
 //    see: :c:func:`ch_sr_msg_to_buf`
@@ -53,7 +53,7 @@ ch_sr_msg_to_buf(ch_message_t* msg, ch_buf* buf)
     *type       = msg->type;
     *header_len = htons(msg->header_len);
     *data_len   = htonl(msg->data_len);
-    *serial     = htonl(msg->serial);
+    *serial     = htonl(msg_serial);
     return CH_SR_WIRE_MESSAGE_SIZE;
 }
 

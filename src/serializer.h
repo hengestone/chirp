@@ -88,7 +88,7 @@ ch_sr_buf_to_msg(ch_buf* buf, ch_message_t* msg);
 
 // .. c:function::
 int
-ch_sr_msg_to_buf(ch_message_t* msg, ch_buf* buf);
+ch_sr_msg_to_buf(ch_message_t* msg, ch_buf* buf, uint32_t msg_serial);
 //
 //    Convert a ch_message_t to a buffer containing the packed data of
 //    the wire message in network order.
@@ -96,6 +96,7 @@ ch_sr_msg_to_buf(ch_message_t* msg, ch_buf* buf);
 //    :param ch_message_t* msg: Pointer to the message
 //    :param ch_buf* buf: Pointer to the packed buffer of at least
 //                        CH_SR_WIRE_MESSAGE_SIZE
+//    :param uint32_t msg_serial: Serial of the message
 //
 // .. code-block:: cpp
 

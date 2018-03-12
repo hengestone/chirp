@@ -171,7 +171,7 @@ typedef enum {
 //
 //    .. c:member:: uv_async_t send_ts
 //
-//       Async event for waking up _ch_wr_send_ts_cb
+//       Async event for waking up ch_wr_send_ts_cb
 //
 //    .. c:member:: uv_mutex_t send_ts_queue_lock
 //
@@ -200,6 +200,9 @@ struct ch_chirp_int_s {
     ch_message_t*   send_ts_queue;
     uv_async_t      send_ts;
     uv_mutex_t      send_ts_queue_lock;
+    ch_message_t*   release_ts_queue;
+    uv_async_t      release_ts;
+    uv_mutex_t      release_ts_queue_lock;
     ch_recv_cb_t    recv_cb;
     uv_async_t      done;
     ch_done_cb_t    done_cb;

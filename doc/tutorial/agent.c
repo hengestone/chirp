@@ -230,8 +230,7 @@ notify_status(int svc_status, int agent_status)
 static void
 new_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 {
-    (void) (chirp);
-    ch_chirp_release_msg_slot(msg);
+    ch_chirp_release_msg_slot(chirp, msg, NULL);
 }
 
 // Sent callback

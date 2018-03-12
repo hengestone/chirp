@@ -253,16 +253,49 @@ ch_chirp_init(
 // .. c:function::
 CH_EXPORT
 void
-ch_chirp_release_msg_slot(ch_message_t* msg);
+ch_chirp_release_msg_slot(
+        ch_chirp_t* rchirp, ch_message_t* msg, ch_release_cb_t release_cb);
 //
 //    Release the internal message-slot and acknowledge the message (if
 //    ACKNOWLEDGE=1). Must be called when the message isn't needed anymore,
-//    afterwards the message may NOT be used anymore.
+//    afterwards the message may NOT be used anymore. The message may belong to
+//    another chirp instance.
 //
 //    IMPORTANT: Neglecting to release the slot will lockup chirp. Never ever
 //    change a messages identity.
 //
+//    The release_cb is only important for the last message in ACKNOWLEDGE=1,
+//    closing before the last message has been acknowledged, could cause an
+//    error on the remote.
+//
+//    :param ch_chirp_t* rchirp: Chirp instances for release_cb
 //    :param ch_message_t* msg: The message representing the slot.
+//    :param ch_release_cb_t release_cb: Called once the message is released.
+//
+
+// .. c:function::
+CH_EXPORT
+ch_error_t
+ch_chirp_release_msg_slot_ts(
+        ch_chirp_t* rchirp, ch_message_t* msg, ch_release_cb_t release_cb);
+//
+//    Release the internal message-slot and acknowledge the message (if
+//    ACKNOWLEDGE=1). Must be called when the message isn't needed anymore,
+//    afterwards the message may NOT be used anymore. The message may belong to
+//    another chirp instance.
+//
+//    IMPORTANT: Neglecting to release the slot will lockup chirp. Never ever
+//    change a messages identity.
+//
+//    The release_cb is only important for the last message in ACKNOWLEDGE=1,
+//    closing before the last message has been acknowledged, could cause an
+//    error on the remote.
+//
+//    This function is thread-safe.
+//
+//    :param ch_chirp_t* rchirp: Chirp instances for release_cb
+//    :param ch_message_t* msg: The message representing the slot.
+//    :param ch_release_cb_t release_cb: Called once the message is released.
 //
 
 // .. c:function::

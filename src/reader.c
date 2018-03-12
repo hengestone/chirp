@@ -21,6 +21,15 @@
 
 // .. c:function::
 static void
+_ch_rd_ack_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status);
+//
+//    Called by chirp once ack_msg is sent.
+//
+//    :param ch_chirp_t* chirp: Chirp instance
+//    :param ch_message_t* msg: Ack message sent
+
+// .. c:function::
+static void
 _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read);
 //
 //    Handle a handshake on the given connection.
@@ -148,6 +157,29 @@ char* _ch_rd_state_names[] = {
 
 // .. c:function::
 static void
+_ch_rd_ack_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
+//    :noindex:
+//
+//    see: :c:func:`_ch_rd_handshake`
+//
+// .. code-block:: cpp
+//
+{
+    (void) (msg);
+    (void) (status);
+    ch_chirp_check_m(chirp);
+    if (msg->_release_cb != NULL) {
+        ch_chirp_t* rchirp = msg->user_data;
+        ch_chirp_check_m(rchirp);
+        ch_connection_t* conn = msg->_pool;
+        ch_release_cb_t  cb   = msg->_release_cb;
+        msg->_release_cb      = NULL;
+        cb(rchirp, msg->identity, conn->reader.release_serial);
+    }
+}
+
+// .. c:function::
+static void
 _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
 //    :noindex:
 //
@@ -232,6 +264,14 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read)
            (void*) conn);
     }
 #endif
+    ch_message_t* ack_msg = &conn->reader.ack_msg;
+    memcpy(ack_msg->address, conn->address, CH_IP_ADDR_SIZE);
+    ack_msg->ip_protocol = conn->ip_protocol;
+    ack_msg->port        = conn->port;
+    ack_msg->type        = CH_MSG_ACK;
+    ack_msg->header_len  = 0;
+    ack_msg->data_len    = 0;
+    ack_msg->_pool       = conn;
     A(conn->remote != NULL, "The remote has to be set");
     ch_wr_process_queues(conn->remote);
 }
@@ -284,7 +324,7 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
     if (ichirp->recv_cb != NULL) {
         ichirp->recv_cb(chirp, msg);
     } else {
-        ch_chirp_release_msg_slot(msg);
+        ch_chirp_release_msg_slot(chirp, msg, NULL);
     }
 }
 
@@ -316,6 +356,59 @@ _ch_rd_handshake_cb(uv_write_t* req, int status)
     if (conn->flags & CH_CN_ENCRYPTED) {
         int stop;
         ch_pr_decrypt_read(conn, &stop);
+    }
+}
+
+static ssize_t
+_ch_rd_read_buffer(
+        ch_connection_t* conn,
+        ch_reader_t*     reader,
+        ch_message_t*    msg,
+        ch_buf*          src_buf,
+        size_t           to_read,
+        char**           assign_buf,
+        ch_buf*          dest_buf,
+        size_t           dest_buf_size,
+        uint32_t         expected,
+        int              free_flag,
+        ssize_t*         bytes_handled)
+//    :noindex:
+//
+//    see: :c:func:`_ch_rd_read_buffer`
+//
+// .. code-block:: cpp
+//
+{
+    if (reader->bytes_read == 0) {
+        if (expected <= dest_buf_size) {
+            /* Preallocated buf is large enough */
+            *assign_buf = dest_buf;
+        } else {
+            *assign_buf = ch_alloc(expected);
+            if (*assign_buf == NULL) {
+                EC(conn->chirp,
+                   "Could not allocate memory for message. ",
+                   "ch_connection_t:%p",
+                   (void*) conn);
+                ch_cn_shutdown(conn, CH_ENOMEM);
+                return CH_ENOMEM;
+            }
+            msg->_flags |= free_flag;
+        }
+    }
+    if ((to_read + reader->bytes_read) >= expected) {
+        /* We can read everything */
+        size_t reading = expected - reader->bytes_read;
+        memcpy(*assign_buf + reader->bytes_read, src_buf, reading);
+        *bytes_handled += reading;
+        reader->bytes_read = 0; /* Reset partial buffer reads */
+        return CH_SUCCESS;
+    } else {
+        /* Only partial read possible */
+        memcpy(*assign_buf + reader->bytes_read, src_buf, to_read);
+        *bytes_handled += to_read;
+        reader->bytes_read += to_read;
+        return CH_MORE;
     }
 }
 
@@ -622,9 +715,33 @@ ch_rd_read(ch_connection_t* conn, ch_buf* buf, size_t bytes_read, int* stop)
     return bytes_handled;
 }
 
+// .. c:function::
+void
+ch_rd_release_ts_cb(uv_async_t* handle)
+//    :noindex:
+//
+//    see: :c:func:`ch_rd_release_ts_cb`
+//
+// .. code-block:: cpp
+//
+{
+    ch_chirp_t* chirp = handle->data;
+    ch_chirp_check_m(chirp);
+    ch_chirp_int_t* ichirp = chirp->_;
+    uv_mutex_lock(&ichirp->release_ts_queue_lock);
+    ch_message_t* cur;
+    ch_msg_dequeue(&ichirp->release_ts_queue, &cur);
+    while (cur != NULL) {
+        ch_chirp_release_msg_slot(chirp, cur, cur->_release_cb);
+        ch_msg_dequeue(&ichirp->release_ts_queue, &cur);
+    }
+    uv_mutex_unlock(&ichirp->release_ts_queue_lock);
+}
+
 CH_EXPORT
 void
-ch_chirp_release_msg_slot(ch_message_t* msg)
+ch_chirp_release_msg_slot(
+        ch_chirp_t* rchirp, ch_message_t* msg, ch_release_cb_t release_cb)
 //    :noindex:
 //
 //    see: :c:func:`ch_chirp_release_msg_slot`
@@ -643,26 +760,26 @@ ch_chirp_release_msg_slot(ch_message_t* msg)
                 (void*) pool);
         return;
     }
+    int call_cb = 1;
     /* If the connection does not exist, it is already shutdown. The user may
      * release a message after a connection has been shutdown. We use reference
      * counting in the buffer pool to delay ch_free of the pool. */
     if (conn && !(conn->flags & CH_CN_SHUTTING_DOWN)) {
-        ch_reader_t* reader = &conn->reader;
         ch_chirp_t*  chirp  = conn->chirp;
+        ch_reader_t* reader = &conn->reader;
+        A(chirp->_init == CH_CHIRP_MAGIC, "Not a ch_chirp_t*");
         if (msg->type & CH_MSG_REQ_ACK) {
             /* Send the ack to the connection, in case the user changed the
              * message for his need, which is absolutely ok, and valid use
              * case. */
             ch_message_t* ack_msg = &reader->ack_msg;
-            memset(ack_msg, 0, sizeof(*ack_msg));
             memcpy(ack_msg->identity, msg->identity, CH_ID_SIZE);
-            memcpy(ack_msg->address, conn->address, CH_IP_ADDR_SIZE);
-            ack_msg->ip_protocol = conn->ip_protocol;
-            ack_msg->port        = conn->port;
-            ack_msg->type        = CH_MSG_ACK;
-            ack_msg->header_len  = 0;
-            ack_msg->data_len    = 0;
-            ch_wr_send(chirp, ack_msg, NULL);
+            ack_msg->user_data = rchirp;
+            A(ack_msg->_release_cb == NULL, "ack_msg in use");
+            ack_msg->_release_cb   = release_cb;
+            reader->release_serial = msg->serial;
+            call_cb                = 0;
+            ch_wr_send(chirp, ack_msg, _ch_rd_ack_send_cb);
         }
     }
     if (msg->_flags & CH_MSG_FREE_DATA) {
@@ -670,6 +787,11 @@ ch_chirp_release_msg_slot(ch_message_t* msg)
     }
     if (msg->_flags & CH_MSG_FREE_HEADER) {
         ch_free(msg->header);
+    }
+    if (call_cb) {
+        if (release_cb != NULL) {
+            release_cb(rchirp, msg->identity, msg->serial);
+        }
     }
     int pool_is_empty = ch_bf_is_exhausted(pool);
     ch_bf_release(pool, msg->_slot);
@@ -680,55 +802,28 @@ ch_chirp_release_msg_slot(ch_message_t* msg)
     }
 }
 
-static ssize_t
-_ch_rd_read_buffer(
-        ch_connection_t* conn,
-        ch_reader_t*     reader,
-        ch_message_t*    msg,
-        ch_buf*          src_buf,
-        size_t           to_read,
-        char**           assign_buf,
-        ch_buf*          dest_buf,
-        size_t           dest_buf_size,
-        uint32_t         expected,
-        int              free_flag,
-        ssize_t*         bytes_handled)
+// .. c:function::
+CH_EXPORT
+ch_error_t
+ch_chirp_release_msg_slot_ts(
+        ch_chirp_t* rchirp, ch_message_t* msg, ch_release_cb_t release_cb)
 //    :noindex:
 //
-//    see: :c:func:`_ch_rd_read_buffer`
+//    see: :c:func:`ch_chirp_release_msg_slot_ts`
 //
 // .. code-block:: cpp
 //
 {
-    if (reader->bytes_read == 0) {
-        if (expected <= dest_buf_size) {
-            /* Preallocated buf is large enough */
-            *assign_buf = dest_buf;
-        } else {
-            *assign_buf = ch_alloc(expected);
-            if (*assign_buf == NULL) {
-                EC(conn->chirp,
-                   "Could not allocate memory for message. ",
-                   "ch_connection_t:%p",
-                   (void*) conn);
-                ch_cn_shutdown(conn, CH_ENOMEM);
-                return CH_ENOMEM;
-            }
-            msg->_flags |= free_flag;
-        }
+    A(rchirp->_init == CH_CHIRP_MAGIC, "Not a ch_chirp_t*");
+    A(msg->_release_cb == NULL, "Message already released");
+    msg->_release_cb       = release_cb;
+    ch_chirp_int_t* ichirp = rchirp->_;
+    uv_mutex_lock(&ichirp->release_ts_queue_lock);
+    ch_msg_enqueue(&ichirp->release_ts_queue, msg);
+    uv_mutex_unlock(&ichirp->release_ts_queue_lock);
+    if (uv_async_send(&ichirp->release_ts) < 0) {
+        E(rchirp, "Could not call release_ts callback", CH_NO_ARG);
+        return CH_UV_ERROR;
     }
-    if ((to_read + reader->bytes_read) >= expected) {
-        /* We can read everything */
-        size_t reading = expected - reader->bytes_read;
-        memcpy(*assign_buf + reader->bytes_read, src_buf, reading);
-        *bytes_handled += reading;
-        reader->bytes_read = 0; /* Reset partial buffer reads */
-        return CH_SUCCESS;
-    } else {
-        /* Only partial read possible */
-        memcpy(*assign_buf + reader->bytes_read, src_buf, to_read);
-        *bytes_handled += to_read;
-        reader->bytes_read += to_read;
-        return CH_MORE;
-    }
+    return CH_SUCCESS;
 }

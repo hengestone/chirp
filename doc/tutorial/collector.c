@@ -53,9 +53,8 @@ static int   upstream_port;
 static void
 sent_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
-    (void) (chirp);
     (void) (status);
-    ch_chirp_release_msg_slot(msg);
+    ch_chirp_release_msg_slot(chirp, msg, NULL);
 }
 
 // Listening for incoming messages

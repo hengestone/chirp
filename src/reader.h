@@ -94,6 +94,10 @@ typedef enum {
 //       Data structure containing preallocated buffers for the chirp
 //       message-slots.
 //
+//    .. c:member:: uint32_t release_serial
+//
+//       The serial of the message currently released.
+//
 // .. code-block:: cpp
 //
 typedef struct ch_reader_s {
@@ -104,6 +108,7 @@ typedef struct ch_reader_s {
     size_t            bytes_read;
     ch_buf            net_msg[CH_SR_WIRE_MESSAGE_SIZE];
     ch_buffer_pool_t* pool;
+    uint32_t          release_serial;
 } ch_reader_t;
 
 // .. c:function::
@@ -137,6 +142,15 @@ ch_rd_read(ch_connection_t* conn, ch_buf* buffer, size_t bytes_read, int* stop);
 //    :param void* buffer:          The buffer containing ``read`` bytes read.
 //    :param size_t bytes_read:     The number of bytes read.
 //    :param int* stop:             (Out) Stop the reading process.
+//
+
+// .. c:function::
+void
+ch_rd_release_ts_cb(uv_async_t* handle);
+//
+//    Release all messages in the release queue.
+//
+//    :param uv_async_t* handle: Async handler used to trigger release queue.
 //
 // .. code-block:: cpp
 

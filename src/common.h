@@ -92,11 +92,13 @@ typedef enum {
     CH_UNINIT_ASYNC_START   = 1 << 4,
     CH_UNINIT_ASYNC_SEND_TS = 1 << 5,
     CH_UNINIT_SEND_TS_LOCK  = 1 << 6,
-    CH_UNINIT_SERVERV4      = 1 << 7,
-    CH_UNINIT_SERVERV6      = 1 << 8,
-    CH_UNINIT_TIMER_GC      = 1 << 9,
-    CH_UNINIT_TIMER_RECON   = 1 << 10,
-    CH_UNINIT_SIGNAL        = 1 << 11,
+    CH_UNINIT_ASYNC_RELE_TS = 1 << 7,
+    CH_UNINIT_RELE_TS_LOCK  = 1 << 8,
+    CH_UNINIT_SERVERV4      = 1 << 9,
+    CH_UNINIT_SERVERV6      = 1 << 10,
+    CH_UNINIT_TIMER_GC      = 1 << 11,
+    CH_UNINIT_TIMER_RECON   = 1 << 12,
+    CH_UNINIT_SIGNAL        = 1 << 13,
 } ch_chirp_uninit_t;
 
 #ifndef NDEBUG

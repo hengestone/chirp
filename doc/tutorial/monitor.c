@@ -215,7 +215,6 @@ service_update(mon_service_t* msg_svc)
 static void
 new_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 {
-    (void) (chirp);
     /* Note: This makes some very naive assumptions regarding the peer.  Any
      * respectable network code should NEVER EVER do this! But it keeps the
      * tutorial short, as we don't need code to serialize/unserialize. */
@@ -228,7 +227,7 @@ new_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
         service_remove_if_exists(svc);
     }
 
-    ch_chirp_release_msg_slot(msg);
+    ch_chirp_release_msg_slot(chirp, msg, NULL);
 }
 
 // Monitoring output

@@ -274,8 +274,7 @@ _ch_tst_done_cb(ch_chirp_t* chirp)
 static void
 _ch_tst_recv_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 {
-    (void) (chirp);
-    ch_chirp_release_msg_slot(msg);
+    ch_chirp_release_msg_slot(chirp, msg, NULL);
 }
 
 int

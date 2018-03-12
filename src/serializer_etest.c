@@ -42,7 +42,7 @@ main(void)
         in.type       = ch_qc_pgen_uint8_t();
         in.header_len = ch_qc_pgen_uint16_t();
         in.data_len   = ch_qc_pgen_uint32_t();
-        ch_sr_msg_to_buf(&in, buf);
+        ch_sr_msg_to_buf(&in, buf, in.serial);
         ch_sr_buf_to_msg(buf, &out);
         if (memcmp(&in, &out, sizeof(in)) != 0) {
             char id_str[CH_ID_SIZE * 2 + 1];

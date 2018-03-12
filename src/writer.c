@@ -372,33 +372,6 @@ _ch_wr_enqeue_probe_if_needed(ch_remote_t* remote)
 }
 
 // .. c:function::
-void
-_ch_wr_send_ts_cb(uv_async_t* handle)
-//    :noindex:
-//
-//    see: :c:func:`_ch_wr_send_ts_cb`
-//
-// .. code-block:: cpp
-//
-{
-    ch_chirp_t* chirp = handle->data;
-    ch_chirp_check_m(chirp);
-    ch_chirp_int_t* ichirp = chirp->_;
-    if (ichirp->flags & CH_CHIRP_CLOSING) {
-        return;
-    }
-    uv_mutex_lock(&ichirp->send_ts_queue_lock);
-
-    ch_message_t* cur;
-    ch_msg_dequeue(&ichirp->send_ts_queue, &cur);
-    while (cur != NULL) {
-        ch_chirp_send(chirp, cur, cur->_send_cb);
-        ch_msg_dequeue(&ichirp->send_ts_queue, &cur);
-    }
-    uv_mutex_unlock(&ichirp->send_ts_queue_lock);
-}
-
-// .. c:function::
 static void
 _ch_wr_write_chirp_header_cb(uv_write_t* req, int status)
 //    :noindex:
@@ -712,8 +685,6 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
         A(tmp_err == 0, "Inserting remote failed");
         (void) (tmp_err);
     }
-    remote->serial += 1;
-    msg->serial = remote->serial;
     /* Remote isn't used for 3/4 REUSE_TIME we send a probe, before the acutal
      * message */
     _ch_wr_enqeue_probe_if_needed(remote);
@@ -736,6 +707,33 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
 
 // .. c:function::
 void
+ch_wr_send_ts_cb(uv_async_t* handle)
+//    :noindex:
+//
+//    see: :c:func:`ch_wr_send_ts_cb`
+//
+// .. code-block:: cpp
+//
+{
+    ch_chirp_t* chirp = handle->data;
+    ch_chirp_check_m(chirp);
+    ch_chirp_int_t* ichirp = chirp->_;
+    if (ichirp->flags & CH_CHIRP_CLOSING) {
+        return;
+    }
+    uv_mutex_lock(&ichirp->send_ts_queue_lock);
+
+    ch_message_t* cur;
+    ch_msg_dequeue(&ichirp->send_ts_queue, &cur);
+    while (cur != NULL) {
+        ch_chirp_send(chirp, cur, cur->_send_cb);
+        ch_msg_dequeue(&ichirp->send_ts_queue, &cur);
+    }
+    uv_mutex_unlock(&ichirp->send_ts_queue_lock);
+}
+
+// .. c:function::
+void
 ch_wr_write(ch_connection_t* conn, ch_message_t* msg)
 //    :noindex:
 //
@@ -746,6 +744,7 @@ ch_wr_write(ch_connection_t* conn, ch_message_t* msg)
 {
     ch_chirp_t*     chirp  = conn->chirp;
     ch_writer_t*    writer = &conn->writer;
+    ch_remote_t*    remote = conn->remote;
     ch_chirp_int_t* ichirp = chirp->_;
     A(writer->msg == NULL, "Message should be null on new write");
     writer->msg = msg;
@@ -762,7 +761,8 @@ ch_wr_write(ch_connection_t* conn, ch_message_t* msg)
            (void*) conn);
     }
 
-    ch_sr_msg_to_buf(msg, writer->net_msg);
+    remote->serial += 1;
+    ch_sr_msg_to_buf(msg, writer->net_msg, remote->serial);
     ch_cn_write(
             conn,
             writer->net_msg,

@@ -337,6 +337,26 @@ Changes
 
 Not yet released
 
+* Update to rbtree 0.7
+
+* Correctly handle ENOMEM when connecting
+
+* Always ch_cn_shutdown on conn init errors (used to just ch_free sometimes)
+
+* Fix AF_INET assert
+
+* Fix late send_ts_queue_lock destroy
+
+* Do not log missing recv callback
+
+* Add ch_chirp_t and ch_release_cb_t to ch_chirp_release_msg_slot (ABI break)
+
+  * Allows to continue when message has been released
+
+* Add ch_chirp_release_msg_slot_ts
+
+  * Allows to release message in a different thread
+
 * Recover from partial ch_chirp_init() properly
 
 * Renaming buffer-handlers to message-slots (ABI break)

@@ -58,15 +58,6 @@ typedef struct ch_writer_s {
 
 // .. c:function::
 void
-_ch_wr_send_ts_cb(uv_async_t* handle);
-//
-//    Send all messages in the message queue.
-//
-//    :param uv_async_t* handle: Async handler used to trigger sending message
-//                               queue.
-
-// .. c:function::
-void
 ch_wr_free(ch_writer_t* writer);
 //
 //    Free the writer data structure.
@@ -107,6 +98,15 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb);
 //
 //    see: :c:func:`ch_chirp_send`
 //
+
+// .. c:function::
+void
+ch_wr_send_ts_cb(uv_async_t* handle);
+//
+//    Send all messages in the message queue.
+//
+//    :param uv_async_t* handle: Async handler used to trigger sending message
+//                               queue.
 
 // .. c:function::
 void

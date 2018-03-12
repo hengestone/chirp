@@ -86,7 +86,7 @@ typedef void (*ch_log_cb_t)(char msg[], char error);
 //
 //    .. c:member:: ch_chirp_t* chirp
 //
-//       Chirp object sending
+//       Chirp instance sending
 //
 //    .. c:member:: int status
 //
@@ -103,7 +103,7 @@ typedef void (*ch_send_cb_t)(
 //
 //    .. c:member:: ch_chirp_t* chirp
 //
-//       Chirp object received
+//       Chirp instance receiving
 //
 //    .. c:member:: ch_message_t* msg
 //
@@ -114,13 +114,34 @@ typedef void (*ch_send_cb_t)(
 //
 typedef void (*ch_recv_cb_t)(ch_chirp_t* chirp, ch_message_t* msg);
 
+// .. c:type:: ch_release_cb_t
+//
+//    Called by chirp when message is released.
+//
+//    .. c:member:: ch_chirp_t* chirp
+//
+//       Chirp instance
+//
+//    .. c:member:: uint8_t identity[CH_ID_SIZE] identity
+//
+//       Identity of the message released
+//
+//    .. c:member:: uint32_t serial
+//
+//       Serial of the message released
+//
+// .. code-block:: cpp
+//
+typedef void (*ch_release_cb_t)(
+        ch_chirp_t* chirp, uint8_t identity[CH_ID_SIZE], uint32_t serial);
+
 // .. c:type:: ch_start_cb_t
 //
 //    Callback called when chirp is started
 //
 //    .. c:member:: ch_chirp_t* chirp
 //
-//       Chirp object started
+//       Chirp instance started
 //
 // .. code-block:: cpp
 //

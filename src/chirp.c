@@ -256,9 +256,11 @@ _ch_chirp_close_async_cb(uv_async_t* handle)
         ichirp->closing_tasks += 2;
     }
     uv_close((uv_handle_t*) &ichirp->send_ts, ch_chirp_close_cb);
+    uv_close((uv_handle_t*) &ichirp->release_ts, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &ichirp->close, ch_chirp_close_cb);
-    ichirp->closing_tasks += 2;
+    ichirp->closing_tasks += 3;
     uv_mutex_destroy(&ichirp->send_ts_queue_lock);
+    uv_mutex_destroy(&ichirp->release_ts_queue_lock);
     tmp_err = uv_prepare_init(ichirp->loop, &ichirp->close_check);
     A(tmp_err == CH_SUCCESS, "Could not init prepare callback");
     ichirp->close_check.data = chirp;
@@ -349,6 +351,10 @@ _ch_chirp_uninit(ch_chirp_t* chirp, uint16_t uninit)
             uv_close((uv_handle_t*) &ichirp->send_ts, ch_chirp_close_cb);
             ichirp->closing_tasks += 1;
         }
+        if (uninit & CH_UNINIT_ASYNC_RELE_TS) {
+            uv_close((uv_handle_t*) &ichirp->release_ts, ch_chirp_close_cb);
+            ichirp->closing_tasks += 1;
+        }
         if (uninit & CH_UNINIT_ASYNC_CLOSE) {
             uv_close((uv_handle_t*) &ichirp->close, ch_chirp_close_cb);
             ichirp->closing_tasks += 1;
@@ -359,6 +365,9 @@ _ch_chirp_uninit(ch_chirp_t* chirp, uint16_t uninit)
         }
         if (uninit & CH_UNINIT_SEND_TS_LOCK) {
             uv_mutex_destroy(&ichirp->send_ts_queue_lock);
+        }
+        if (uninit & CH_UNINIT_RELE_TS_LOCK) {
+            uv_mutex_destroy(&ichirp->release_ts_queue_lock);
         }
         if (uninit & CH_UNINIT_SERVERV4) {
             uv_close((uv_handle_t*) &protocol->serverv4, ch_chirp_close_cb);
@@ -789,15 +798,32 @@ ch_chirp_init(
     }
     ichirp->start.data = chirp;
     uninit |= CH_UNINIT_ASYNC_START;
-    if (uv_async_init(loop, &ichirp->send_ts, _ch_wr_send_ts_cb) < 0) {
+    if (uv_async_init(loop, &ichirp->send_ts, ch_wr_send_ts_cb) < 0) {
         E(chirp, "Could not initialize send_ts handler", CH_NO_ARG);
         _ch_chirp_uninit(chirp, uninit);
         return CH_INIT_FAIL;
     }
     ichirp->send_ts.data = chirp;
     uninit |= CH_UNINIT_ASYNC_SEND_TS;
-    uv_mutex_init(&ichirp->send_ts_queue_lock);
+    if (uv_mutex_init(&ichirp->send_ts_queue_lock) < 0) {
+        E(chirp, "Could not initialize send_ts_lock", CH_NO_ARG);
+        _ch_chirp_uninit(chirp, uninit);
+        return CH_INIT_FAIL;
+    }
     uninit |= CH_UNINIT_SEND_TS_LOCK;
+    if (uv_async_init(loop, &ichirp->release_ts, ch_rd_release_ts_cb) < 0) {
+        E(chirp, "Could not initialize release_ts handler", CH_NO_ARG);
+        _ch_chirp_uninit(chirp, uninit);
+        return CH_INIT_FAIL;
+    }
+    ichirp->release_ts.data = chirp;
+    uninit |= CH_UNINIT_ASYNC_RELE_TS;
+    if (uv_mutex_init(&ichirp->release_ts_queue_lock) < 0) {
+        E(chirp, "Could not initialize release_ts_lock", CH_NO_ARG);
+        _ch_chirp_uninit(chirp, uninit);
+        return CH_INIT_FAIL;
+    }
+    uninit |= CH_UNINIT_RELE_TS_LOCK;
 
     ch_pr_init(chirp, protocol);
     tmp_err = ch_pr_start(protocol, &uninit);
@@ -875,12 +901,10 @@ ch_chirp_finish_message(
             if (msg->type & CH_MSG_ACK) {
                 LC(chirp,
                    "%s: sending ACK message id: %s\n"
-                   "                             "
-                   "serial: %u. ",
+                   "                            ",
                    "ch_message_t:%p",
                    action,
                    id,
-                   msg->serial,
                    (void*) msg);
             } else if (msg->type & CH_MSG_NOOP) {
                 LC(chirp,
@@ -891,12 +915,10 @@ ch_chirp_finish_message(
             } else {
                 LC(chirp,
                    "%s: finishing message id: %s\n"
-                   "                             "
-                   "serial: %u. ",
+                   "                            ",
                    "ch_message_t:%p",
                    action,
                    id,
-                   msg->serial,
                    (void*) msg);
             }
         }

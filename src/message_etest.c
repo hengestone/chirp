@@ -109,13 +109,37 @@ _ch_tst_simple_msg(ch_message_t* msg)
 }
 
 static void
+_ch_tst_release_cb(
+        ch_chirp_t* chirp, uint8_t identity[CH_ID_SIZE], uint32_t serial)
+{
+    (void) (serial);
+    unsigned int i = 0;
+    while (i < (CH_ID_SIZE - 1) && identity[i] == 0)
+        i += 1;
+    A(identity[i] != 0 || i != 0, "Identity not set");
+    _ch_tst_msg_echo_count += 1;
+    if (_ch_tst_msg_echo_count == _ch_tst_message_count) {
+        uv_timer_stop(&_ch_tst_sleep_timer);
+        uv_close((uv_handle_t*) &_ch_tst_sleep_timer, NULL);
+        ch_chirp_close_ts(ch_tr_other_chirp(chirp));
+        ch_chirp_close_ts(chirp);
+    }
+    A(_ch_tst_msg_echo_count <= _ch_tst_message_count, "More callbacks");
+}
+
+static void
 _ch_tst_delay_release(uv_timer_t* handle)
 {
     (void) (handle);
+    ch_chirp_t*         chirp = handle->data;
     ch_tst_msg_stack_t* cur;
     ch_tst_msg_pop(&_ch_tst_msg_stack, &cur);
     while (cur != NULL) {
-        ch_chirp_release_msg_slot(cur->msg);
+        if (rand() % 2 == 0) {
+            ch_chirp_release_msg_slot(chirp, cur->msg, _ch_tst_release_cb);
+        } else {
+            ch_chirp_release_msg_slot_ts(chirp, cur->msg, _ch_tst_release_cb);
+        }
         ch_free(cur);
         ch_tst_msg_pop(&_ch_tst_msg_stack, &cur);
     }
@@ -124,9 +148,7 @@ _ch_tst_delay_release(uv_timer_t* handle)
 static void
 _ch_tst_echo_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
 {
-    (void) (chirp);
     (void) (status);
-    _ch_tst_msg_echo_count += 1;
     A(status == CH_SUCCESS, "Echoing failed");
     int           stack_was_null = _ch_tst_msg_stack == NULL;
     ch_chirp_t*   other          = ch_tr_other_chirp(chirp);
@@ -144,14 +166,11 @@ _ch_tst_echo_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
             uv_timer_start(&_ch_tst_sleep_timer, _ch_tst_delay_release, 300, 0);
         }
     } else {
-        ch_chirp_release_msg_slot(msg);
-    }
-    if (_ch_tst_msg_echo_count == _ch_tst_message_count) {
-        uv_timer_stop(&_ch_tst_sleep_timer);
-        _ch_tst_delay_release(&_ch_tst_sleep_timer);
-        uv_close((uv_handle_t*) &_ch_tst_sleep_timer, NULL);
-        ch_chirp_close_ts(ch_tr_other_chirp(chirp));
-        ch_chirp_close_ts(chirp);
+        if (rand() % 2 == 0) {
+            ch_chirp_release_msg_slot(chirp, msg, _ch_tst_release_cb);
+        } else {
+            ch_chirp_release_msg_slot_ts(chirp, msg, _ch_tst_release_cb);
+        }
     }
 }
 
@@ -231,6 +250,7 @@ _ch_tst_echo_init_handler(ch_chirp_t* chirp)
 {
     ch_chirp_check_m(chirp);
     uv_timer_init(ch_chirp_get_loop(chirp), &_ch_tst_sleep_timer);
+    _ch_tst_sleep_timer.data = chirp;
     ch_chirp_set_recv_callback(chirp, _ch_tst_recv_echo_message_cb);
 }
 
