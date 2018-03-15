@@ -414,6 +414,14 @@ typedef struct ch_resume_state_s {
 //       Timestamp when the connection was last used. Used to determine
 //       garbage-collection.
 //
+//    .. c:member:: uint32_t release_serial
+//
+//       The serial of the message currently released.
+//
+//    .. c:member:: ch_message_t ack_msg
+//
+//       Buffer used for ack message
+//
 //    .. c:member:: char color
 //
 //       rbtree member
@@ -466,6 +474,8 @@ struct ch_connection_s {
     ch_reader_t       reader;
     ch_writer_t       writer;
     uint64_t          timestamp;
+    uint32_t          release_serial;
+    ch_message_t      ack_msg;
     char              color;
     ch_connection_t*  parent;
     ch_connection_t*  left;

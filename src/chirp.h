@@ -239,4 +239,13 @@ ch_chirp_finish_message(
 //    :param int status: Error code
 //
 
+// .. c:function::
+void
+ch_chirp_release_ts_cb(uv_async_t* handle);
+//
+//    Release all messages in the release queue.
+//
+//    :param uv_async_t* handle: Async handler used to trigger release queue.
+//
+
 #endif // ch_chirp_h
