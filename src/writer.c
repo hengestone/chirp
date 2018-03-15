@@ -685,8 +685,8 @@ ch_wr_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
         A(tmp_err == 0, "Inserting remote failed");
         (void) (tmp_err);
     }
-    /* Remote isn't used for 3/4 REUSE_TIME we send a probe, before the acutal
-     * message */
+    /* Remote isn't used for 3/4 REUSE_TIME we send a probe, before the
+     * acutal message */
     _ch_wr_enqeue_probe_if_needed(remote);
 
     int queued = 0;

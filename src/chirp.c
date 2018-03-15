@@ -1012,7 +1012,8 @@ ch_chirp_release_msg_slot(
     if (conn && !(conn->flags & CH_CN_SHUTTING_DOWN)) {
         ch_chirp_t* chirp = conn->chirp;
         A(chirp->_init == CH_CHIRP_MAGIC, "Not a ch_chirp_t*");
-        if (msg->type & CH_MSG_REQ_ACK) {
+        if (msg->_flags & CH_MSG_SEND_ACK) {
+            msg->_flags &= ~CH_MSG_SEND_ACK;
             /* Send the ack to the connection, in case the user changed the
              * message for his need, which is absolutely ok, and valid use
              * case. */

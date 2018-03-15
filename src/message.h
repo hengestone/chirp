@@ -90,6 +90,7 @@ typedef enum {
     CH_MSG_WRITE_DONE   = 1 << 4,
     CH_MSG_FAILURE      = CH_MSG_ACK_RECEIVED | CH_MSG_WRITE_DONE,
     CH_MSG_HAS_SLOT     = 1 << 5,
+    CH_MSG_SEND_ACK     = 1 << 6,
 } ch_msg_flags_t;
 
 #endif // ch_msg_message_h

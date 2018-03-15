@@ -511,6 +511,9 @@ _ch_rd_read_step(
                conn->address,
                (msg->ip_protocol == AF_INET6) ? CH_IP_ADDR_SIZE
                                               : CH_IP4_ADDR_SIZE);
+        if (msg->type & CH_MSG_REQ_ACK) {
+            msg->_flags |= CH_MSG_SEND_ACK;
+        }
         /* Direct jump to next read state */
         if (msg->header_len > 0) {
             reader->state = CH_RD_HEADER;
