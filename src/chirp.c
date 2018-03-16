@@ -792,10 +792,10 @@ ch_chirp_init(
         *ichirp->identity = *tmp_conf->IDENTITY;
     }
 
-    if (tmp_conf->MAX_SLOTS == 0) {
-        if (tmp_conf->ACKNOWLEDGE) {
-            tmp_conf->MAX_SLOTS = 1;
-        } else {
+    if (tmp_conf->ACKNOWLEDGE) {
+        tmp_conf->MAX_SLOTS = 1;
+    } else {
+        if (tmp_conf->MAX_SLOTS == 0) {
             tmp_conf->MAX_SLOTS = 16;
         }
     }
