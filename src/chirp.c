@@ -1089,7 +1089,9 @@ ch_chirp_release_ts_cb(uv_async_t* handle)
     ch_message_t* cur;
     ch_msg_dequeue(&ichirp->release_ts_queue, &cur);
     while (cur != NULL) {
+        uv_mutex_unlock(&ichirp->release_ts_queue_lock);
         ch_chirp_release_msg_slot(chirp, cur, cur->_release_cb);
+        uv_mutex_lock(&ichirp->release_ts_queue_lock);
         ch_msg_dequeue(&ichirp->release_ts_queue, &cur);
     }
     uv_mutex_unlock(&ichirp->release_ts_queue_lock);
