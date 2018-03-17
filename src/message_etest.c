@@ -35,7 +35,7 @@ typedef enum {
     CH_TST_MESSAGE_COUNT  = 1001,
     CH_TST_BUFFER_SIZE    = 1002,
     CH_TST_TIMEOUT        = 1003,
-    CH_TST_NO_ACK         = 1004,
+    CH_TST_ASYNC          = 1004,
     CH_TST_MIN_SLOTS      = 1005,
     CH_TST_MAX_MSG_SIZE   = 1006,
     CH_TST_SLOW           = 1007,
@@ -93,7 +93,7 @@ static int                 _ch_tst_buffer_size    = 0;
 static float               _ch_tst_timeout        = 5.0;
 static int                 _ch_tst_message_count  = 20;
 static uv_timer_t          _ch_tst_sleep_timer;
-static int                 _ch_tst_ack          = 1;
+static int                 _ch_tst_sync         = 1;
 static int                 _ch_tst_slow         = 0;
 static int                 _ch_tst_min_slots    = 0;
 static uint32_t            _ch_tst_max_msg_size = CH_MAX_MSG_SIZE;
@@ -268,7 +268,7 @@ _ch_tst_run_chirp(void* arg)
     config.PORT           = args->port;
     config.CERT_CHAIN_PEM = "./cert.pem";
     config.DH_PARAMS_PEM  = "./dh.pem";
-    config.ACKNOWLEDGE    = _ch_tst_ack;
+    config.SYNCHRONOUS    = _ch_tst_sync;
     config.MAX_MSG_SIZE   = _ch_tst_max_msg_size;
     if (_ch_tst_min_slots) {
         config.MAX_SLOTS = 1;
@@ -318,7 +318,7 @@ main(int argc, char* argv[])
             {"timeout", required_argument, 0, CH_TST_TIMEOUT},
             {"buffer-size", required_argument, 0, CH_TST_BUFFER_SIZE},
             {"max-msg-size", required_argument, 0, CH_TST_MAX_MSG_SIZE},
-            {"no-ack", no_argument, 0, CH_TST_NO_ACK},
+            {"async", no_argument, 0, CH_TST_ASYNC},
             {"min-slots", no_argument, 0, CH_TST_MIN_SLOTS},
             {"slow", no_argument, 0, CH_TST_SLOW},
             {"help", no_argument, 0, CH_TST_HELP},
@@ -366,9 +366,9 @@ main(int argc, char* argv[])
                 exit(1);
             }
             break;
-        case CH_TST_NO_ACK:
-            printf("Set no-ack\n");
-            _ch_tst_ack = 0;
+        case CH_TST_ASYNC:
+            printf("Set async\n");
+            _ch_tst_sync = 0;
             break;
         case CH_TST_MIN_SLOTS:
             printf("Set min-slots\n");

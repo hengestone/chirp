@@ -52,10 +52,10 @@ etests: stest  ## Run binary tests
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(BUILD)/src/message_etest --max-msg-size 4 2> /dev/null; [ $$? -ne 0 ]
-	$(MEMCHECK) $(BUILD)/src/message_etest --no-ack --always-encrypt \
+	$(MEMCHECK) $(BUILD)/src/message_etest --async --always-encrypt \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
-	$(MEMCHECK) $(BUILD)/src/message_etest --no-ack \
+	$(MEMCHECK) $(BUILD)/src/message_etest --async \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(MEMCHECK) $(BUILD)/src/message_etest \
@@ -73,27 +73,27 @@ etests: stest  ## Run binary tests
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(MEMCHECK) $(BUILD)/src/message_etest \
-			--no-ack \
+			--async \
 			--always-encrypt \
 			--slow \
 			--message-count 150 \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(MEMCHECK) $(BUILD)/src/message_etest \
-			--no-ack \
+			--async \
 			--slow \
 			--message-count 150 \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(MEMCHECK) $(BUILD)/src/message_etest \
-			--no-ack \
+			--async \
 			--always-encrypt \
 			--slow \
 			--min-slots \
 			2> message_etest.log || \
 		(cat message_etest.log; false)
 	$(MEMCHECK) $(BUILD)/src/message_etest \
-			--no-ack \
+			--async \
 			--always-encrypt \
 			--min-slots \
 			2> message_etest.log || \

@@ -60,7 +60,7 @@ static ch_config_t _ch_config_defaults = {
         .PORT               = 2998,
         .BACKLOG            = 100,
         .MAX_SLOTS          = 0,
-        .ACKNOWLEDGE        = 1,
+        .SYNCHRONOUS        = 1,
         .DISABLE_SIGNALS    = 0,
         .BUFFER_SIZE        = 0,
         .MAX_MSG_SIZE       = CH_MAX_MSG_SIZE,
@@ -603,10 +603,10 @@ _ch_chirp_verify_cfg(ch_chirp_t* chirp)
       "Config: timeout must be <= reuse time. (%f, %f)",
       conf->TIMEOUT,
       conf->REUSE_TIME);
-    if (conf->ACKNOWLEDGE == 1) {
+    if (conf->SYNCHRONOUS == 1) {
         V(chirp,
           conf->MAX_SLOTS == 1,
-          "Config: if acknowledge is enabled max slots must be 1.",
+          "Config: if synchronous is enabled max slots must be 1.",
           CH_NO_ARG);
     }
     V(chirp,
@@ -792,7 +792,7 @@ ch_chirp_init(
         *ichirp->identity = *tmp_conf->IDENTITY;
     }
 
-    if (tmp_conf->ACKNOWLEDGE) {
+    if (tmp_conf->SYNCHRONOUS) {
         tmp_conf->MAX_SLOTS = 1;
     } else {
         if (tmp_conf->MAX_SLOTS == 0) {

@@ -53,7 +53,7 @@ rb_bind_m(_ch_tst_msg, ch_tst_msg_tree_t) CH_ALLOW_NL;
 
 static int                _ch_tst_always_encrypt  = 0;
 static int                _ch_tst_expect_shutdown = 0;
-static int                _ch_tst_acknowledge     = 0;
+static int                _ch_tst_synchronous     = 0;
 static ch_chirp_t*        _ch_tst_chirp;
 static mpack_node_t       _ch_tst_cur_mpack_data;
 static mpack_writer_t*    _ch_tst_cur_mpack_writer;
@@ -102,7 +102,7 @@ _ch_tst_send_cb(ch_chirp_t* chirp, ch_message_t* msg, ch_error_t status)
     entry->status            = status;
 
     if (_ch_tst_mpp_mc == NULL && !_ch_tst_expect_shutdown &&
-        _ch_tst_acknowledge) {
+        _ch_tst_synchronous) {
         /* If memcheck is enabled we want to check for memory leaks not
          * correctness. Connect sometime fails if memcheck is attached, I blame
          * valgrind for now. I can't find a real problem. */
@@ -286,7 +286,7 @@ main(int argc, char* argv[])
 
     if (argc < 5) {
         fprintf(stderr,
-                "%s listen_port always_encrypt expect_shutdown acknowledge\n",
+                "%s listen_port always_encrypt expect_shutdown synchronous\n",
                 argv[0]);
         exit(1);
     }
@@ -321,20 +321,20 @@ main(int argc, char* argv[])
         fprintf(stderr, "expect_shutdown must be boolean (0/1).\n");
         exit(1);
     }
-    _ch_tst_acknowledge = strtol(argv[4], NULL, 10);
+    _ch_tst_synchronous = strtol(argv[4], NULL, 10);
     if (errno) {
-        fprintf(stderr, "acknowledge must be integer.\n");
+        fprintf(stderr, "synchronous must be integer.\n");
         exit(1);
     }
-    if (!(_ch_tst_acknowledge == 0 || _ch_tst_acknowledge == 1)) {
-        fprintf(stderr, "expect_shutdown must be boolean (0/1).\n");
+    if (!(_ch_tst_synchronous == 0 || _ch_tst_synchronous == 1)) {
+        fprintf(stderr, "synchronous must be boolean (0/1).\n");
         exit(1);
     }
     fprintf(stderr,
-            "Config encrypt: %d, execpt_shutdown: %d, acknowledge: %d\n",
+            "Config encrypt: %d, execpt_shutdown: %d, synchronous: %d\n",
             _ch_tst_always_encrypt,
             _ch_tst_expect_shutdown,
-            _ch_tst_acknowledge);
+            _ch_tst_synchronous);
     _ch_tst_msg_tree_init(&_ch_tst_msg_tree);
     ch_config_t config;
     ch_chirp_config_init(&config);
@@ -342,7 +342,7 @@ main(int argc, char* argv[])
     config.CERT_CHAIN_PEM  = "./cert.pem";
     config.DH_PARAMS_PEM   = "./dh.pem";
     config.DISABLE_SIGNALS = 1;
-    config.ACKNOWLEDGE     = _ch_tst_acknowledge;
+    config.SYNCHRONOUS     = _ch_tst_synchronous;
     _ch_tst_mpp_mc         = getenv("MPP_MC");
     if (_ch_tst_mpp_mc == NULL) {
         config.TIMEOUT    = 0.50;

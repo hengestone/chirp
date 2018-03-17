@@ -55,7 +55,7 @@ Features
 
     * No encryption
 
-    * No acknowledge
+    * Asynchronous
 
     * The test shows that chirp is highly optimized, but if the network
       delay is bigger star- or mesh-topology can improve throughput.
@@ -65,17 +65,20 @@ Features
 Modes of operation
 ==================
 
-Connection-synchronous (config.ACKNOWLEDGE=1)
+The programming interface and internal operation is always asynchronous.
+libchirp is asynchronous across multiple connections. Often you want one peer to
+be synchronous and the other asynchronous, depending on what pattern you
+implement.
+
+Connection-synchronous (config.SYNCHRONOUS=1)
 ---------------------------------------------
+
+* The sender requests and waits for a acknowledge message
 
 * The send callback only returns a success when the remote has called
   ch_chirp_release_msg_slot
 
 * No message can be lost by chirp
-
-* For concurrency the application needs to copy the message and call
-  ch_chirp_release message. Then the application has to take care that the
-  copied message is not lost
 
 * If the application calls ch_chirp_release_msg_slot after the operation is
   finished, messages will automatically be throttled. Be aware of the timeout:
@@ -84,7 +87,7 @@ Connection-synchronous (config.ACKNOWLEDGE=1)
 
 * Slower
 
-Connection-asynchronous (config.ACKNOWLEDGE=0)
+Connection-asynchronous (config.SYNCHRONOUS=0)
 ----------------------------------------------
 
 * The send callback returns a success when the message is successfully written to
@@ -105,16 +108,19 @@ What should I use?
 
 Rule of thumb:
 
-* Consumers (workers) do not request acknowledge (ACKNOWLEDGE = 0)
+* Consumers (workers) are not synchronous (SYNCHRONOUS=0)
 
-* Producers request acknowledge if they don't do bookkeeping (ACKNOWLEDGE = 1)
+* Producers are synchronous if they don't do bookkeeping (SYNCHRONOUS=1)
+
+* If you route messages from a synchronous producer, you want to be synchronous
+  too: Timeouts get propagated to the producer.
 
 For simple message transmission, for example sending events to a time-series
-database we recommend config.ACKNOWLEDGE=1, since chirp will cover this process
+database we recommend config.SYNCHRONOUS=1, since chirp will cover this process
 out of the box.
 
 For more complex application where you have to schedule your operations anyway,
-use config.ACKNOWLEDGE=0, do periodic bookkeeping and resend failed
+use config.SYNCHRONOUS=0, do periodic bookkeeping and resend failed
 operations.
 
 Diving in

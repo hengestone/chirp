@@ -45,7 +45,7 @@ class GenFunc(GenericStateMachine):
         self.capsys = capsys
         self.enc = "0"
         self.shutdown = "0"
-        self.acknowledge = "0"
+        self.synchronous = "0"
         self.fast = False
         self.etest_ready = False
         self.echo_ready = False
@@ -154,7 +154,7 @@ class GenFunc(GenericStateMachine):
             "2998",
             self.enc,
             self.shutdown,
-            self.acknowledge,
+            self.synchronous,
         ])
         self.open_messages = set()
 
@@ -218,7 +218,7 @@ class GenFunc(GenericStateMachine):
         if action == 'init_etest':
             self.enc = str(value[0])
             self.shutdown = str(value[1])
-            self.acknowledge = str(value[2])
+            self.synchronous = str(value[2])
             self.fast = value[3]
             self.init_etest()
         elif action == 'init_echo':

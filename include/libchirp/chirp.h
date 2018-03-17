@@ -47,13 +47,13 @@
 //    .. c:member:: uint8_t MAX_SLOTS
 //
 //       The count of message-slots used. Allowed values are values between 1
-//       and 32. The default is 0: Use 16 slots if ACKNOWLEDGE=0 and 1
-//       slot if ACKNOWLEDGE=1.
+//       and 32. The default is 0: Use 16 slots if SYNCHRONOUS=0 and 1
+//       slot if SYNCHRONOUS=1.
 //
-//    .. c:member:: char ACKNOWLEDGE
+//    .. c:member:: char SYNCHRONOUS
 //
-//       Acknowledge messages. Default 1. Makes chirp connection-synchronous.
-//       See :ref:`modes-of-operation`
+//       Enable connection-synchronous operations. Default 1. See
+//       :ref:`modes-of-operation`
 //
 //    .. c:member:: char DISABLE_SIGNALS
 //
@@ -118,7 +118,7 @@ struct ch_config_s {
     uint16_t PORT;
     uint8_t  BACKLOG;
     uint8_t  MAX_SLOTS;
-    char     ACKNOWLEDGE;
+    char     SYNCHRONOUS;
     char     DISABLE_SIGNALS;
     uint32_t BUFFER_SIZE;
     uint32_t MAX_MSG_SIZE;
@@ -256,17 +256,16 @@ void
 ch_chirp_release_msg_slot(
         ch_chirp_t* rchirp, ch_message_t* msg, ch_release_cb_t release_cb);
 //
-//    Release the internal message-slot and acknowledge the message (if
-//    ACKNOWLEDGE=1). Must be called when the message isn't needed anymore,
-//    afterwards the message may NOT be used anymore. The message may belong to
-//    another chirp instance.
+//    Release the internal message-slot and acknowledge the message if the
+//    remote requested an acknowledge-message. Must be called when the message
+//    isn't needed anymore, afterwards the message may NOT be used anymore. The
+//    message may belong to another chirp instance.
 //
 //    IMPORTANT: Neglecting to release the slot will lockup chirp. Never ever
 //    change a messages identity.
 //
-//    The release_cb is only important for the last message in ACKNOWLEDGE=1,
-//    closing before the last message has been acknowledged, could cause an
-//    error on the remote.
+//    Before closing chirp you should await release_cb otherwise the remote
+//    might not get the requested acknowledge-message.
 //
 //    :param ch_chirp_t* rchirp: Chirp instances for release_cb
 //    :param ch_message_t* msg: The message representing the slot.
@@ -279,17 +278,16 @@ ch_error_t
 ch_chirp_release_msg_slot_ts(
         ch_chirp_t* rchirp, ch_message_t* msg, ch_release_cb_t release_cb);
 //
-//    Release the internal message-slot and acknowledge the message (if
-//    ACKNOWLEDGE=1). Must be called when the message isn't needed anymore,
-//    afterwards the message may NOT be used anymore. The message may belong to
-//    another chirp instance.
+//    Release the internal message-slot and acknowledge the message if the
+//    remote requested an acknowledge-message. Must be called when the message
+//    isn't needed anymore, afterwards the message may NOT be used anymore. The
+//    message may belong to another chirp instance.
 //
 //    IMPORTANT: Neglecting to release the slot will lockup chirp. Never ever
 //    change a messages identity.
 //
-//    The release_cb is only important for the last message in ACKNOWLEDGE=1,
-//    closing before the last message has been acknowledged, could cause an
-//    error on the remote.
+//    Before closing chirp you should await release_cb otherwise the remote
+//    might not get the requested acknowledge-message.
 //
 //    This function is thread-safe.
 //

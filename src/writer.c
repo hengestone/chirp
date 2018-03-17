@@ -501,7 +501,7 @@ ch_chirp_send(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
 //
 {
     ch_chirp_check_m(chirp);
-    if (chirp->_->config.ACKNOWLEDGE != 0) {
+    if (chirp->_->config.SYNCHRONOUS != 0) {
         msg->type = CH_MSG_REQ_ACK;
     } else {
         msg->type = 0;
@@ -623,7 +623,7 @@ ch_wr_process_queues(ch_remote_t* remote)
             ch_wr_write(conn, msg);
             return CH_SUCCESS;
         } else if (remote->msg_queue != NULL) {
-            if (chirp->_->config.ACKNOWLEDGE) {
+            if (chirp->_->config.SYNCHRONOUS) {
                 if (remote->wait_ack_message == NULL) {
                     ch_msg_dequeue(&remote->msg_queue, &msg);
                     remote->wait_ack_message = msg;

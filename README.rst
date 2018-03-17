@@ -65,7 +65,7 @@ Features
 
     * No encryption
 
-    * No acknowledge
+    * Asynchronous
 
     * The test shows that chirp is highly optimized, but if the network
       delay is bigger star- or mesh-topology can improve throughput.
@@ -336,6 +336,8 @@ Changes
 -----------------------
 
 Not yet released
+
+* Rename config.ACKNOWLEDGE to config.SYNCHRONOUS (ABI break)
 
 * Update to rbtree 0.7
 
