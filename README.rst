@@ -332,10 +332,8 @@ Changes
 
 * Switch from uv_hrtime to uv_now
 
-2018-??-?? - 1.0.0-beta
+2018-03-17 - 1.0.0-beta
 -----------------------
-
-Not yet released
 
 * Rename config.ACKNOWLEDGE to config.SYNCHRONOUS (ABI break)
 
