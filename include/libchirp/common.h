@@ -12,6 +12,7 @@
 //
 // .. code-block:: cpp
 //
+#include "libchirp-config.h"
 #include "libchirp/const.h"
 #include "libchirp/error.h"
 

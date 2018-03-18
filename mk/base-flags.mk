@@ -16,9 +16,9 @@ LDFLAGS += \
 	$(VISIBLITYFLAG) \
 	-luv \
 	-lssl \
+	-lcrypto \
 	-lm \
 	-lpthread \
-	-lcrypto
 
 
 # Export API symbols only

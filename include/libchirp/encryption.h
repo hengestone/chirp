@@ -1,3 +1,9 @@
+//
+// .. code-block:: cpp
+
+#include "libchirp-config.h"
+#ifndef CH_WITHOUT_TLS
+
 // ==========
 // Encryption
 // ==========
@@ -82,3 +88,4 @@ ch_en_set_manual_tls_init(void);
 //
 
 #endif // ch_libchirp_encryption_h
+#endif // CH_WITHOUT_TLS

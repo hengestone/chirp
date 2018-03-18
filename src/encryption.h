@@ -1,3 +1,9 @@
+//
+// .. code-block:: cpp
+
+#include "libchirp-config.h"
+#ifndef CH_WITHOUT_TLS
+
 // =================
 // Encryption header
 // =================
@@ -123,3 +129,4 @@ ch_en_init(ch_chirp_t* chirp, ch_encryption_t* enc);
 //    :param ch_encryption_t* enc: Encryption to initialize
 
 #endif // ch_encryption_h
+#endif // CH_WITHOUT_TLS

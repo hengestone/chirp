@@ -54,7 +54,7 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read);
 //    :param ch_buf* buf:           Buffer containing bytes read, acts as data
 //                                  source
 //    :param size_t read:           Count of bytes read
-//
+
 // .. c:function::
 static void
 _ch_rd_handshake_cb(uv_write_t* req, int status);
@@ -317,6 +317,7 @@ _ch_rd_handshake_cb(uv_write_t* req, int status)
         ch_cn_shutdown(conn, CH_WRITE_ERROR);
         return;
     }
+#ifndef CH_WITHOUT_TLS
     /* Check if we already have a message (just after handshake)
      * this is here so we have no overlapping ch_cn_write. If the read causes a
      * ack message to be sent and the write of the handshake is not finished,
@@ -325,6 +326,7 @@ _ch_rd_handshake_cb(uv_write_t* req, int status)
         int stop;
         ch_pr_decrypt_read(conn, &stop);
     }
+#endif
 }
 
 static ssize_t

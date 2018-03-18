@@ -19,7 +19,9 @@
 //
 // .. code-block:: cpp
 //
+#ifndef CH_WITHOUT_TLS
 #include <openssl/err.h>
+#endif
 
 // Declarations
 // ============
@@ -33,6 +35,7 @@ _ch_pr_abort_all_messages(ch_remote_t* remote, ch_error_t error);
 //    :param ch_remote_t* remote: Remote failed to connect.
 //    :param ch_error_t error: Status returned by connect.
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static int
 _ch_pr_decrypt_feed(ch_connection_t* conn, ch_buf* buf, size_t read, int* stop);
@@ -43,7 +46,10 @@ _ch_pr_decrypt_feed(ch_connection_t* conn, ch_buf* buf, size_t read, int* stop);
 //    :param ch_buf* buf:           The buffer containing ``read`` bytes read.
 //    :param size_t read:           The number of bytes read.
 //    :param int* stop:             (Out) Stop the reading process.
+//
+#endif
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_pr_do_handshake(ch_connection_t* conn);
@@ -52,6 +58,8 @@ _ch_pr_do_handshake(ch_connection_t* conn);
 //
 //    :param ch_connection_t* conn: Pointer to a connection handle.
 //
+#endif
+
 // .. c:function::
 static void
 _ch_pr_gc_connections_cb(uv_timer_t* handle);
@@ -164,6 +172,7 @@ _ch_pr_abort_all_messages(ch_remote_t* remote, ch_error_t error)
     remote->cntl_msg_queue = NULL;
 }
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_pr_do_handshake(ch_connection_t* conn)
@@ -197,6 +206,8 @@ _ch_pr_do_handshake(ch_connection_t* conn)
     }
     ch_cn_send_if_pending(conn);
 }
+#endif
+
 // .. c:function::
 static void
 _ch_pr_gc_connections_cb(uv_timer_t* handle)
@@ -333,9 +344,11 @@ _ch_pr_new_connection_cb(uv_stream_t* server, int status)
             memcpy(&conn->address, &saddr->sin_addr, sizeof(saddr->sin_addr));
             uv_ip4_name(saddr, taddr.data, sizeof(taddr.data));
         }
+#ifndef CH_WITHOUT_TLS
         if (!(ichirp->config.DISABLE_ENCRYPTION || ch_is_local_addr(&taddr))) {
             conn->flags |= CH_CN_ENCRYPTED;
         }
+#endif
         ch_pr_conn_start(chirp, conn, client, 1);
     } else {
         ch_cn_shutdown(conn, CH_FATAL);
@@ -490,6 +503,9 @@ ch_pr_conn_start(
 
     uv_read_start(
             (uv_stream_t*) client, ch_cn_read_alloc_cb, _ch_pr_read_data_cb);
+#ifdef CH_WITHOUT_TLS
+    (void) (accept);
+#else
     if (conn->flags & CH_CN_ENCRYPTED) {
         if (accept) {
             SSL_set_accept_state(conn->ssl);
@@ -498,10 +514,11 @@ ch_pr_conn_start(
             _ch_pr_do_handshake(conn);
         }
         conn->flags |= CH_CN_TLS_HANDSHAKE;
-    } else {
-        int stop;
-        ch_rd_read(conn, NULL, 0, &stop); /* Start reader */
+        return CH_SUCCESS;
     }
+#endif
+    int stop;
+    ch_rd_read(conn, NULL, 0, &stop); /* Start reader */
     return CH_SUCCESS;
 }
 
@@ -578,6 +595,7 @@ ch_pr_debounce_connection(ch_connection_t* conn)
     }
 }
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static int
 _ch_pr_decrypt_feed(ch_connection_t* conn, ch_buf* buf, size_t nread, int* stop)
@@ -620,7 +638,9 @@ _ch_pr_decrypt_feed(ch_connection_t* conn, ch_buf* buf, size_t nread, int* stop)
     } while (bytes_handled < nread);
     return bytes_handled;
 }
+#endif
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 void
 ch_pr_decrypt_read(ch_connection_t* conn, int* stop)
@@ -673,6 +693,7 @@ ch_pr_decrypt_read(ch_connection_t* conn, int* stop)
         ch_cn_shutdown(conn, CH_TLS_ERROR);
     }
 }
+#endif
 
 // .. c:function::
 void
@@ -751,6 +772,7 @@ _ch_pr_resume(ch_connection_t* conn)
 // .. code-block:: cpp
 //
 {
+#ifndef CH_WITHOUT_TLS
     if (conn->flags & CH_CN_ENCRYPTED) {
         int stop;
         int ret = _ch_pr_read_resume(conn, &conn->tls_resume);
@@ -770,9 +792,9 @@ _ch_pr_resume(ch_connection_t* conn)
             _ch_pr_update_resume(resume, buf, nread, bytes_handled);
         }
         return !stop;
-    } else {
-        return _ch_pr_read_resume(conn, &conn->read_resume);
     }
+#endif
+    return _ch_pr_read_resume(conn, &conn->read_resume);
 }
 
 // .. c:function::
@@ -824,11 +846,15 @@ _ch_pr_read_data_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
        (int) nread,
        (void*) conn);
     int stop;
+#ifndef CH_WITHOUT_TLS
     if (conn->flags & CH_CN_ENCRYPTED) {
         bytes_handled = _ch_pr_decrypt_feed(conn, buf->base, nread, &stop);
     } else {
+#endif
         bytes_handled = ch_rd_read(conn, buf->base, nread, &stop);
+#ifndef CH_WITHOUT_TLS
     }
+#endif
     if (stop) {
         _ch_pr_update_resume(
                 &conn->read_resume, buf->base, nread, bytes_handled);

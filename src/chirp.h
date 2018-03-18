@@ -194,28 +194,30 @@ typedef enum {
 // .. code-block:: cpp
 //
 struct ch_chirp_int_s {
-    ch_config_t     config;
-    int             closing_tasks;
-    uint8_t         flags;
-    uv_async_t      close;
-    uv_async_t      start;
-    ch_start_cb_t   start_cb;
-    uv_signal_t     signals[2];
-    uv_prepare_t    close_check;
-    ch_protocol_t   protocol;
+    ch_config_t   config;
+    int           closing_tasks;
+    uint8_t       flags;
+    uv_async_t    close;
+    uv_async_t    start;
+    ch_start_cb_t start_cb;
+    uv_signal_t   signals[2];
+    uv_prepare_t  close_check;
+    ch_protocol_t protocol;
+#ifndef CH_WITHOUT_TLS
     ch_encryption_t encryption;
-    uv_loop_t*      loop;
-    uint8_t         identity[CH_ID_SIZE];
-    uint16_t        public_port;
-    ch_message_t*   send_ts_queue;
-    uv_async_t      send_ts;
-    uv_mutex_t      send_ts_queue_lock;
-    ch_message_t*   release_ts_queue;
-    uv_async_t      release_ts;
-    uv_mutex_t      release_ts_queue_lock;
-    ch_recv_cb_t    recv_cb;
-    uv_async_t      done;
-    ch_done_cb_t    done_cb;
+#endif
+    uv_loop_t*    loop;
+    uint8_t       identity[CH_ID_SIZE];
+    uint16_t      public_port;
+    ch_message_t* send_ts_queue;
+    uv_async_t    send_ts;
+    uv_mutex_t    send_ts_queue_lock;
+    ch_message_t* release_ts_queue;
+    uv_async_t    release_ts;
+    uv_mutex_t    release_ts_queue_lock;
+    ch_recv_cb_t  recv_cb;
+    uv_async_t    done;
+    ch_done_cb_t  done_cb;
 };
 
 #ifndef NDEBUG

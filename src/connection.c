@@ -19,7 +19,9 @@
 //
 // .. code-block:: cpp
 //
+#ifndef CH_WITHOUT_TLS
 #include <openssl/err.h>
+#endif
 
 // Data Struct Prototypes
 // ======================
@@ -41,7 +43,7 @@ _ch_cn_allocate_buffers(ch_connection_t* conn);
 //
 //    :param ch_connection_t* conn: Connection
 //
-//
+
 // .. c:function::
 static void
 _ch_cn_closing(ch_connection_t* conn);
@@ -49,7 +51,9 @@ _ch_cn_closing(ch_connection_t* conn);
 //    Called by ch_cn_shutdown to enter the closing stage.
 //
 //    :param ch_connection_t: Connection to close
+//
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_cn_partial_write(ch_connection_t* conn);
@@ -58,7 +62,9 @@ _ch_cn_partial_write(ch_connection_t* conn);
 //
 //    :param ch_connection_t* conn: Connection
 //
+#endif
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_cn_send_pending_cb(uv_write_t* req, int status);
@@ -69,7 +75,9 @@ _ch_cn_send_pending_cb(uv_write_t* req, int status);
 //                            connection handle
 //    :param int status: Send status
 //
+#endif
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_cn_write_cb(uv_write_t* req, int status);
@@ -79,6 +87,7 @@ _ch_cn_write_cb(uv_write_t* req, int status);
 //    :param uv_write_t* req: Write request
 //    :param int status: Write status
 //
+#endif
 
 // Definitions
 // ===========
@@ -220,6 +229,7 @@ _ch_cn_closing(ch_connection_t* conn)
     }
 }
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_cn_partial_write(ch_connection_t* conn)
@@ -318,7 +328,9 @@ _ch_cn_partial_write(ch_connection_t* conn)
        (void*) conn);
     conn->write_written += bytes_encrypted;
 }
+#endif
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_cn_send_pending_cb(uv_write_t* req, int status)
@@ -357,7 +369,9 @@ _ch_cn_send_pending_cb(uv_write_t* req, int status)
     }
     ch_cn_send_if_pending(conn);
 }
+#endif
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 static void
 _ch_cn_write_cb(uv_write_t* req, int status)
@@ -415,6 +429,7 @@ _ch_cn_write_cb(uv_write_t* req, int status)
         }
     }
 }
+#endif
 
 // .. c:function::
 void
@@ -465,6 +480,7 @@ ch_cn_close_cb(uv_handle_t* handle)
             }
             conn->flags &= ~CH_CN_INIT_BUFFERS;
         }
+#ifndef CH_WITHOUT_TLS
         if (conn->flags & CH_CN_ENCRYPTED) {
             /* The doc says this frees conn->bio_ssl I tested it. let's
              * hope they never change that. */
@@ -475,6 +491,7 @@ ch_cn_close_cb(uv_handle_t* handle)
                 BIO_free(conn->bio_app);
             }
         }
+#endif
         /* Since we define a unencrypted connection as CH_CN_INIT_ENCRYPTION. */
         conn->flags &= ~CH_CN_INIT_ENCRYPTION;
         A(!(conn->flags & CH_CN_INIT),
@@ -516,9 +533,11 @@ ch_cn_init(ch_chirp_t* chirp, ch_connection_t* conn, uint8_t flags)
         return tmp_err;
     }
     conn->flags |= CH_CN_INIT_READER_WRITER;
+#ifndef CH_WITHOUT_TLS
     if (conn->flags & CH_CN_ENCRYPTED) {
         tmp_err = ch_cn_init_enc(chirp, conn);
     }
+#endif
     if (tmp_err != CH_SUCCESS) {
         return tmp_err;
     }
@@ -527,6 +546,7 @@ ch_cn_init(ch_chirp_t* chirp, ch_connection_t* conn, uint8_t flags)
     return _ch_cn_allocate_buffers(conn);
 }
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 ch_error_t
 ch_cn_init_enc(ch_chirp_t* chirp, ch_connection_t* conn)
@@ -570,6 +590,7 @@ ch_cn_init_enc(ch_chirp_t* chirp, ch_connection_t* conn)
     LC(chirp, "SSL context created. ", "ch_connection_t:%p", (void*) conn);
     return CH_SUCCESS;
 }
+#endif
 
 // .. c:function::
 void
@@ -595,6 +616,7 @@ ch_cn_read_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
     buf->len  = conn->buffer_size;
 }
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 void
 ch_cn_send_if_pending(ch_connection_t* conn)
@@ -645,6 +667,7 @@ ch_cn_send_if_pending(ch_connection_t* conn)
            (void*) conn);
     }
 }
+#endif
 
 // .. c:function::
 ch_error_t
@@ -702,14 +725,15 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
         msg->_flags |= CH_MSG_FAILURE;
         ch_chirp_finish_message(chirp, conn, msg, reason);
     }
-    if (wam == NULL && msg == NULL && remote != NULL) {
-        /* If we have not finished a message we abort one on the remote. */
-        ch_cn_abort_one_message(remote, reason);
-    }
     /* finish vs abort - finish: cancel a message on the current connection.
      * abort: means canceling a message that hasn't been queued yet. If
      * possible we don't want to cancel a message that hasn't been queued
      * yet.*/
+    if (wam == NULL && msg == NULL && remote != NULL) {
+        /* If we have not finished a message we abort one on the remote. */
+        ch_cn_abort_one_message(remote, reason);
+    }
+#ifndef CH_WITHOUT_TLS
     if (conn->flags & CH_CN_ENCRYPTED && conn->flags & CH_CN_INIT_ENCRYPTION) {
         int tmp_err = SSL_get_verify_result(conn->ssl);
         if (tmp_err != X509_V_OK) {
@@ -720,6 +744,7 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
                (void*) conn);
         }
     }
+#endif
     if (ichirp->flags & CH_CHIRP_CLOSING) {
         conn->flags |= CH_CN_DO_CLOSE_ACCOUTING;
         ichirp->closing_tasks += 1;
@@ -748,6 +773,7 @@ ch_cn_write(
         conn->bufs_size = nbufs;
     }
     memcpy(conn->bufs, bufs, buf_list_size);
+#ifndef CH_WITHOUT_TLS
     if (conn->flags & CH_CN_ENCRYPTED) {
         conn->write_callback = callback;
         conn->write_written  = 0;
@@ -760,22 +786,23 @@ ch_cn_write(
         A(pending == 0, "There is still pending data in SSL BIO");
 #endif
         _ch_cn_partial_write(conn);
-    } else {
-        uv_write(
-                &conn->write_req,
-                (uv_stream_t*) &conn->client,
-                conn->bufs,
-                nbufs,
-                callback);
-#ifdef CH_ENABLE_LOGGING
-        ch_chirp_t* chirp = conn->chirp;
-        for (unsigned int i = 0; i < nbufs; i++) {
-            LC(chirp,
-               "Wrote %d bytes. ",
-               "ch_connection_t:%p",
-               (int) conn->bufs[i].len,
-               (void*) conn);
-        }
-#endif
+        return;
     }
+#endif
+    uv_write(
+            &conn->write_req,
+            (uv_stream_t*) &conn->client,
+            conn->bufs,
+            nbufs,
+            callback);
+#ifdef CH_ENABLE_LOGGING
+    ch_chirp_t* chirp = conn->chirp;
+    for (unsigned int i = 0; i < nbufs; i++) {
+        LC(chirp,
+           "Wrote %d bytes. ",
+           "ch_connection_t:%p",
+           (int) conn->bufs[i].len,
+           (void*) conn);
+    }
+#endif
 }

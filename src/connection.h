@@ -151,8 +151,10 @@
 //
 // .. code-block:: cpp
 //
+#ifndef CH_WITHOUT_TLS
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
+#endif
 
 // Declarations
 // ============
@@ -469,20 +471,22 @@ struct ch_connection_s {
     uv_timer_t        connect_timeout;
     int8_t            shutdown_tasks;
     uint32_t          flags;
-    SSL*              ssl;
-    BIO*              bio_ssl;
-    BIO*              bio_app;
-    int               tls_handshake_state;
-    ch_reader_t       reader;
-    ch_writer_t       writer;
-    uint64_t          timestamp;
-    uint32_t          release_serial;
-    ch_message_t      ack_msg;
-    char              color;
-    ch_connection_t*  parent;
-    ch_connection_t*  left;
-    ch_connection_t*  right;
-    ch_connection_t*  next;
+#ifndef CH_WITHOUT_TLS
+    SSL* ssl;
+    BIO* bio_ssl;
+    BIO* bio_app;
+#endif
+    int              tls_handshake_state;
+    ch_reader_t      reader;
+    ch_writer_t      writer;
+    uint64_t         timestamp;
+    uint32_t         release_serial;
+    ch_message_t     ack_msg;
+    char             color;
+    ch_connection_t* parent;
+    ch_connection_t* left;
+    ch_connection_t* right;
+    ch_connection_t* next;
 };
 
 // Data Struct Prototypes
@@ -559,6 +563,7 @@ ch_cn_init(ch_chirp_t* chirp, ch_connection_t* conn, uint8_t flags);
 //                          otherwise
 //
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 ch_error_t
 ch_cn_init_enc(ch_chirp_t* chirp, ch_connection_t* conn);
@@ -568,7 +573,9 @@ ch_cn_init_enc(ch_chirp_t* chirp, ch_connection_t* conn);
 //    :param ch_chirp_t* chirp: Chirp instance
 //    :param ch_connection_t* conn: Connection to initialize
 //
+#endif
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 void
 ch_cn_send_if_pending(ch_connection_t* conn);
@@ -577,7 +584,8 @@ ch_cn_send_if_pending(ch_connection_t* conn);
 //
 //    :param ch_connection_t* conn: Connection
 //
-//
+#endif
+
 // .. c:function::
 void
 ch_cn_write(

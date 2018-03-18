@@ -203,9 +203,11 @@ _ch_wr_connect(ch_remote_t* remote)
             remote->address,
             taddr.data,
             sizeof(taddr.data));
+#ifndef CH_WITHOUT_TLS
     if (!(ichirp->config.DISABLE_ENCRYPTION || ch_is_local_addr(&taddr))) {
         conn->flags |= CH_CN_ENCRYPTED;
     }
+#endif
     memcpy(&conn->address, &remote->address, CH_IP_ADDR_SIZE);
     if (uv_tcp_init(ichirp->loop, &conn->client) < 0) {
         EC(chirp,

@@ -243,10 +243,12 @@ _ch_chirp_check_closing_cb(uv_prepare_t* handle)
         tmp_err = uv_prepare_stop(handle);
         A(tmp_err == CH_SUCCESS, "Could not stop prepare callback");
         (void) (tmp_err);
+#ifndef CH_WITHOUT_TLS
         if (!ichirp->config.DISABLE_ENCRYPTION) {
             tmp_err = ch_en_stop(&ichirp->encryption);
             A(tmp_err == CH_SUCCESS, "Could not stop encryption");
         }
+#endif
         uv_close((uv_handle_t*) handle, _ch_chirp_closing_down_cb);
     }
     if (ichirp->closing_tasks < 0) {
@@ -556,6 +558,7 @@ _ch_chirp_verify_cfg(ch_chirp_t* chirp)
 //
 {
     ch_config_t* conf = &chirp->_->config;
+#ifndef CH_WITHOUT_TLS
     if (!conf->DISABLE_ENCRYPTION) {
         V(chirp,
           conf->DH_PARAMS_PEM != NULL,
@@ -574,6 +577,7 @@ _ch_chirp_verify_cfg(ch_chirp_t* chirp)
           "Config: cert %s does not exist.",
           conf->CERT_CHAIN_PEM);
     }
+#endif
     V(chirp,
       conf->PORT > 1024,
       "Config: port must be > 1024. (%d)",
@@ -769,16 +773,15 @@ ch_chirp_init(
     }
     uninit |= CH_UNINIT_ICHIRP;
     memset(ichirp, 0, sizeof(*ichirp));
-    ichirp->done_cb           = done_cb;
-    ichirp->config            = *config;
-    ichirp->public_port       = config->PORT;
-    ichirp->loop              = loop;
-    ichirp->start_cb          = start_cb;
-    ichirp->recv_cb           = recv_cb;
-    ch_config_t*     tmp_conf = &ichirp->config;
-    ch_protocol_t*   protocol = &ichirp->protocol;
-    ch_encryption_t* enc      = &ichirp->encryption;
-    chirp->_                  = ichirp;
+    ichirp->done_cb         = done_cb;
+    ichirp->config          = *config;
+    ichirp->public_port     = config->PORT;
+    ichirp->loop            = loop;
+    ichirp->start_cb        = start_cb;
+    ichirp->recv_cb         = recv_cb;
+    ch_config_t*   tmp_conf = &ichirp->config;
+    ch_protocol_t* protocol = &ichirp->protocol;
+    chirp->_                = ichirp;
     if (log_cb != NULL) {
         ch_chirp_set_log_callback(chirp, log_cb);
     }
@@ -864,6 +867,8 @@ ch_chirp_init(
         _ch_chirp_uninit(chirp, uninit);
         return tmp_err;
     }
+#ifndef CH_WITHOUT_TLS
+    ch_encryption_t* enc = &ichirp->encryption;
     if (!tmp_conf->DISABLE_ENCRYPTION) {
         ch_en_init(chirp, enc);
         tmp_err = ch_en_start(enc);
@@ -876,6 +881,7 @@ ch_chirp_init(
             return tmp_err;
         }
     }
+#endif
 #ifdef CH_ENABLE_LOGGING
     char id_str[CH_ID_SIZE * 2 + 1];
     ch_bytes_to_hex(
@@ -1248,7 +1254,11 @@ ch_libchirp_cleanup(void)
     }
     _ch_libchirp_initialized = 0;
     uv_mutex_destroy(&_ch_chirp_init_lock);
+#ifndef CH_WITHOUT_TLS
     ch_error_t ret = ch_en_tls_cleanup();
+#else
+    ch_error_t ret = CH_SUCCESS;
+#endif
 #ifdef CH_ENABLE_ASSERTS
     ch_at_cleanup();
 #endif
@@ -1282,7 +1292,11 @@ ch_libchirp_init(void)
 #ifdef CH_ENABLE_ASSERTS
     ch_at_init();
 #endif
+#ifndef CH_WITHOUT_TLS
     return ch_en_tls_init();
+#else
+    return CH_SUCCESS;
+#endif
 }
 
 // .. c:function::

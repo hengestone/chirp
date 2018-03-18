@@ -1,3 +1,9 @@
+//
+// .. code-block:: cpp
+
+#include "libchirp-config.h"
+#ifndef CH_WITHOUT_TLS
+
 // ==========
 // Encryption
 // ==========
@@ -8,8 +14,8 @@
 //
 // .. code-block:: cpp
 //
-#include "encryption.h"
 #include "chirp.h"
+#include "encryption.h"
 #include "util.h"
 
 // System includes
@@ -431,3 +437,9 @@ _ch_en_thread_id_function(void)
     return (unsigned long) self;
 }
 #endif // CH_OPENSSL_10_API
+#else
+static void
+_ch_no_empty_translation_unti(void)
+{
+}
+#endif // CH_WITHOUT_TLS

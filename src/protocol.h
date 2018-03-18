@@ -120,6 +120,7 @@ ch_pr_debounce_connection(ch_connection_t* conn);
 //    :param ch_connection_t* conn: Connection object
 //
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 void
 ch_pr_decrypt_read(ch_connection_t* conn, int* stop);
@@ -129,6 +130,7 @@ ch_pr_decrypt_read(ch_connection_t* conn, int* stop);
 //
 //    :param ch_connection_t* conn: Pointer to a connection handle.
 //    :param int* stop:             (Out) Stop the reading process.
+#endif
 
 // .. c:function::
 void
