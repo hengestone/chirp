@@ -446,7 +446,8 @@ struct ch_connection_s {
     ch_buf*           buffer_rtls;
     uv_buf_t          buffer_uv_uv;
     uv_buf_t          buffer_wtls_uv;
-    uv_buf_t          buffer_any_uv;
+    uv_buf_t*         buffer_any_uv;
+    unsigned int      buffer_any_size;
     size_t            buffer_size;
     size_t            buffer_rtls_size;
     uv_write_cb       write_callback;

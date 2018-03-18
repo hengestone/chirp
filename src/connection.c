@@ -168,6 +168,8 @@ _ch_cn_allocate_buffers(ch_connection_t* conn)
     conn->buffer_rtls_size = size;
     conn->buffer_uv_uv     = uv_buf_init(conn->buffer_uv, conn->buffer_size);
     conn->buffer_wtls_uv   = uv_buf_init(conn->buffer_wtls, conn->buffer_size);
+    conn->buffer_any_uv    = ch_alloc(sizeof(uv_buf_t) * 3);
+    conn->buffer_any_size  = 3;
     conn->flags |= CH_CN_INIT_BUFFERS;
     A((conn->flags & CH_CN_INIT) == CH_CN_INIT,
       "Connection not fully initialized");
@@ -241,7 +243,7 @@ _ch_cn_partial_write(ch_connection_t* conn)
     for (;;) {
         int       can_write_more = 1;
         int       pending        = BIO_pending(conn->bio_app);
-        uv_buf_t* buf            = &conn->buffer_any_uv;
+        uv_buf_t* buf            = conn->buffer_any_uv;
         while (pending && can_write_more) {
             ssize_t read = BIO_read(
                     conn->bio_app,
@@ -365,7 +367,7 @@ _ch_cn_write_cb(uv_write_t* req, int status)
         return;
     }
     /* Check if we can write data */
-    uv_buf_t* buf     = &conn->buffer_any_uv;
+    uv_buf_t* buf     = conn->buffer_any_uv;
     int       pending = BIO_pending(conn->bio_app);
     if (buf->len > conn->write_written || pending) {
         _ch_cn_partial_write(conn);
@@ -457,6 +459,7 @@ ch_cn_close_cb(uv_handle_t* handle)
           "Connection resources haven't been freed completely");
         A(!(conn->flags & CH_CN_CONNECTED),
           "Connection not properly disconnected");
+        ch_free(conn->buffer_any_uv);
         ch_free(conn);
         LC(chirp,
            "Closed connection, closing semaphore (%d). ",
@@ -719,9 +722,13 @@ ch_cn_write(
 //
 {
     (void) (nbufs);
-    ch_chirp_t* chirp   = conn->chirp;
-    conn->buffer_any_uv = bufs[0];
-    uv_buf_t* uvbuf     = &conn->buffer_any_uv;
+    ch_chirp_t* chirp         = conn->chirp;
+    size_t      buf_list_size = sizeof(uv_buf_t) * nbufs;
+    if (nbufs > conn->buffer_any_size) {
+        conn->buffer_any_uv   = ch_realloc(conn->buffer_any_uv, buf_list_size);
+        conn->buffer_any_size = nbufs;
+    }
+    memcpy(conn->buffer_any_uv, bufs, buf_list_size);
     if (conn->flags & CH_CN_ENCRYPTED) {
         /* A(uvbuf->len == 0, "Another connection write is pending");
          * TODO replace with other test */
@@ -736,13 +743,17 @@ ch_cn_write(
         uv_write(
                 &conn->write_req,
                 (uv_stream_t*) &conn->client,
-                uvbuf,
+                conn->buffer_any_uv,
                 1,
                 callback);
-        LC(chirp,
-           "Called uv_write with %d bytes. ",
-           "ch_connection_t:%p",
-           (int) uvbuf->len,
-           (void*) conn);
+#ifdef CH_ENABLE_LOGGING
+        for (unsigned int i = 0; i < nbufs; i++) {
+            LC(chirp,
+               "Wrote %d bytes. ",
+               "ch_connection_t:%p",
+               (int) conn->buffer_any_uv[i].len,
+               (void*) conn);
+        }
+#endif
     }
 }
