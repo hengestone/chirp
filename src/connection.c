@@ -168,8 +168,8 @@ _ch_cn_allocate_buffers(ch_connection_t* conn)
     conn->buffer_rtls_size = size;
     conn->buffer_uv_uv     = uv_buf_init(conn->buffer_uv, conn->buffer_size);
     conn->buffer_wtls_uv   = uv_buf_init(conn->buffer_wtls, conn->buffer_size);
-    conn->bufs    = ch_alloc(sizeof(uv_buf_t) * 3);
-    conn->bufs_size  = 3;
+    conn->bufs             = ch_alloc(sizeof(uv_buf_t) * 3);
+    conn->bufs_size        = 3;
     conn->flags |= CH_CN_INIT_BUFFERS;
     A((conn->flags & CH_CN_INIT) == CH_CN_INIT,
       "Connection not fully initialized");
@@ -241,10 +241,10 @@ _ch_cn_partial_write(ch_connection_t* conn)
     conn->flags |= CH_CN_BUF_WTLS_USED;
 #endif
     for (;;) {
-        int       can_write_more = 1;
-        int       pending        = BIO_pending(conn->bio_app);
-        uv_buf_t* buf            = &conn->bufs[conn->bufs_index];
-        while (pending && can_write_more) {
+        /* Read all data pending in BIO */
+        int can_read_more = 1;
+        int pending       = BIO_pending(conn->bio_app);
+        while (pending && can_read_more) {
             ssize_t read = BIO_read(
                     conn->bio_app,
                     conn->buffer_wtls + bytes_read,
@@ -259,29 +259,49 @@ _ch_cn_partial_write(ch_connection_t* conn)
                 return;
             }
             bytes_read += read;
-            int is_write_size_valid =
-                    (bytes_encrypted + conn->write_written) < buf->len;
-            int is_buffer_size_valid = bytes_read < conn->buffer_size;
+            can_read_more = bytes_read < conn->buffer_size;
 
-            can_write_more = is_write_size_valid && is_buffer_size_valid;
-            pending        = BIO_pending(conn->bio_app);
+            pending = BIO_pending(conn->bio_app);
         }
-        if (!can_write_more) {
+        if (!can_read_more) {
             break;
         }
-        int tmp_err = SSL_write(
-                conn->ssl,
-                buf->base + bytes_encrypted + conn->write_written,
-                buf->len - bytes_encrypted - conn->write_written);
-        bytes_encrypted += tmp_err;
-        A(tmp_err > -1, "SSL_write failure unexpected");
-        if (tmp_err < 0) {
-            EC(chirp,
-               "SSL error writing to BIO, shutting down connection. ",
-               "ch_connection_t:%p",
-               (void*) conn);
-            ch_cn_shutdown(conn, CH_TLS_ERROR);
-            return;
+        uv_buf_t* buf = &conn->bufs[conn->bufs_index];
+        /* Switch to next buffer if available or break */
+        int can_write_more = (bytes_encrypted + conn->write_written) < buf->len;
+        if (!can_write_more) {
+            int changed = 0;
+            while (conn->bufs_index < (conn->nbufs - 1)) {
+                conn->bufs_index += 1;
+                changed = 1;
+                if (conn->bufs[conn->bufs_index].len != 0) {
+                    break;
+                }
+            }
+            if (conn->bufs[conn->bufs_index].len == 0 || !changed) {
+                break;
+            }
+            conn->write_written = 0;
+            bytes_encrypted     = 0;
+            can_write_more      = 1;
+        }
+        buf = &conn->bufs[conn->bufs_index];
+        /* Write data into BIO */
+        if (can_read_more && can_write_more) {
+            int tmp_err = SSL_write(
+                    conn->ssl,
+                    buf->base + bytes_encrypted + conn->write_written,
+                    buf->len - bytes_encrypted - conn->write_written);
+            bytes_encrypted += tmp_err;
+            A(tmp_err > -1, "SSL_write failure unexpected");
+            if (tmp_err < 0) {
+                EC(chirp,
+                   "SSL error writing to BIO, shutting down connection. ",
+                   "ch_connection_t:%p",
+                   (void*) conn);
+                ch_cn_shutdown(conn, CH_TLS_ERROR);
+                return;
+            }
         }
     }
     conn->buffer_wtls_uv.len = bytes_read;
@@ -721,20 +741,19 @@ ch_cn_write(
 // .. code-block:: cpp
 //
 {
-    (void) (nbufs);
-    ch_chirp_t* chirp         = conn->chirp;
-    size_t      buf_list_size = sizeof(uv_buf_t) * nbufs;
+    size_t buf_list_size = sizeof(uv_buf_t) * nbufs;
     if (nbufs > conn->bufs_size) {
-        conn->bufs   = ch_realloc(conn->bufs, buf_list_size);
+        conn->bufs      = ch_realloc(conn->bufs, buf_list_size);
         conn->bufs_size = nbufs;
     }
     memcpy(conn->bufs, bufs, buf_list_size);
     if (conn->flags & CH_CN_ENCRYPTED) {
         /* A(uvbuf->len == 0, "Another connection write is pending");
          * TODO replace with other test */
-        conn->write_callback   = callback;
-        conn->write_written    = 0;
-        conn->bufs_index = 0;
+        conn->write_callback = callback;
+        conn->write_written  = 0;
+        conn->bufs_index     = 0;
+        conn->nbufs          = nbufs;
 #ifdef CH_ENABLE_ASSERTS
         int pending = BIO_pending(conn->bio_app);
         A(pending == 0, "There is still pending data in SSL BIO");
@@ -745,9 +764,10 @@ ch_cn_write(
                 &conn->write_req,
                 (uv_stream_t*) &conn->client,
                 conn->bufs,
-                1,
+                nbufs,
                 callback);
 #ifdef CH_ENABLE_LOGGING
+        ch_chirp_t* chirp = conn->chirp;
         for (unsigned int i = 0; i < nbufs; i++) {
             LC(chirp,
                "Wrote %d bytes. ",

@@ -97,7 +97,7 @@ static void
 _ch_tst_recv_message_cb(ch_chirp_t* chirp, ch_message_t* msg)
 {
     assert(msg != NULL && "Not a ch_message_t*");
-    CH_WRITE_LOGC(chirp, "Recevied message", "ch_message_t:%p", msg);
+    CH_WRITE_LOGC(chirp, "Received message", "ch_message_t:%p", msg);
     ch_chirp_release_msg_slot(chirp, msg, NULL);
 }
 

@@ -70,22 +70,6 @@ _ch_wr_connect_timeout_cb(uv_timer_t* handle);
 
 // .. c:function::
 static void
-_ch_wr_write_chirp_header_cb(uv_write_t* req, int status);
-//
-//    Callback which is called after the messages header was written.
-//
-//    The successful sending of a message over a connection triggers the
-//    message header callback, which, in its turn, then calls this callback ---
-//    if a header is present.
-//
-//    Cancels (void) if the sending was erroneous. Next data will be written if
-//    the message has data.
-//
-//    :param uv_write_t* req:  Write request.
-//    :param int status:       Write status.
-
-// .. c:function::
-static void
 _ch_wr_write_data_cb(uv_write_t* req, int status);
 //
 //    Callback which is called after data was written.
@@ -104,15 +88,6 @@ _ch_wr_write_finish(
 //    :param ch_chirp_t* chirp:      Pointer to a chirp instance.
 //    :param ch_writer_t* writer:    Pointer to a writer instance.
 //    :param ch_connection_t* conn:  Pointer to a connection instance.
-
-// .. c:function::
-static void
-_ch_wr_write_msg_header_cb(uv_write_t* req, int status);
-//
-//    Callback which is called after the messages header was written.
-//
-//    :param uv_write_t* req:  Write request.
-//    :param int status:       Write status.
 
 // .. c:function::
 static void
@@ -373,34 +348,6 @@ _ch_wr_enqeue_probe_if_needed(ch_remote_t* remote)
 
 // .. c:function::
 static void
-_ch_wr_write_chirp_header_cb(uv_write_t* req, int status)
-//    :noindex:
-//
-//    see: :c:func:`_ch_wr_write_chirp_header_cb`
-//
-// .. code-block:: cpp
-//
-{
-    ch_connection_t* conn  = req->data;
-    ch_chirp_t*      chirp = conn->chirp;
-    ch_chirp_check_m(chirp);
-    ch_writer_t*  writer = &conn->writer;
-    ch_message_t* msg    = writer->msg;
-    if (_ch_wr_check_write_error(chirp, writer, conn, status)) {
-        return;
-    }
-    if (msg->data_len > 0) {
-        uv_buf_t buf;
-        buf.base = msg->data;
-        buf.len  = msg->data_len;
-        ch_cn_write(conn, &buf, 1, _ch_wr_write_data_cb);
-    } else {
-        _ch_wr_write_finish(chirp, writer, conn);
-    }
-}
-
-// .. c:function::
-static void
 _ch_wr_write_data_cb(uv_write_t* req, int status)
 //    :noindex:
 //
@@ -442,38 +389,6 @@ _ch_wr_write_finish(
         conn->remote->timestamp = conn->timestamp;
     }
     ch_chirp_finish_message(chirp, conn, msg, CH_SUCCESS);
-}
-
-// .. c:function::
-static void
-_ch_wr_write_msg_header_cb(uv_write_t* req, int status)
-//    :noindex:
-//
-//    see: :c:func:`_ch_wr_write_msg_header_cb`
-//
-// .. code-block:: cpp
-//
-{
-    ch_connection_t* conn  = req->data;
-    ch_chirp_t*      chirp = conn->chirp;
-    ch_chirp_check_m(chirp);
-    ch_writer_t*  writer = &conn->writer;
-    ch_message_t* msg    = writer->msg;
-    if (_ch_wr_check_write_error(chirp, writer, conn, status)) {
-        return;
-    }
-    uv_buf_t buf;
-    if (msg->header_len > 0) {
-        buf.base = msg->header;
-        buf.len  = msg->header_len;
-        ch_cn_write(conn, &buf, 1, _ch_wr_write_chirp_header_cb);
-    } else if (msg->data_len > 0) {
-        buf.base = msg->data;
-        buf.len  = msg->data_len;
-        ch_cn_write(conn, &buf, 1, _ch_wr_write_data_cb);
-    } else {
-        _ch_wr_write_finish(chirp, writer, conn);
-    }
 }
 
 // .. c:function::
@@ -767,8 +682,12 @@ ch_wr_write(ch_connection_t* conn, ch_message_t* msg)
 
     remote->serial += 1;
     ch_sr_msg_to_buf(msg, writer->net_msg, remote->serial);
-    uv_buf_t buf;
-    buf.base = writer->net_msg;
-    buf.len  = CH_SR_WIRE_MESSAGE_SIZE;
-    ch_cn_write(conn, &buf, 1, _ch_wr_write_msg_header_cb);
+    uv_buf_t buf[3];
+    buf[0].base = writer->net_msg;
+    buf[0].len  = CH_SR_WIRE_MESSAGE_SIZE;
+    buf[1].base = msg->header;
+    buf[1].len  = msg->header_len;
+    buf[2].base = msg->data;
+    buf[2].len  = msg->data_len;
+    ch_cn_write(conn, buf, 3, _ch_wr_write_data_cb);
 }
