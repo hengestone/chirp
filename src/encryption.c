@@ -1,9 +1,3 @@
-//
-// .. code-block:: cpp
-
-#include "libchirp-config.h"
-#ifndef CH_WITHOUT_TLS
-
 // ==========
 // Encryption
 // ==========
@@ -14,8 +8,9 @@
 //
 // .. code-block:: cpp
 //
-#include "chirp.h"
 #include "encryption.h"
+#include "chirp.h"
+#include "common.h"
 #include "util.h"
 
 // System includes
@@ -23,6 +18,7 @@
 //
 // .. code-block:: cpp
 //
+#ifndef CH_WITHOUT_TLS
 #include <openssl/conf.h>
 #include <openssl/crypto.h>
 #include <openssl/engine.h>
@@ -127,6 +123,7 @@ _ch_en_locking_function(int mode, int n, const char* file, int line)
     }
 }
 #endif // CH_OPENSSL_10_API
+#endif // CH_WITHOUT_TLS
 
 // .. c:function::
 CH_EXPORT
@@ -139,6 +136,7 @@ ch_en_tls_init(void)
 // .. code-block:: cpp
 //
 {
+#ifndef CH_WITHOUT_TLS
     if (_ch_en_manual_tls) {
         return CH_SUCCESS;
     }
@@ -163,6 +161,9 @@ ch_en_tls_init(void)
     }
     return CH_SUCCESS;
 #endif
+#else  // CH_WITHOUT_TLS
+    return CH_SUCCESS;
+#endif // CH_WITHOUT_TLS
 }
 
 // .. c:function::
@@ -176,6 +177,7 @@ ch_en_tls_cleanup(void)
 // .. code-block:: cpp
 //
 {
+#ifndef CH_WITHOUT_TLS
     if (_ch_en_manual_tls) {
         return CH_SUCCESS;
     }
@@ -198,6 +200,9 @@ ch_en_tls_cleanup(void)
     ASN1_STRING_TABLE_cleanup();
 
     return ch_en_tls_threading_cleanup();
+#else // CH_WITHOUT_TLS
+    return CH_SUCCESS;
+#endif
 }
 
 // .. c:function::
@@ -211,6 +216,7 @@ ch_en_tls_threading_cleanup(void)
 // .. code-block:: cpp
 //
 {
+#ifndef CH_WITHOUT_TLS
 #ifdef CH_OPENSSL_10_API
     A(_ch_en_lock_list, "Threading not setup");
     if (!_ch_en_lock_list) {
@@ -230,6 +236,7 @@ ch_en_tls_threading_cleanup(void)
 #else
     OPENSSL_thread_stop();
 #endif // CH_OPENSSL_10_API
+#endif // CH_WITHOUT_TLS
     return CH_SUCCESS;
 }
 
@@ -244,6 +251,7 @@ ch_en_tls_threading_setup(void)
 // .. code-block:: cpp
 //
 {
+#ifndef CH_WITHOUT_TLS
 #ifdef CH_OPENSSL_10_API
     A(!_ch_en_lock_list, "Threading already setup");
     if (_ch_en_lock_list) {
@@ -272,6 +280,7 @@ ch_en_tls_threading_setup(void)
     CRYPTO_set_id_callback(_ch_en_thread_id_function);
     CRYPTO_set_locking_callback(_ch_en_locking_function);
 #endif // CH_OPENSSL_10_API
+#endif // CH_WITHOUT_TLS
     return CH_SUCCESS;
 }
 
@@ -286,9 +295,12 @@ ch_en_set_manual_tls_init(void)
 // .. code-block:: cpp
 //
 {
+#ifndef CH_WITHOUT_TLS
     _ch_en_manual_tls = 1;
+#endif
 }
 
+#ifndef CH_WITHOUT_TLS
 // .. c:function::
 ch_error_t
 ch_en_start(ch_encryption_t* enc)
@@ -437,9 +449,4 @@ _ch_en_thread_id_function(void)
     return (unsigned long) self;
 }
 #endif // CH_OPENSSL_10_API
-#else
-static void
-_ch_no_empty_translation_unti(void)
-{
-}
 #endif // CH_WITHOUT_TLS

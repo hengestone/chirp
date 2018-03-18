@@ -139,6 +139,7 @@
 //
 // .. code-block:: cpp
 //
+#include "common.h"
 #include "libchirp/chirp.h"
 #include "message.h"
 #include "qs.h"

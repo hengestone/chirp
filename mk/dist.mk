@@ -63,4 +63,4 @@ uninstall:
 	rm -f $(DEST)$(PREFIX)/include/libchirp.h
 
 clean:
-	rm -f libchirp.o libchirp.so libchirp.a chirp_test
+	rm -f *.o libchirp.so libchirp.a chirp_test

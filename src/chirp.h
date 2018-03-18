@@ -78,6 +78,7 @@
 //
 // .. code-block:: cpp
 //
+#include "common.h"
 #include "encryption.h"
 #include "libchirp.h"
 #include "protocol.h"

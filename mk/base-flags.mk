@@ -12,14 +12,21 @@ CFLAGS += \
 	-Wno-unused-function \
 	$(VISIBLITYFLAG)
 
+ifeq ($(WITHOUT_TLS),True)
+	CFLAGS += -DCH_WITHOUT_TLS
+endif
+
 LDFLAGS += \
 	$(VISIBLITYFLAG) \
 	-luv \
-	-lssl \
-	-lcrypto \
 	-lm \
-	-lpthread \
+	-lpthread
 
+ifneq ($(WITHOUT_TLS),True)
+LDFLAGS += \
+	-lssl \
+	-lcrypto
+endif
 
 # Export API symbols only
 # =======================

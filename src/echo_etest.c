@@ -113,7 +113,11 @@ int
 main(int argc, char* argv[])
 {
     signal(SIGPIPE, SIG_IGN);
+#ifdef CH_WITHOUT_TLS
+    fprintf(stderr, "Starting echo_etest (NO TLS)\n");
+#else
     fprintf(stderr, "Starting echo_etest\n");
+#endif
     if (argc < 3) {
         fprintf(stderr, "%s listen_port always_encrypt\n", argv[0]);
         exit(1);

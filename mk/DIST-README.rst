@@ -22,6 +22,13 @@ Example: Install in /usr
    make STRIP=True
    sudo make install PREFIX=/usr
 
+Example: Install in /usr without TLS
+
+.. code-block:: bash
+
+   make STRIP=True WITHOUT_TLS=True
+   sudo make install PREFIX=/usr
+
 Example: Packaging (no strip since distributions usually want to control strip)
 
 .. code-block:: bash

@@ -55,7 +55,7 @@
 
 #define CH_MAX_MSG_SIZE 1024 * 1024 * 100 // 100M
 
-// Build chirp without SSL code
+// Build chirp without SSL code. The functions from encryption.h become no-ops.
 //
 // .. code-block:: cpp
 

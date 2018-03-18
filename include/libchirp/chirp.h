@@ -395,7 +395,8 @@ CH_EXPORT
 void
 ch_chirp_set_always_encrypt(void);
 //
-//    Also encrypt local connections.
+//    Also encrypt local connections. This is set globally to all chirp
+//    instances.
 
 // .. c:function::
 CH_EXPORT

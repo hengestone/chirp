@@ -10,6 +10,7 @@
 //
 #include "writer.h"
 #include "chirp.h"
+#include "common.h"
 #include "protocol.h"
 #include "remote.h"
 #include "util.h"

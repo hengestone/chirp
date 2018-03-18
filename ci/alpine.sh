@@ -33,6 +33,7 @@ sudo docker run -it \
     -e "DOC_FORMAT=$DOC_FORMAT" \
     -e "IS_ALPINE_CI=True" \
     -e "NO_MEMCHECK=$NO_MEMCHECK" \
+    -e "WITHOUT_TLS=$WITHOUT_TLS" \
     -v "$(pwd -P)/..":/outside \
     --rm \
     alpine:3.7 \

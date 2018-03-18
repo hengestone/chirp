@@ -205,6 +205,12 @@ Running pytest manually with -s for example:
    make all
    pytest -s ../src
 
+To build without TLS:
+
+.. code-block:: bash
+
+   make all WITHOUT_TLS=True
+
 Docker
 ------
 
@@ -379,6 +385,8 @@ Not yet released
 * Implement scatter-gather write API
 
   * Improves peak performance to 240'000 msg/s
+
+* Allow build without TLS
 
 Thanks
 ======

@@ -14,6 +14,7 @@
 //
 // .. code-block:: cpp
 //
+#include "common.h"
 #include "connection.h"
 #include "libchirp/chirp.h"
 #include "rbtree.h"
@@ -130,6 +131,7 @@ ch_pr_decrypt_read(ch_connection_t* conn, int* stop);
 //
 //    :param ch_connection_t* conn: Pointer to a connection handle.
 //    :param int* stop:             (Out) Stop the reading process.
+//
 #endif
 
 // .. c:function::
