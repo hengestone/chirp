@@ -57,7 +57,7 @@ Features
 
 * Fast
 
-  * Up to 150'000 msg/s on a single-connection, in an unrealistic test:
+  * Up to 240'000 msg/s on a single-connection, in an unrealistic test:
 
     * Run on loopback
 
@@ -69,6 +69,8 @@ Features
 
     * The test shows that chirp is highly optimized, but if the network
       delay is bigger star- or mesh-topology can improve throughput.
+
+  * Up to 55'000 msg/s in synchronous mode
 
 Install
 =======

@@ -10,12 +10,13 @@
 // * TLS support
 //
 //   * Connections to 127.0.0.1 and ::1 aren't encrypted
+//   * We support and test with OpenSSL and LibreSSL
 //
 // * Easy message routing
 //
 // * Robust
 //
-//   * No message can be lost without an error (or it is a bug)
+//   * No message can be lost without an error (in sync mode)
 //
 // * Very thin API
 //
@@ -24,11 +25,20 @@
 //
 // * Fast
 //
-//   * Up to 50'000 msg/s on a single-connection (encrypted 35'000 msg/s)
-//   * Up to 100'000 msg/s in star-topology (encrypted same)
+//   * Up to 240'000 msg/s on a single-connection, in an unrealistic test:
 //
-//     * Which shows that chirp is highly optimized, but still if the network
-//       delay is bigger star-topology is the way to go.
+//     * Run on loopback
+//
+//     * Nothing was executed
+//
+//     * No encryption
+//
+//     * Asynchronous
+//
+//     * The test shows that chirp is highly optimized, but if the network
+//       delay is bigger star- or mesh-topology can improve throughput.
+//
+//   * Up to 55'000 msg/s in synchronous mode
 //
 // .. code-block:: cpp
 //
