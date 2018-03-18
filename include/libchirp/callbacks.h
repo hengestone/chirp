@@ -90,7 +90,8 @@ typedef void (*ch_log_cb_t)(char msg[], char error);
 //
 //    .. c:member:: int status
 //
-//       Error code: CH_SUCCESS, CH_TIMEOUT, CH_CANNOT_CONNECT TODO update
+//       Error code: CH_SUCCESS, CH_TIMEOUT, CH_CANNOT_CONNECT, CH_TLS_ERROR,
+//       CH_WRITE_ERROR, CH_SHUTDOWN, CH_FATAL, CH_PROTOCOL_ERROR, CH_ENOMEM
 //
 // .. code-block:: cpp
 //

@@ -405,8 +405,9 @@ _ch_cn_write_cb(uv_write_t* req, int status)
            (int) conn->write_written,
            (void*) conn);
         conn->write_written = 0;
-        /* buf->len            = 0;
-         * TODO replace with other check */
+#ifdef CH_ENABLE_ASSERTS
+        conn->flags &= ~CH_CN_ENCRYPTED_WRITE;
+#endif
         if (conn->write_callback != NULL) {
             uv_write_cb cb       = conn->write_callback;
             conn->write_callback = NULL;
@@ -454,6 +455,7 @@ ch_cn_close_cb(uv_handle_t* handle)
         }
         if (conn->flags & CH_CN_INIT_BUFFERS) {
             A(conn->buffer_uv, "Initialized buffers inconsistent");
+            ch_free(conn->bufs);
             ch_free(conn->buffer_uv);
             if (conn->flags & CH_CN_ENCRYPTED) {
                 A(conn->buffer_wtls, "Initialized buffers inconsistent");
@@ -479,7 +481,6 @@ ch_cn_close_cb(uv_handle_t* handle)
           "Connection resources haven't been freed completely");
         A(!(conn->flags & CH_CN_CONNECTED),
           "Connection not properly disconnected");
-        ch_free(conn->bufs);
         ch_free(conn);
         LC(chirp,
            "Closed connection, closing semaphore (%d). ",
@@ -748,13 +749,13 @@ ch_cn_write(
     }
     memcpy(conn->bufs, bufs, buf_list_size);
     if (conn->flags & CH_CN_ENCRYPTED) {
-        /* A(uvbuf->len == 0, "Another connection write is pending");
-         * TODO replace with other test */
         conn->write_callback = callback;
         conn->write_written  = 0;
         conn->bufs_index     = 0;
         conn->nbufs          = nbufs;
 #ifdef CH_ENABLE_ASSERTS
+        A(!(conn->flags & CH_CN_ENCRYPTED_WRITE), "Encrypted write pending");
+        conn->flags |= CH_CN_ENCRYPTED_WRITE;
         int pending = BIO_pending(conn->bio_app);
         A(pending == 0, "There is still pending data in SSL BIO");
 #endif

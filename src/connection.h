@@ -8,9 +8,6 @@
 // Connection state machine
 // ========================
 //
-// TODO: Due missing features the state machine is not yet completely followed.
-// Please always consider this definitions when changing connection handling.
-//
 // Variables
 // ---------
 //
@@ -235,11 +232,12 @@ typedef enum {
     CH_CN_DO_CLOSE_ACCOUTING   = 1 << 8,
     CH_CN_STOPPED              = 1 << 9,
     CH_CN_INCOMING             = 1 << 10,
-    CH_CN_INIT_CLIENT          = 1 << 11,
-    CH_CN_INIT_READER_WRITER   = 1 << 12,
-    CH_CN_INIT_CONNECT_TIMEOUT = 1 << 13,
-    CH_CN_INIT_ENCRYPTION      = 1 << 14,
-    CH_CN_INIT_BUFFERS         = 1 << 15,
+    CH_CN_ENCRYPTED_WRITE      = 1 << 11,
+    CH_CN_INIT_CLIENT          = 1 << 12,
+    CH_CN_INIT_READER_WRITER   = 1 << 13,
+    CH_CN_INIT_CONNECT_TIMEOUT = 1 << 14,
+    CH_CN_INIT_ENCRYPTION      = 1 << 15,
+    CH_CN_INIT_BUFFERS         = 1 << 16,
     CH_CN_INIT =
             (CH_CN_INIT_CLIENT | CH_CN_INIT_READER_WRITER |
              CH_CN_INIT_ENCRYPTION | CH_CN_INIT_BUFFERS)
@@ -486,8 +484,6 @@ struct ch_connection_s {
     ch_connection_t*  right;
     ch_connection_t*  next;
 };
-
-// TODO: Timestamp has to be in ch_connection_t because of old connections
 
 // Data Struct Prototypes
 // ----------------------
