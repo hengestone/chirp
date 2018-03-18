@@ -31,7 +31,7 @@ Supported by |adsy|
    :target: https://adfinis-sygroup.ch/
 
 
-BETA-RELEASE: 1.0.0
+BETA-RELEASE: 1.1.0
 ===================
 
 Features
@@ -370,6 +370,15 @@ Changes
 * ch_msg_free_data now also frees the upper-layer protocol header
 
 * Missing lock in ch_at_allocated
+
+2018-??-?? - 1.1.0-beta
+-----------------------
+
+Not yet released
+
+* Implement scatter-gather write API
+
+  * Improves peak performance to 240'000 msg/s
 
 Thanks
 ======
