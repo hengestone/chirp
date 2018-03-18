@@ -390,7 +390,10 @@ _ch_wr_write_chirp_header_cb(uv_write_t* req, int status)
         return;
     }
     if (msg->data_len > 0) {
-        ch_cn_write(conn, msg->data, msg->data_len, _ch_wr_write_data_cb);
+        uv_buf_t buf;
+        buf.base = msg->data;
+        buf.len  = msg->data_len;
+        ch_cn_write(conn, &buf, 1, _ch_wr_write_data_cb);
     } else {
         _ch_wr_write_finish(chirp, writer, conn);
     }
@@ -459,14 +462,15 @@ _ch_wr_write_msg_header_cb(uv_write_t* req, int status)
     if (_ch_wr_check_write_error(chirp, writer, conn, status)) {
         return;
     }
+    uv_buf_t buf;
     if (msg->header_len > 0) {
-        ch_cn_write(
-                conn,
-                msg->header,
-                msg->header_len,
-                _ch_wr_write_chirp_header_cb);
+        buf.base = msg->header;
+        buf.len  = msg->header_len;
+        ch_cn_write(conn, &buf, 1, _ch_wr_write_chirp_header_cb);
     } else if (msg->data_len > 0) {
-        ch_cn_write(conn, msg->data, msg->data_len, _ch_wr_write_data_cb);
+        buf.base = msg->data;
+        buf.len  = msg->data_len;
+        ch_cn_write(conn, &buf, 1, _ch_wr_write_data_cb);
     } else {
         _ch_wr_write_finish(chirp, writer, conn);
     }
@@ -763,9 +767,8 @@ ch_wr_write(ch_connection_t* conn, ch_message_t* msg)
 
     remote->serial += 1;
     ch_sr_msg_to_buf(msg, writer->net_msg, remote->serial);
-    ch_cn_write(
-            conn,
-            writer->net_msg,
-            CH_SR_WIRE_MESSAGE_SIZE,
-            _ch_wr_write_msg_header_cb);
+    uv_buf_t buf;
+    buf.base = writer->net_msg;
+    buf.len  = CH_SR_WIRE_MESSAGE_SIZE;
+    ch_cn_write(conn, &buf, 1, _ch_wr_write_msg_header_cb);
 }

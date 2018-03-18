@@ -571,14 +571,17 @@ ch_cn_send_if_pending(ch_connection_t* conn);
 // .. c:function::
 void
 ch_cn_write(
-        ch_connection_t* conn, void* buf, size_t size, uv_write_cb callback);
+        ch_connection_t* conn,
+        const uv_buf_t   bufs[],
+        unsigned int     nbufs,
+        uv_write_cb      callback);
 //
 //    Send data to remote
 //
 //    :param ch_connection_t* conn: Connection
-//    :param void* buf: Buffer to send. It must stay valid till the callback is
-//                      called.
-//    :param size_t size: Size of data to send
+//    :param const uv_buf_t: Buffers to send. The bases must stay valid till
+//                           the callback is called.
+//    :param unsigned int nbufs: Count of buffers to send
 //    :param uv_write_cb: Callback when data is written, can be NULL
 //
 //

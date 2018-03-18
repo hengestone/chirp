@@ -383,7 +383,8 @@ _ch_cn_write_cb(uv_write_t* req, int status)
            (int) conn->write_written,
            (void*) conn);
         conn->write_written = 0;
-        buf->len            = 0;
+        /* buf->len            = 0;
+         * TODO replace with other check */
         if (conn->write_callback != NULL) {
             uv_write_cb cb       = conn->write_callback;
             conn->write_callback = NULL;
@@ -705,7 +706,11 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
 
 // .. c:function::
 void
-ch_cn_write(ch_connection_t* conn, void* buf, size_t size, uv_write_cb callback)
+ch_cn_write(
+        ch_connection_t* conn,
+        const uv_buf_t   bufs[],
+        unsigned int     nbufs,
+        uv_write_cb      callback)
 //    :noindex:
 //
 //    see: :c:func:`ch_cn_write`
@@ -713,12 +718,13 @@ ch_cn_write(ch_connection_t* conn, void* buf, size_t size, uv_write_cb callback)
 // .. code-block:: cpp
 //
 {
-    ch_chirp_t* chirp = conn->chirp;
-    uv_buf_t*   uvbuf = &conn->buffer_any_uv;
-    A(uvbuf->len == 0, "Another connection write is pending");
-    uvbuf->base = buf;
-    uvbuf->len  = size;
+    (void) (nbufs);
+    ch_chirp_t* chirp   = conn->chirp;
+    conn->buffer_any_uv = bufs[0];
+    uv_buf_t* uvbuf     = &conn->buffer_any_uv;
     if (conn->flags & CH_CN_ENCRYPTED) {
+        /* A(uvbuf->len == 0, "Another connection write is pending");
+         * TODO replace with other test */
         conn->write_callback = callback;
         conn->write_written  = 0;
 #ifdef CH_ENABLE_ASSERTS
@@ -733,11 +739,10 @@ ch_cn_write(ch_connection_t* conn, void* buf, size_t size, uv_write_cb callback)
                 uvbuf,
                 1,
                 callback);
-        uvbuf->len = 0;
         LC(chirp,
            "Called uv_write with %d bytes. ",
            "ch_connection_t:%p",
-           (int) size,
+           (int) uvbuf->len,
            (void*) conn);
     }
 }

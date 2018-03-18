@@ -416,7 +416,10 @@ _ch_rd_read_step(
         hs_tmp.port = ichirp->public_port;
         memcpy(hs_tmp.identity, ichirp->identity, CH_ID_SIZE);
         ch_sr_hs_to_buf(&hs_tmp, hs_buf);
-        ch_cn_write(conn, hs_buf, CH_SR_HANDSHAKE_SIZE, _ch_rd_handshake_cb);
+        uv_buf_t buf;
+        buf.base = hs_buf;
+        buf.len  = CH_SR_HANDSHAKE_SIZE;
+        ch_cn_write(conn, &buf, 1, _ch_rd_handshake_cb);
         reader->state = CH_RD_HANDSHAKE;
         break;
     }
