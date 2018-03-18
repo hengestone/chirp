@@ -317,10 +317,21 @@ typedef struct ch_resume_state_s {
 //       The actual libuv buffer for writing data over TLS (using the
 //       buffer_wtls data type).
 //
-//    .. c:member:: uv_buf_t buffer_any_uv
+//    .. c:member:: unsigned int nbufs
 //
-//       Generic libuv (data-) buffer used for writing over a connection. The
-//       data type of the buffer must be provided when writing.
+//       Number of buffers to be written
+//
+//    .. c:member:: uv_buf_t* bufs
+//
+//       Generic libuv (data-) buffer used for writing over a connection.
+//
+//    .. c:member:: unsigned int bufs_size
+//
+//       The current size of bufs. Will be resized if needed.
+//
+//    .. c:member:: unsigned int bufs_index
+//
+//       The bufs index that is currently writing
 //
 //    .. c:member:: size_t buffer_size
 //
@@ -446,8 +457,10 @@ struct ch_connection_s {
     ch_buf*           buffer_rtls;
     uv_buf_t          buffer_uv_uv;
     uv_buf_t          buffer_wtls_uv;
-    uv_buf_t*         buffer_any_uv;
-    unsigned int      buffer_any_size;
+    unsigned int      nbufs;
+    uv_buf_t*         bufs;
+    unsigned int      bufs_size;
+    unsigned int      bufs_index;
     size_t            buffer_size;
     size_t            buffer_rtls_size;
     uv_write_cb       write_callback;
