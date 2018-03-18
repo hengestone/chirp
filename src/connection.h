@@ -340,14 +340,6 @@ typedef struct ch_resume_state_s {
 //       Holds how many bytes have been written over a connection. This is
 //       typically zero at first and gets increased with each partial write.
 //
-//    .. c:member:: size_t write_size
-//
-//       Indicates how many bytes shall in total be written over a connection.
-//
-//    .. c:member:: ch_buf* write_buffer
-//
-//       Pointer to the write buffer. The buffer that will be written to.
-//
 //    .. c:member:: ch_remote_t* remote
 //
 //       Pointer to the remote of this connection.
@@ -459,8 +451,6 @@ struct ch_connection_s {
     size_t            buffer_rtls_size;
     uv_write_cb       write_callback;
     size_t            write_written;
-    size_t            write_size;
-    ch_buf*           write_buffer;
     ch_resume_state_t read_resume;
     ch_resume_state_t tls_resume;
     uv_write_t        write_req;

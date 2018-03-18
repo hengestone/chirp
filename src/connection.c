@@ -239,8 +239,9 @@ _ch_cn_partial_write(ch_connection_t* conn)
     conn->flags |= CH_CN_BUF_WTLS_USED;
 #endif
     for (;;) {
-        int can_write_more = 1;
-        int pending        = BIO_pending(conn->bio_app);
+        int       can_write_more = 1;
+        int       pending        = BIO_pending(conn->bio_app);
+        uv_buf_t* buf            = &conn->buffer_any_uv;
         while (pending && can_write_more) {
             ssize_t read = BIO_read(
                     conn->bio_app,
@@ -257,7 +258,7 @@ _ch_cn_partial_write(ch_connection_t* conn)
             }
             bytes_read += read;
             int is_write_size_valid =
-                    (bytes_encrypted + conn->write_written) < conn->write_size;
+                    (bytes_encrypted + conn->write_written) < buf->len;
             int is_buffer_size_valid = bytes_read < conn->buffer_size;
 
             can_write_more = is_write_size_valid && is_buffer_size_valid;
@@ -268,8 +269,8 @@ _ch_cn_partial_write(ch_connection_t* conn)
         }
         int tmp_err = SSL_write(
                 conn->ssl,
-                conn->write_buffer + bytes_encrypted + conn->write_written,
-                conn->write_size - bytes_encrypted - conn->write_written);
+                buf->base + bytes_encrypted + conn->write_written,
+                buf->len - bytes_encrypted - conn->write_written);
         bytes_encrypted += tmp_err;
         A(tmp_err > -1, "SSL_write failure unexpected");
         if (tmp_err < 0) {
@@ -364,14 +365,15 @@ _ch_cn_write_cb(uv_write_t* req, int status)
         return;
     }
     /* Check if we can write data */
-    int pending = BIO_pending(conn->bio_app);
-    if (conn->write_size > conn->write_written || pending) {
+    uv_buf_t* buf     = &conn->buffer_any_uv;
+    int       pending = BIO_pending(conn->bio_app);
+    if (buf->len > conn->write_written || pending) {
         _ch_cn_partial_write(conn);
         LC(chirp,
            "Partially encrypted %d of %d bytes. ",
            "ch_connection_t:%p",
            (int) conn->write_written,
-           (int) conn->write_size,
+           (int) buf->len,
            (void*) conn);
     } else {
         A(pending == 0, "Unexpected pending data on TLS write");
@@ -381,7 +383,7 @@ _ch_cn_write_cb(uv_write_t* req, int status)
            (int) conn->write_written,
            (void*) conn);
         conn->write_written = 0;
-        conn->write_size    = 0;
+        buf->len            = 0;
         if (conn->write_callback != NULL) {
             uv_write_cb cb       = conn->write_callback;
             conn->write_callback = NULL;
@@ -712,11 +714,12 @@ ch_cn_write(ch_connection_t* conn, void* buf, size_t size, uv_write_cb callback)
 //
 {
     ch_chirp_t* chirp = conn->chirp;
-    A(conn->write_size == 0, "Another connection write is pending");
+    uv_buf_t*   uvbuf = &conn->buffer_any_uv;
+    A(uvbuf->len == 0, "Another connection write is pending");
+    uvbuf->base = buf;
+    uvbuf->len  = size;
     if (conn->flags & CH_CN_ENCRYPTED) {
         conn->write_callback = callback;
-        conn->write_buffer   = buf;
-        conn->write_size     = size;
         conn->write_written  = 0;
 #ifdef CH_ENABLE_ASSERTS
         int pending = BIO_pending(conn->bio_app);
@@ -724,13 +727,13 @@ ch_cn_write(ch_connection_t* conn, void* buf, size_t size, uv_write_cb callback)
 #endif
         _ch_cn_partial_write(conn);
     } else {
-        conn->buffer_any_uv = uv_buf_init(buf, size);
         uv_write(
                 &conn->write_req,
                 (uv_stream_t*) &conn->client,
-                &conn->buffer_any_uv,
+                uvbuf,
                 1,
                 callback);
+        uvbuf->len = 0;
         LC(chirp,
            "Called uv_write with %d bytes. ",
            "ch_connection_t:%p",
