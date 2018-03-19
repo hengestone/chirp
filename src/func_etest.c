@@ -346,11 +346,11 @@ main(int argc, char* argv[])
     _ch_tst_mpp_mc         = getenv("MPP_MC");
     if (_ch_tst_mpp_mc == NULL) {
         config.TIMEOUT    = 0.50;
-        config.REUSE_TIME = 0.80;
+        config.REUSE_TIME = 1.50;
     } else {
         /* If memcheck is enabled everything takes much longer */
         config.TIMEOUT    = 1.0;
-        config.REUSE_TIME = 1.0;
+        config.REUSE_TIME = 3.0;
     }
     int ret = ch_chirp_run(
             &config,

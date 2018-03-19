@@ -31,6 +31,10 @@
 // Declarations
 // ============
 //
+// .. code-block:: cpp
+
+MINMAX_FUNCS(float)
+
 // .. c:var:: uv_mutex_t _ch_chirp_init_lock
 //
 //    It seems that initializing signals accesses a shared data-structure. We
@@ -587,8 +591,8 @@ _ch_chirp_verify_cfg(ch_chirp_t* chirp)
       "Config: backlog must be < 128. (%d)",
       conf->BACKLOG);
     V(chirp,
-      conf->TIMEOUT <= 60,
-      "Config: timeout must be <= 60. (%f)",
+      conf->TIMEOUT <= 1200,
+      "Config: timeout must be <= 1200. (%f)",
       conf->TIMEOUT);
     V(chirp,
       conf->TIMEOUT >= 0.1,
@@ -779,7 +783,7 @@ ch_chirp_init(
     ichirp->loop            = loop;
     ichirp->start_cb        = start_cb;
     ichirp->recv_cb         = recv_cb;
-    ch_config_t*   tmp_conf = &ichirp->config;
+    ch_config_t*   tconf    = &ichirp->config;
     ch_protocol_t* protocol = &ichirp->protocol;
     chirp->_                = ichirp;
     if (log_cb != NULL) {
@@ -787,21 +791,22 @@ ch_chirp_init(
     }
 
     unsigned int i = 0;
-    while (i < (sizeof(tmp_conf->IDENTITY) - 1) && tmp_conf->IDENTITY[i] == 0)
+    while (i < (sizeof(tconf->IDENTITY) - 1) && tconf->IDENTITY[i] == 0)
         i += 1;
-    if (tmp_conf->IDENTITY[i] == 0) {
+    if (tconf->IDENTITY[i] == 0) {
         ch_random_ints_as_bytes(ichirp->identity, sizeof(ichirp->identity));
     } else {
-        *ichirp->identity = *tmp_conf->IDENTITY;
+        *ichirp->identity = *tconf->IDENTITY;
     }
 
-    if (tmp_conf->SYNCHRONOUS) {
-        tmp_conf->MAX_SLOTS = 1;
+    if (tconf->SYNCHRONOUS) {
+        tconf->MAX_SLOTS = 1;
     } else {
-        if (tmp_conf->MAX_SLOTS == 0) {
-            tmp_conf->MAX_SLOTS = 16;
+        if (tconf->MAX_SLOTS == 0) {
+            tconf->MAX_SLOTS = 16;
         }
     }
+    tconf->REUSE_TIME = ch_max_float(tconf->REUSE_TIME, tconf->TIMEOUT * 3);
 
     if (uv_async_init(loop, &ichirp->done, _ch_chirp_done_cb) < 0) {
         E(chirp, "Could not initialize done handler", CH_NO_ARG);
@@ -869,7 +874,7 @@ ch_chirp_init(
     }
 #ifndef CH_WITHOUT_TLS
     ch_encryption_t* enc = &ichirp->encryption;
-    if (!tmp_conf->DISABLE_ENCRYPTION) {
+    if (!tconf->DISABLE_ENCRYPTION) {
         ch_en_init(chirp, enc);
         tmp_err = ch_en_start(enc);
         if (tmp_err != CH_SUCCESS) {

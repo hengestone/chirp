@@ -29,12 +29,14 @@
 //    .. c:member:: float REUSE_TIME
 //
 //       Time until a connection gets garbage collected. Until then the
-//       connection will be reused.
+//       connection will be reused. Actual reuse time will be
+//       max(REUSE_TIME, TIMEOUT * 3).
 //
 //    .. c:member:: float TIMEOUT
 //
-//       IO related timeout in seconds: Sending messages, connecting to
-//       remotes.
+//       Send- and connect-timeout scaling in seconds. Send-timeout will be
+//       TIMEOUT senconds. Connect-timeout will be min(TIMEOUT * 2, 60)
+//       seconds.
 //
 //    .. c:member:: uint16_t PORT
 //

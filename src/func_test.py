@@ -2,7 +2,7 @@
 
 from hypothesis import settings, unlimited  # noqa
 from hypothesis.strategies import (
-    tuples, sampled_from, just, lists, binary, one_of, floats
+    tuples, sampled_from, just, lists, binary, one_of
 )
 from hypothesis.stateful import (
     GenericStateMachine, run_state_machine_as_test
@@ -66,7 +66,7 @@ class GenFunc(GenericStateMachine):
         )
         self.init_echo_step = tuples(just("init_echo"), just(0))
         self.x42_step = tuples(
-            just("42"), floats(min_value=0.2, max_value=1.2)
+            just("42"), sampled_from([0.20, 0.21, 0.22, 0.23, 1.0, 4.0])
         )
         self.check_step = tuples(just("check_messages"), just(0))
         self.send_message_step = tuples(

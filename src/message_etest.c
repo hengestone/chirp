@@ -264,7 +264,7 @@ _ch_tst_run_chirp(void* arg)
     ch_chirp_config_init(&config);
     config.BUFFER_SIZE    = _ch_tst_buffer_size;
     config.TIMEOUT        = _ch_tst_timeout;
-    config.REUSE_TIME     = _ch_tst_timeout * 15;
+    config.REUSE_TIME     = _ch_tst_timeout * 3;
     config.PORT           = args->port;
     config.CERT_CHAIN_PEM = "./cert.pem";
     config.DH_PARAMS_PEM  = "./dh.pem";

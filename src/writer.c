@@ -17,6 +17,10 @@
 
 // Declarations
 // ============
+//
+// .. code-block:: cpp
+
+MINMAX_FUNCS(uint64_t)
 
 // .. c:function::
 static int
@@ -186,7 +190,7 @@ _ch_wr_connect(ch_remote_t* remote)
     tmp_err = uv_timer_start(
             &conn->connect_timeout,
             _ch_wr_connect_timeout_cb,
-            ichirp->config.TIMEOUT * 1000,
+            ch_min_uint64_t(ichirp->config.TIMEOUT * 2000, 60000),
             0);
     if (tmp_err != CH_SUCCESS) {
         EC(chirp,
