@@ -697,10 +697,10 @@ ch_cn_shutdown(ch_connection_t* conn, int reason)
     /* In case this conn is in old_connections remove it, since we now cleaned
      * it up*/
     ch_cn_delete(&ichirp->protocol.old_connections, conn, &out);
+    conn->remote = NULL; /* Disassociate from remote */
     if (conn->flags & CH_CN_INIT_CLIENT) {
         uv_read_stop((uv_stream_t*) &conn->client);
     }
-    conn->remote      = NULL; /* Disassociate from remote */
     ch_message_t* msg = writer->msg;
     ch_message_t* wam = NULL;
     /* In early handshake remote can empty, since we allocate resources after
