@@ -356,6 +356,10 @@ typedef struct ch_resume_state_s {
 //
 //       Pointer to the remote of this connection.
 //
+//    .. c:member:: ch_remote_t* delete_remote
+//
+//       Remote to be deleted after shutdown.
+//
 //    .. c:member:: ch_chirp_t* chirp
 //
 //       Pointer to the chirp object. See: :c:type:`ch_chirp_t`.
@@ -451,6 +455,7 @@ struct ch_connection_s {
     uint8_t           remote_identity[CH_ID_SIZE];
     ch_chirp_t*       chirp;
     ch_remote_t*      remote;
+    ch_remote_t*      delete_remote;
     uv_tcp_t          client;
     uv_connect_t      connect;
     ch_buf*           buffer_uv;

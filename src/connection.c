@@ -498,6 +498,15 @@ ch_cn_close_cb(uv_handle_t* handle)
           "Connection resources haven't been freed completely");
         A(!(conn->flags & CH_CN_CONNECTED),
           "Connection not properly disconnected");
+        ch_remote_t* remote = conn->delete_remote;
+        if (remote != NULL) {
+            LC(chirp,
+               "Deleted ch_remote_t: %p. ",
+               "ch_connection_t:%p",
+               (void*) remote,
+               (void*) conn);
+            ch_rm_free(remote);
+        }
         ch_free(conn);
         LC(chirp,
            "Closed connection, closing semaphore (%d). ",

@@ -256,19 +256,23 @@ _ch_pr_gc_connections_cb(uv_timer_t* handle)
     ch_rm_st_pop(&rm_del_stack, &remote);
     while (remote != NULL) {
         _ch_pr_abort_all_messages(remote, CH_SHUTDOWN);
-        if (remote->conn != NULL) {
+        ch_rm_delete_node(&protocol->remotes, remote);
+        ch_connection_t* conn = remote->conn;
+        if (conn != NULL) {
             LC(chirp,
                "Garbage-collecting: shutdown.",
                "ch_connection_t:%p",
                remote->conn);
-            remote->flags = CH_RM_CONN_BLOCKED;
+            conn->delete_remote = remote;
+            remote->flags       = CH_RM_CONN_BLOCKED;
             ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
         }
         LC(chirp, "Garbage-collecting: deleting.", "ch_remote_t:%p", remote);
-        ch_rm_delete_node(&protocol->remotes, remote);
         tmp_remote = remote;
         ch_rm_st_pop(&rm_del_stack, &remote);
-        ch_rm_free(tmp_remote);
+        if (conn == NULL) {
+            ch_rm_free(tmp_remote);
+        }
     }
     uint64_t start = (config->REUSE_TIME * 1000 / 2);
     start += rand() % start;
@@ -551,13 +555,16 @@ ch_pr_close_free_remotes(ch_chirp_t* chirp, int only_conns)
     } else {
         while (protocol->remotes != ch_rm_nil_ptr) {
             ch_remote_t* remote = protocol->remotes;
-            /* Leaves the queue empty and there prevents reconnects. */
+            /* Leaves the queue empty and therefor prevents reconnects. */
             _ch_pr_abort_all_messages(remote, CH_SHUTDOWN);
-            if (remote->conn != NULL) {
-                ch_cn_shutdown(remote->conn, CH_SHUTDOWN);
-            }
             ch_rm_delete_node(&protocol->remotes, remote);
-            ch_rm_free(remote);
+            ch_connection_t* conn = remote->conn;
+            if (conn != NULL) {
+                conn->delete_remote = remote;
+                ch_cn_shutdown(conn, CH_SHUTDOWN);
+            } else {
+                ch_rm_free(remote);
+            }
         }
         /* Remove all remotes, sync with reconnect_remotes */
         protocol->reconnect_remotes = NULL;
