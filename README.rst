@@ -377,16 +377,28 @@ Changes
 
 * Missing lock in ch_at_allocated
 
-2018-??-?? - 1.1.0-beta
+2018-03-20 - 1.1.0-beta
 -----------------------
-
-Not yet released
 
 * Implement scatter-gather write API
 
   * Improves peak performance to 240'000 msg/s
 
 * Allow build without TLS
+
+* Timeout consistency
+
+  * TIMEOUT
+
+    * Send- and connect-timeout scaling in seconds. Send-timeout will be
+      TIMEOUT seconds. Connect-timeout will be min(TIMEOUT * 2, 60)
+      seconds.
+
+  * REUSE_TIME
+
+    * Time until a connection gets garbage collected. Until then the
+      connection will be reused. Actual reuse time will be
+      max(REUSE_TIME, TIMEOUT * 3).
 
 Thanks
 ======

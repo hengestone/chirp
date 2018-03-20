@@ -35,7 +35,7 @@
 //    .. c:member:: float TIMEOUT
 //
 //       Send- and connect-timeout scaling in seconds. Send-timeout will be
-//       TIMEOUT senconds. Connect-timeout will be min(TIMEOUT * 2, 60)
+//       TIMEOUT seconds. Connect-timeout will be min(TIMEOUT * 2, 60)
 //       seconds.
 //
 //    .. c:member:: uint16_t PORT

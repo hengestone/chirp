@@ -276,10 +276,10 @@ _ch_cn_partial_write(ch_connection_t* conn)
         if (!can_read_more) {
             break;
         }
-        uv_buf_t* buf = &conn->bufs[conn->bufs_index];
-        /* Switch to next buffer if available or break */
+        uv_buf_t* buf      = &conn->bufs[conn->bufs_index];
         int can_write_more = (bytes_encrypted + conn->write_written) < buf->len;
         if (!can_write_more) {
+            /* Switch to next buffer if available or break */
             int changed = 0;
             while (conn->bufs_index < (conn->nbufs - 1)) {
                 conn->bufs_index += 1;
