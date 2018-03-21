@@ -31,7 +31,7 @@ Supported by |adsy|
    :target: https://adfinis-sygroup.ch/
 
 
-BETA-RELEASE: 1.1.0
+BETA-RELEASE: 1.1.1
 ===================
 
 Features
