@@ -448,12 +448,12 @@ ch_chirp_send_ts(ch_chirp_t* chirp, ch_message_t* msg, ch_send_cb_t send_cb)
 {
     A(chirp->_init == CH_CHIRP_MAGIC, "Not a ch_chirp_t*");
     ch_chirp_int_t* ichirp = chirp->_;
-    uv_mutex_lock(&ichirp->send_ts_queue_lock);
-    if (msg->_flags & CH_MSG_USED) {
+    if (msg->_flags & CH_MSG_USED || msg->_send_cb != NULL) {
         EC(chirp, "Message already used. ", "ch_message_t:%p", (void*) msg);
         return CH_USED;
     }
     msg->_send_cb = send_cb;
+    uv_mutex_lock(&ichirp->send_ts_queue_lock);
     ch_msg_enqueue(&ichirp->send_ts_queue, msg);
     uv_mutex_unlock(&ichirp->send_ts_queue_lock);
     if (uv_async_send(&ichirp->send_ts) < 0) {
@@ -652,7 +652,9 @@ ch_wr_send_ts_cb(uv_async_t* handle)
     ch_message_t* cur;
     ch_msg_dequeue(&ichirp->send_ts_queue, &cur);
     while (cur != NULL) {
+        uv_mutex_unlock(&ichirp->send_ts_queue_lock);
         ch_chirp_send(chirp, cur, cur->_send_cb);
+        uv_mutex_lock(&ichirp->send_ts_queue_lock);
         ch_msg_dequeue(&ichirp->send_ts_queue, &cur);
     }
     uv_mutex_unlock(&ichirp->send_ts_queue_lock);
