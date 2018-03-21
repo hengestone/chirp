@@ -400,6 +400,13 @@ Changes
       connection will be reused. Actual reuse time will be
       max(REUSE_TIME, TIMEOUT * 3).
 
+2018-03-31 - 1.1.1-beta
+-----------------------
+
+* Fix deadlock in ch_chirp_send_ts
+
+* Fix bug when disabling signals
+
 Thanks
 ======
 
