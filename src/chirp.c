@@ -286,6 +286,7 @@ _ch_chirp_close_async_cb(uv_async_t* handle)
     tmp_err = ch_pr_stop(&ichirp->protocol);
     A(tmp_err == CH_SUCCESS, "Could not stop protocol");
     (void) (tmp_err);
+#ifndef CH_DISABLE_SIGNALS
     if (!ichirp->config.DISABLE_SIGNALS) {
         uv_signal_stop(&ichirp->signals[0]);
         uv_signal_stop(&ichirp->signals[1]);
@@ -293,6 +294,7 @@ _ch_chirp_close_async_cb(uv_async_t* handle)
         uv_close((uv_handle_t*) &ichirp->signals[1], ch_chirp_close_cb);
         ichirp->closing_tasks += 2;
     }
+#endif
     uv_close((uv_handle_t*) &ichirp->send_ts, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &ichirp->release_ts, ch_chirp_close_cb);
     uv_close((uv_handle_t*) &ichirp->close, ch_chirp_close_cb);
