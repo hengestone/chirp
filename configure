@@ -194,7 +194,7 @@ Please install libuv:
 
 Alpine:         apk add libuv-dev
 Debian-based:   apt install libuv1-dev (may require backports)
-Redhat-based:   yum install libuv-devel
+RPM-based:      yum install libuv-devel
 Arch:           pacman -S libuv
 OSX:            brew install libuv
 """)
@@ -209,7 +209,7 @@ Please install openssl:
 
 Alpine:         apk add libressl-dev
 Debian-based:   apt install libssl-dev
-Redhat-based:   yum install openssl-devel
+RPM-based:      yum install openssl-devel
 Arch:           pacman -S openssl
 OSX:            brew install libressl
 """)
@@ -238,7 +238,7 @@ Please install sphinx:
 
 Alpine:         apk add py3-sphinx py3-sphinx_rtd_theme graphviz
 Debian-based:   apt install python3-sphinx python3-sphinx-rtd-theme graphviz
-Redhat-based:   yum install python3-sphinx python3-sphinx-rtd-theme graphviz
+RPM-based:      yum install python3-sphinx python3-sphinx-rtd-theme graphviz
 Arch:           pacman -S python-sphinx python-sphinx_rtd_theme graphviz
 OSX:            brew install sphinx-doc graphviz
 """)
@@ -251,7 +251,7 @@ Please install valgrind:
 
 Alpine:         apk add valgrind
 Debian-based:   apt install valgrind
-Redhat-based:   yum install valgrind
+RPM-based:      yum install valgrind
 Arch:           pacman -S valgrind
 OSX:            brew install valgrind
 """)
@@ -265,7 +265,7 @@ Please install cppcheck:
 
 Alpine:         apk add cppcheck
 Debian-based:   apt install cppcheck
-Redhat-based:   yum install cppcheck
+RPM-based:      yum install cppcheck
 Arch:           pacman -S cppcheck
 OSX:            brew install cppcheck
 """)
@@ -279,7 +279,7 @@ Please install abi-compliance-checker:
 
 Alpine:         apk add abi-compliance-checker
 Debian-based:   apt install abi-compliance-checker
-Redhat-based:   yum install abi-compliance-checker
+RPM-based:      yum install abi-compliance-checker
 Arch:           yaourt -S abi-compliance-checker
 OSX:            brew install abi-compliance-checker
 """)
@@ -293,7 +293,7 @@ Please install clang-format:
 
 Alpine:         apk add clang
 Debian-based:   apt install clang-format
-Redhat-based:   yum install clang
+RPM-based:      yum install clang
 Arch:           yaourt -S clang
 OSX:            brew install clang-format
 """)
@@ -310,7 +310,7 @@ Please install hypothesis:
 
 Alpine:         pip3 install hypothesis
 Debian-based:   apt install python3-hypothesis
-Redhat-based:   yum install python3-hypothesis
+RPM-based:      yum install python3-hypothesis
 Arch:           pacman -S python-hypothesis
 OSX:            brew install python3; pip3 install hypothesis
 """)
@@ -325,7 +325,7 @@ Please install pytest:
 
 Alpine:         pip3 install pytest
 Debian-based:   apt install python3-pytest
-Redhat-based:   yum install python3-pytest
+RPM-based:      yum install python3-pytest
 Arch:           pacman -S python-pytest
 OSX:            brew install python3; pip3 install pytest
 """)
@@ -344,7 +344,7 @@ Please install umsgpack (or msgpack):
 
 Alpine:         pip3 install u-msgpack-python
 Debian-based:   apt install python3-u-msgpack
-Redhat-based:   yum install python3-msgpack
+RPM-based:      yum install python3-msgpack
 Arch:           pacman -S python-msgpack
 OSX:            brew install python3; pip3 install u-msgpack-python
 """)
