@@ -136,7 +136,7 @@ _ch_wr_check_write_error(
 // .. code-block:: cpp
 //
 {
-    A(writer->msg != NULL, "ⱳriter->msg should be set on callback");
+    A(writer->msg != NULL, "writer->msg should be set on callback");
     (void) (writer);
     if (status != CH_SUCCESS) {
         LC(chirp,

@@ -1,5 +1,5 @@
 // =================
-// Queue / Stack 0.7
+// Queue / Stack 0.8
 // =================
 //
 // Queue and stack with a rbtree-style interface. Both queue and stack use one

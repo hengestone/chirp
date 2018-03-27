@@ -165,7 +165,7 @@ typedef enum {
 //    .. c:member:: uv_loop_t* loop
 //
 //       Pointer to the libuv (main) event loop. The event loop is the central
-//       part of libuv’s functionality. It takes care of polling for i/o and
+//       part of libuv's functionality. It takes care of polling for i/o and
 //       scheduling callbacks to be run based on different sources of events.
 //
 //    .. c:member:: uint8_t identity[16]

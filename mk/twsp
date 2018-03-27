@@ -20,6 +20,16 @@ file_ = os.path.abspath(sys.argv[1])
 if file_.endswith("sglib.h"):
     sys.exit(0)
 
+with codecs.open(file_, encoding="ASCII") as f:
+    try:
+        f.read()
+    except UnicodeDecodeError as e:
+        ret = 1
+        print(
+            "%s:1:0: This project is ascii only, there is a non-ascii"
+            "char at position %d" % (file_, e.start)
+        )
+
 with codecs.open(file_, encoding="UTF-8") as in_:
     for i, line in enumerate(in_.readlines()):
         line = line.strip("\n\r")
