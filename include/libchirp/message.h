@@ -154,26 +154,9 @@ struct ch_message_s {
     ch_message_t*   _next;
 };
 
-// Protocol receiver /Pseudo code/
-//
-// .. code-block:: cpp
-//
-//    ch_message_t msg;
-//    recv_wait(buffer=&msg, size=39)
-//    if(msg.header_len) {
-//        msg.header = malloc(msg.header_len) *
-//        recv_exactly(buffer=msg.header, msg.header_len)
-//    }
-//    if(msg.data_len) {
-//        msg.data  = malloc(msg.data_len) *
-//        recv_exactly(buffer=msg.data, msg.data_len)
-//    }
-//
-// * Please use MAX_SLOTS preallocated buffers of size 32 for header
-// * Please use MAX_SLOTS preallocated buffers of size 512 for data
-//
-// Either fields may exceed the limit, in which case you have to alloc and set
-// the free_* field.
+// IMPORTANT: The wire-message layout is different from the message layout.
+// Because we don't want to break the ABI and the message's format (if packed)
+// would be unaligned. See serializer.h
 
 // .. c:function::
 CH_EXPORT

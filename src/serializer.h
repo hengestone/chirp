@@ -52,12 +52,13 @@ typedef struct ch_sr_handshake_s {
 
 #ifdef CH_ENABLE_ASSERTS
 #define CH_SR_WIRE_MESSAGE_CHECK                                               \
-    pos += 4;                                                                  \
+    pos += 1;                                                                  \
     A(pos == CH_SR_WIRE_MESSAGE_SIZE, "Bad message serialization size");
 #else
 #define CH_SR_WIRE_MESSAGE_CHECK
 #endif
 
+/* IMPORTANT: Make sure there is no unaligned access */
 #define CH_SR_WIRE_MESSAGE_LAYOUT                                              \
     size_t   pos      = 0;                                                     \
     uint8_t* identity = (void*) &buf[pos];                                     \
@@ -66,13 +67,14 @@ typedef struct ch_sr_handshake_s {
     uint32_t* serial = (void*) &buf[pos];                                      \
     pos += 4;                                                                  \
                                                                                \
-    uint8_t* type = (void*) &buf[pos];                                         \
-    pos += 1;                                                                  \
+    uint32_t* data_len = (void*) &buf[pos];                                    \
+    pos += 4;                                                                  \
                                                                                \
     uint16_t* header_len = (void*) &buf[pos];                                  \
     pos += 2;                                                                  \
                                                                                \
-    uint32_t* data_len = (void*) &buf[pos];                                    \
+    uint8_t* type = (void*) &buf[pos];                                         \
+                                                                               \
     CH_SR_WIRE_MESSAGE_CHECK
 
 // .. c:function::

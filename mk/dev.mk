@@ -9,6 +9,11 @@ CFLAGS += \
 
 LDFLAGS += -L"$(BUILD)" \
 
+ifeq ($(CI_DISTRO),arch)
+	CFLAGS += -fsanitize=alignment -fno-sanitize-recover=alignment
+	LDFLAGS += -lubsan
+endif
+
 # Memcheck settings
 # =================
 ifeq ($(NO_MEMCHECK),True)
