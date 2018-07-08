@@ -140,20 +140,18 @@ ch_en_tls_init(void)
     if (_ch_en_manual_tls) {
         return CH_SUCCESS;
     }
-    /* Detect if ssl is already initialized by host program */
-    if (EVP_get_cipherbyname("AES-256-CBC")) {
-        _ch_en_manual_tls = 1;
-        return CH_SUCCESS;
-    }
 #ifdef CH_OPENSSL_10_API
-    if (CRYPTO_get_locking_callback() != NULL) {
-        _ch_en_manual_tls = 1;
-        return CH_SUCCESS;
-    }
     OPENSSL_add_all_algorithms_noconf();
     SSL_load_error_strings();
     SSL_library_init();
 
+    /* Check if the host program already initialized threading. The
+     * initialization above only adds things and doesn't change anything, but
+     * threading setup would change the lock-callback and bad things would
+     * happen. */
+    if (CRYPTO_get_locking_callback() != NULL) {
+        return CH_SUCCESS;
+    }
     return ch_en_tls_threading_setup();
 #else
     if (OPENSSL_init_ssl(0, NULL) == 0) {

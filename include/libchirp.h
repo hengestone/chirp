@@ -27,6 +27,9 @@ ch_libchirp_cleanup(void);
 //
 //    Cleanup the global libchirp structures, including encryption/libssl
 //
+//    In release-mode we do not cleanup the TLS library. If you want to check
+//    for memory leaks in your application define :c:macro:`CH_TLS_CLEANUP` or
+//    call :c:func:`ch_en_tls_cleanup` manually.
 
 // .. c:function::
 CH_EXPORT

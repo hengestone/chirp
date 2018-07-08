@@ -1251,6 +1251,7 @@ ch_libchirp_cleanup(void)
 // .. code-block:: cpp
 //
 {
+    ch_error_t ret = CH_SUCCESS;
     A(_ch_libchirp_initialized, "Libchirp is not initialized");
     if (!_ch_libchirp_initialized) {
         fprintf(stderr,
@@ -1262,9 +1263,9 @@ ch_libchirp_cleanup(void)
     _ch_libchirp_initialized = 0;
     uv_mutex_destroy(&_ch_chirp_init_lock);
 #ifndef CH_WITHOUT_TLS
-    ch_error_t ret = ch_en_tls_cleanup();
-#else
-    ch_error_t ret = CH_SUCCESS;
+#if defined(CH_TLS_CLEANUP) || !defined(NDEBUG)
+    ret = ch_en_tls_cleanup();
+#endif
 #endif
 #ifdef CH_ENABLE_ASSERTS
     ch_at_cleanup();

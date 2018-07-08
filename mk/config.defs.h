@@ -7,6 +7,14 @@
 //
 #define CH_VERSION "XVERSIONX"
 
+// In release-mode we do not cleanup the TLS library. If you want to check for
+// memory leaks in your application define CH_TLS_CLEANUP or call
+// :c:func:`ch_en_tls_cleanup` manually.
+//
+// .. code-block:: cpp
+
+/* #define CH_TLS_CLEANUP */
+
 // Buffer-size when allocating communication buffers, can be overridden in
 // :c:type:`ch_config_t`.
 //
