@@ -141,6 +141,7 @@ API Reference
 .. toctree::
    :maxdepth: 3
 
+   config.defs.h.rst
    include/libchirp/chirp.h.rst
    include/libchirp/message.h.rst
    include/libchirp/callbacks.h.rst

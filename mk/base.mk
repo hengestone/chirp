@@ -107,6 +107,7 @@ doc: doc_files tutorial_files tutorial_code ## Generate documentation
 	$(V_M)ln -s $(BUILD)/src $(BUILD)/doc/src
 	$(V_M)cp $(BASE)/doc/*.py $(BUILD)/doc
 	$(V_M)cp $(BASE)/doc/*.rst $(BUILD)/doc
+	$(V_M)$(BASE)/mk/c2rst $(BASE)/mk/config.defs.h $(BUILD)/doc/config.defs.h.rst
 ifeq ($(DEV),True)
 	$(V_M)BASE=$(BASE) sphinx-build -b html $(BUILD)/doc $(BUILD)/doc/html 2>&1 \
 		| grep -v intersphinx \
