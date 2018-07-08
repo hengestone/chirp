@@ -88,7 +88,7 @@ _ch_tst_gen_data_field(
     }
     ch_qc_mem_track_t* track = ch_qc_track_alloc(count);
     *data                    = track->data;
-    strncpy(track->data, "pattern", 7);
+    memcpy(track->data, "pattern", 7);
     while (pos < count) {
         uint8_t i = 0;
         /* The pattern length must always be at least 1, so we scale pat_len to
