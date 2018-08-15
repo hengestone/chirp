@@ -36,6 +36,15 @@
 //
 static char _ch_en_manual_tls = 0;
 
+// .. c:var:: _ch_en_threading_setup
+//
+//    Track if threading has been setup by us. And therefore we have to clean it
+//    up.
+//
+// .. code-block:: cpp
+//
+static char _ch_en_threading_setup = 0;
+
 #ifdef CH_OPENSSL_10_API
 // .. c:var:: _ch_en_lock_count
 //
@@ -216,21 +225,23 @@ ch_en_tls_threading_cleanup(void)
 {
 #ifndef CH_WITHOUT_TLS
 #ifdef CH_OPENSSL_10_API
-    A(_ch_en_lock_list, "Threading not setup");
-    if (!_ch_en_lock_list) {
-        fprintf(stderr,
-                "%s:%d Fatal: Threading not setup.\n",
-                __FILE__,
-                __LINE__);
-        return CH_VALUE_ERROR;
+    if (_ch_en_threading_setup) {
+        A(_ch_en_lock_list, "Threading not setup");
+        if (!_ch_en_lock_list) {
+            fprintf(stderr,
+                    "%s:%d Fatal: Threading not setup.\n",
+                    __FILE__,
+                    __LINE__);
+            return CH_VALUE_ERROR;
+        }
+        CRYPTO_set_id_callback(NULL);
+        CRYPTO_set_locking_callback(NULL);
+        for (int i = 0; i < _ch_en_lock_count; i++) {
+            uv_rwlock_destroy(&_ch_en_lock_list[i]);
+        }
+        ch_free(_ch_en_lock_list);
+        _ch_en_lock_list = NULL;
     }
-    CRYPTO_set_id_callback(NULL);
-    CRYPTO_set_locking_callback(NULL);
-    for (int i = 0; i < _ch_en_lock_count; i++) {
-        uv_rwlock_destroy(&_ch_en_lock_list[i]);
-    }
-    ch_free(_ch_en_lock_list);
-    _ch_en_lock_list = NULL;
 #else
     OPENSSL_thread_stop();
 #endif // CH_OPENSSL_10_API
@@ -277,6 +288,7 @@ ch_en_tls_threading_setup(void)
     }
     CRYPTO_set_id_callback(_ch_en_thread_id_function);
     CRYPTO_set_locking_callback(_ch_en_locking_function);
+    _ch_en_threading_setup = 1;
 #endif // CH_OPENSSL_10_API
 #endif // CH_WITHOUT_TLS
     return CH_SUCCESS;
