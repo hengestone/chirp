@@ -413,6 +413,10 @@ ch_chirp_set_auto_stop_loop(ch_chirp_t* chirp);
 //
 //    This function is thread-safe.
 //
+//    If libuv is used properly this is not needed. Libuv will stop running,
+//    after closing all handles and requests. But it helps debugging missing
+//    uv_close() calls.
+//
 //    :param ch_chirp_t* chirp: Pointer to a chirp object.
 
 // .. c:function::
