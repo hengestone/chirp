@@ -365,7 +365,7 @@ _ch_chirp_stop_cb(uv_handle_t* handle)
 {
     ch_chirp_int_t* ichirp = handle->data;
     if (ichirp->flags & CH_CHIRP_AUTO_STOP) {
-        uv_stop(ichirp->loop);
+        /* uv_stop(ichirp->loop); */
     }
     ch_free(ichirp);
 }

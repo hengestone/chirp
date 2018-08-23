@@ -43,7 +43,9 @@ static char _ch_en_manual_tls = 0;
 //
 // .. code-block:: cpp
 //
+#ifdef CH_OPENSSL_10_API
 static char _ch_en_threading_setup = 0;
+#endif
 
 #ifdef CH_OPENSSL_10_API
 // .. c:var:: _ch_en_lock_count
