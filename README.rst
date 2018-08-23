@@ -407,6 +407,13 @@ Changes
 
 * Fix bug when disabling signals
 
+2018-08-23 - 1.1.2-beta
+-----------------------
+
+* Fix warning about strncpy by using memcpy
+
+* Inform user about purpose ch_chirp_set_auto_stop_loop
+
 Thanks
 ======
 
