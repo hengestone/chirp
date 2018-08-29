@@ -112,6 +112,19 @@
 //       Connections to "127.0.0.1" and "::1" aren't encrypted anyways.
 //       Defaults to 0.
 //
+//   You can create the certificate using the makepki Makefile_ on github. If
+//   you want to create it manually the chain has to contain:
+//
+//   * The certification authority's public key
+//
+//   * The client public key (signed by CA)
+//
+//   * The client private key
+//
+//   Any client-key signed by the CA will be able to connect.
+//
+//   .. _Makefile: https://github.com/concretecloud/chirp/tree/master/mk/makepki
+//
 // .. code-block:: cpp
 //
 struct ch_config_s {
