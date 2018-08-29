@@ -53,11 +53,11 @@ matrix:
       env: CC=gcc CI_DISTRO=alpine TLS=libressl WITHOUT_TLS=True
       services: docker
       script: ./ci/alpine.sh
-#  allow_failures:
-#    - os: linux
-#      env: CC=gcc CI_DISTRO=arch
-#      services: docker
-#      script: ./ci/arch.sh
+  allow_failures:
+    - os: linux
+      env: CC=gcc CI_DISTRO=arch
+      services: docker
+      script: ./ci/arch.sh
 #    - os: linux
 #      env: CC=gcc CI_DISTRO=alpine TLS=libressl
 #      services: docker
