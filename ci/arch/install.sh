@@ -2,7 +2,7 @@
 
 set -e
 
-pacman -Syu --noconfirm --noprogressbar 2> /dev/null
+pacman -Syu --noconfirm --noprogressbar 2> /dev/null | grep -v 'warning:'
 pacman -S --noconfirm --noprogressbar \
     sudo \
     base-devel \
@@ -13,11 +13,11 @@ pacman -S --noconfirm --noprogressbar \
     cppcheck \
     openssl \
     libuv \
-    clang
+    clang 2> /dev/null | grep -v 'warning:'
 if [ "$NO_MEMCHECK" != "True" ]; then
-    pacman -S --noconfirm --noprogressbar valgrind
+    pacman -S --noconfirm --noprogressbar valgrind 2> /dev/null | grep -v 'warning:'
 fi
 if [ "$TESTSHELL" = "True" ]; then
-    pacman -S --noconfirm --noprogressbar gdb 2> /dev/null
+    pacman -S --noconfirm --noprogressbar gdb 2> /dev/null | grep -v 'warning:'
 fi
 pip3 install pytest hypothesis u-msgpack-python
