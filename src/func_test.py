@@ -21,6 +21,9 @@ func_send_message_e   = 3
 func_check_messages_e = 4
 func_shutdown_conns_e = 5
 
+settings.register_profile("ci", deadline=None, timeout=unlimited)
+settings.load_profile("ci")
+
 
 def close(proc : Popen):
     """Close the subprocess."""
@@ -281,7 +284,6 @@ class GenFunc(GenericStateMachine):
         self.timeout_open = False
 
 
-@settings(deadline=None, timeout=unlimited)
 def test_func(capsys):
     """Functional test of chirp."""
     def init_with_capsys():
