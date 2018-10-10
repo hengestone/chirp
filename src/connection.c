@@ -646,7 +646,6 @@ ch_cn_send_if_pending(ch_connection_t* conn)
 // .. code-block:: cpp
 //
 {
-    A(!(conn->flags & CH_CN_WRITE_PENDING), "Another write is still pending");
     ch_chirp_t* chirp = conn->chirp;
     ch_chirp_check_m(chirp);
     int pending = BIO_pending(conn->bio_app);
@@ -657,6 +656,7 @@ ch_cn_send_if_pending(ch_connection_t* conn)
         }
         return;
     }
+    A(!(conn->flags & CH_CN_WRITE_PENDING), "Another write is still pending");
     A(!(conn->flags & CH_CN_BUF_WTLS_USED), "The wtls buffer is still used");
 #ifdef CH_ENABLE_ASSERTS
     conn->flags |= CH_CN_BUF_WTLS_USED;
