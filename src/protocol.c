@@ -206,7 +206,7 @@ _ch_pr_do_handshake(ch_connection_t* conn)
     }
     if (!(conn->flags & CH_CN_WRITE_PENDING)) {
         ch_cn_send_if_pending(conn);
-        /* Start a send if pending loop if none is running */
+        /* Start a send-if-pending-loop if it is not running */
     }
 }
 #endif
