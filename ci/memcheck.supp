@@ -120,3 +120,13 @@
    fun:OPENSSL_config
    ...
 }
+{
+   arch epoll uninitialized error
+   Memcheck:Param
+   epoll_ctl(event)
+   fun:epoll_ctl
+   fun:uv__io_poll
+   fun:uv_run
+   fun:ch_run
+   ...
+}

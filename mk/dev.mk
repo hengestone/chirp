@@ -26,11 +26,11 @@ ifneq ($(TLS),openssl)
 		--errors-for-leak-kinds=all \
 		--show-leak-kinds=all \
 		--error-exitcode=1 \
-		--suppressions=$(BASE)/ci/memcheck-musl.supp
+		--suppressions=$(BASE)/ci/memcheck.supp
 else
 	MEMCHECK := valgrind \
 		--tool=memcheck \
-		--suppressions=$(BASE)/ci/memcheck-musl.supp
+		--suppressions=$(BASE)/ci/memcheck.supp
 endif
 endif
 
@@ -146,7 +146,7 @@ pytest: all  ## Run pytests
 ifneq ($(NO_MEMCHECK),True)
 ifneq ($(TLS),openssl)
 ifeq ($(CI_DISTRO),alpine)
-	MPP_MC="$(BASE)/ci/memcheck-musl.supp" pytest $(BASE)/src
+	MPP_MC="$(BASE)/ci/memcheck.supp" pytest $(BASE)/src
 endif
 endif
 endif
