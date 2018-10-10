@@ -57,17 +57,6 @@ _ch_rd_handshake(ch_connection_t* conn, ch_buf* buf, size_t read);
 
 // .. c:function::
 static void
-_ch_rd_handshake_cb(uv_write_t* req, int status);
-//
-//    Called when handshake is sent.
-//
-//    :param uv_write_t* req: Write request type, holding the
-//                            connection handle
-//    :param int status: Send status
-//
-
-// .. c:function::
-static void
 _ch_rd_handle_msg(
         ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg);
 //
@@ -138,7 +127,6 @@ _ch_rd_verify_msg(ch_connection_t* conn, ch_message_t* msg);
 // .. code-block:: cpp
 //
 char* _ch_rd_state_names[] = {
-        "CH_RD_START",
         "CH_RD_HANDSHAKE",
         "CH_RD_WAIT",
         "CH_RD_SLOT",
@@ -296,39 +284,6 @@ _ch_rd_handle_msg(ch_connection_t* conn, ch_reader_t* reader, ch_message_t* msg)
     }
 }
 
-// .. c:function::
-static void
-_ch_rd_handshake_cb(uv_write_t* req, int status)
-//    :noindex:
-//
-//    see: :c:func:`_ch_rd_handshake_cb`
-//
-// .. code-block:: cpp
-//
-{
-    ch_connection_t* conn  = req->data;
-    ch_chirp_t*      chirp = conn->chirp;
-    ch_chirp_check_m(chirp);
-    if (status < 0) {
-        LC(chirp,
-           "Sending handshake failed. ",
-           "ch_connection_t:%p",
-           (void*) conn);
-        ch_cn_shutdown(conn, CH_WRITE_ERROR);
-        return;
-    }
-#ifndef CH_WITHOUT_TLS
-    /* Check if we already have a message (just after handshake)
-     * this is here so we have no overlapping ch_cn_write. If the read causes a
-     * ack message to be sent and the write of the handshake is not finished,
-     * chirp would assert or be in undefined state. */
-    if (conn->flags & CH_CN_ENCRYPTED) {
-        int stop;
-        ch_pr_decrypt_read(conn, &stop);
-    }
-#endif
-}
-
 static ssize_t
 _ch_rd_read_buffer(
         ch_connection_t* conn,
@@ -412,19 +367,6 @@ _ch_rd_read_step(
        (void*) conn);
 
     switch (reader->state) {
-    case CH_RD_START: {
-        ch_sr_handshake_t hs_tmp;
-        ch_buf            hs_buf[CH_SR_HANDSHAKE_SIZE];
-        hs_tmp.port = ichirp->public_port;
-        memcpy(hs_tmp.identity, ichirp->identity, CH_ID_SIZE);
-        ch_sr_hs_to_buf(&hs_tmp, hs_buf);
-        uv_buf_t buf;
-        buf.base = hs_buf;
-        buf.len  = CH_SR_HANDSHAKE_SIZE;
-        ch_cn_write(conn, &buf, 1, _ch_rd_handshake_cb);
-        reader->state = CH_RD_HANDSHAKE;
-        break;
-    }
     case CH_RD_HANDSHAKE: {
         if (bytes_read == 0)
             return -1;
@@ -649,7 +591,7 @@ ch_rd_init(ch_reader_t* reader, ch_connection_t* conn, ch_chirp_int_t* ichirp)
 // .. code-block:: cpp
 //
 {
-    reader->state = CH_RD_START;
+    reader->state = CH_RD_HANDSHAKE;
     reader->pool  = ch_alloc(sizeof(*reader->pool));
     if (reader->pool == NULL) {
         return CH_ENOMEM;

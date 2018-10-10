@@ -27,7 +27,7 @@
 //
 //    Possible states of a reader.
 //
-//    .. c:member:: CH_RD_START
+//    .. c:member:: CH_RD_HANDSHAKE
 //
 //       Initial state, chirp handshake has to be done.
 //
@@ -50,12 +50,11 @@
 // .. code-block:: cpp
 //
 typedef enum {
-    CH_RD_START     = 0,
-    CH_RD_HANDSHAKE = 1,
-    CH_RD_WAIT      = 2,
-    CH_RD_SLOT      = 3,
-    CH_RD_HEADER    = 4,
-    CH_RD_DATA      = 5,
+    CH_RD_HANDSHAKE = 0,
+    CH_RD_WAIT      = 1,
+    CH_RD_SLOT      = 2,
+    CH_RD_HEADER    = 3,
+    CH_RD_DATA      = 4,
 } ch_rd_state_t;
 
 // .. c:type:: ch_reader_t

@@ -594,6 +594,14 @@ ch_cn_send_if_pending(ch_connection_t* conn);
 
 // .. c:function::
 void
+ch_cn_send_handshake(ch_connection_t* conn);
+//
+//    Send to remote
+//
+//    :param ch_connection_t* conn: Connection to send handshake to
+
+// .. c:function::
+void
 ch_cn_write(
         ch_connection_t* conn,
         const uv_buf_t   bufs[],

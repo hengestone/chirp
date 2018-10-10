@@ -521,8 +521,7 @@ ch_pr_conn_start(
         return CH_SUCCESS;
     }
 #endif
-    int stop;
-    ch_rd_read(conn, NULL, 0, &stop); /* Start reader */
+    ch_cn_send_handshake(conn);
     return CH_SUCCESS;
 }
 
