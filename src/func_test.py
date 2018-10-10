@@ -281,12 +281,10 @@ class GenFunc(GenericStateMachine):
         self.timeout_open = False
 
 
+@settings(deadline=None, timeout=unlimited)
 def test_func(capsys):
     """Functional test of chirp."""
     def init_with_capsys():
         return GenFunc(capsys)
 
-    # with settings(deadline=None, timeout=unlimited, max_examples=1000,
-    #             max_iterations=10000):
-    with settings(deadline=None, timeout=unlimited):
-        run_state_machine_as_test(init_with_capsys)
+    run_state_machine_as_test(init_with_capsys)
