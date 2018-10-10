@@ -856,6 +856,12 @@ _ch_cn_send_handshake_cb(uv_write_t* req, int status)
         ch_pr_decrypt_read(conn, &stop);
     }
 #endif
+    if (conn->remote) {
+        ch_wr_process_queues(conn->remote);
+        /* Process queues in case we have blocked a send, this only happens in
+         * the very rare case, where sending the handshake gets extremely
+         * delayed. */
+    }
 }
 
 // .. c:function::

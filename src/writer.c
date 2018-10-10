@@ -538,7 +538,10 @@ ch_wr_process_queues(ch_remote_t* remote)
     } else {
         AP(ch_at_allocated(conn), "Conn (%p) not allocated", (void*) conn);
         if (!(conn->flags & CH_CN_CONNECTED) ||
-            conn->flags & CH_CN_SHUTTING_DOWN) {
+            conn->flags & CH_CN_SHUTTING_DOWN ||
+            conn->flags & CH_CN_WRITE_PENDING) {
+            /* CH_CN_WRITE_PENDING: the connection can be blocked by a low-level
+             * write. */
             return CH_BUSY;
         } else if (conn->writer.msg != NULL) {
             return CH_BUSY;
