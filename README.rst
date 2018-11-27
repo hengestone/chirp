@@ -414,6 +414,15 @@ Changes
 
 * Inform user about purpose ch_chirp_set_auto_stop_loop
 
+2018-11-27 - 1.2.0-beta
+-----------------------
+
+* Make sending handshake independent from first read
+
+* Pure low-level writes block the send-queue
+
+* Only start a send_if_pending loop if is not active
+
 Thanks
 ======
 
