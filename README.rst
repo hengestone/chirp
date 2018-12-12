@@ -30,6 +30,9 @@ Supported by |adsy|
 .. |adsy| image:: https://1042.ch/ganwell/adsy-logo.svg
    :target: https://adfinis-sygroup.ch/
 
+On twitter_ @libchirp
+
+.. _twitter: https://twitter.com/libchirp
 
 BETA-RELEASE: 1.2.1
 ===================
