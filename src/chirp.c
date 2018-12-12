@@ -1157,7 +1157,6 @@ ch_chirp_run(
            (void*) &chirp);
         return tmp_err;
     }
-    chirp._->flags |= CH_CHIRP_AUTO_STOP;
     LC((&chirp), "UV-Loop run by chirp. ", "uv_loop_t:%p", (void*) &loop);
     /* This works and is not TOO bad because the function blocks. */
     // cppcheck-suppress autoVariables

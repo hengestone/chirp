@@ -31,7 +31,7 @@ Supported by |adsy|
    :target: https://adfinis-sygroup.ch/
 
 
-BETA-RELEASE: 1.2.0
+BETA-RELEASE: 1.2.1
 ===================
 
 Features
@@ -422,6 +422,11 @@ Changes
 * Pure low-level writes block the send-queue
 
 * Only start a send_if_pending loop if is not active
+
+2018-12-12 - 1.2.1-beta
+-----------------------
+
+* Do not enable auto_stop_loop in ch_chirp_run
 
 Thanks
 ======
