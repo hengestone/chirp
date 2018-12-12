@@ -317,28 +317,60 @@ If you use clang complete, we recommend
 Changes
 =======
 
-2018-01-03 - 0.2.0-beta
+2018-12-12 - 1.2.1-beta
 -----------------------
 
-* Initial public beta release
+`Read the Docs 1.2.1`_
 
-* All functional features implemented
+.. _`Read the Docs 1.2.1`: https://docs.adfinis-sygroup.ch/public/chirp-1.2.1/
 
-* Some performance/build features missing
+* Do not enable auto_stop_loop in ch_chirp_run
 
-
-2018-02-17 - 0.2.1-beta
+2018-11-27 - 1.2.0-beta
 -----------------------
 
-* Remove unnecessary copy of reconnect_remotes datastructure
+* Make sending handshake independent from first read
 
-* Simplify iterations in gc_connections
+* Pure low-level writes block the send-queue
 
-* Send probe message the first time it is needed
+* Only start a send_if_pending loop if is not active
 
-* Fix memory leak in buffer pool
+2018-08-23 - 1.1.2-beta
+-----------------------
 
-* Switch from uv_hrtime to uv_now
+* Fix warning about strncpy by using memcpy
+
+* Inform user about purpose ch_chirp_set_auto_stop_loop
+
+2018-03-31 - 1.1.1-beta
+-----------------------
+
+* Fix deadlock in ch_chirp_send_ts
+
+* Fix bug when disabling signals
+
+2018-03-20 - 1.1.0-beta
+-----------------------
+
+* Implement scatter-gather write API
+
+  * Improves peak performance to 240'000 msg/s
+
+* Allow build without TLS
+
+* Timeout consistency
+
+  * TIMEOUT
+
+    * Send- and connect-timeout scaling in seconds. Send-timeout will be
+      TIMEOUT seconds. Connect-timeout will be min(TIMEOUT * 2, 60)
+      seconds.
+
+  * REUSE_TIME
+
+    * Time until a connection gets garbage collected. Until then the
+      connection will be reused. Actual reuse time will be
+      max(REUSE_TIME, TIMEOUT * 3).
 
 2018-03-17 - 1.0.0-beta
 -----------------------
@@ -377,60 +409,27 @@ Changes
 
 * Missing lock in ch_at_allocated
 
-2018-03-20 - 1.1.0-beta
+2018-02-17 - 0.2.1-beta
 -----------------------
 
-* Implement scatter-gather write API
+* Remove unnecessary copy of reconnect_remotes datastructure
 
-  * Improves peak performance to 240'000 msg/s
+* Simplify iterations in gc_connections
 
-* Allow build without TLS
+* Send probe message the first time it is needed
 
-* Timeout consistency
+* Fix memory leak in buffer pool
 
-  * TIMEOUT
+* Switch from uv_hrtime to uv_now
 
-    * Send- and connect-timeout scaling in seconds. Send-timeout will be
-      TIMEOUT seconds. Connect-timeout will be min(TIMEOUT * 2, 60)
-      seconds.
-
-  * REUSE_TIME
-
-    * Time until a connection gets garbage collected. Until then the
-      connection will be reused. Actual reuse time will be
-      max(REUSE_TIME, TIMEOUT * 3).
-
-2018-03-31 - 1.1.1-beta
+2018-01-03 - 0.2.0-beta
 -----------------------
 
-* Fix deadlock in ch_chirp_send_ts
+* Initial public beta release
 
-* Fix bug when disabling signals
+* All functional features implemented
 
-2018-08-23 - 1.1.2-beta
------------------------
-
-* Fix warning about strncpy by using memcpy
-
-* Inform user about purpose ch_chirp_set_auto_stop_loop
-
-2018-11-27 - 1.2.0-beta
------------------------
-
-* Make sending handshake independent from first read
-
-* Pure low-level writes block the send-queue
-
-* Only start a send_if_pending loop if is not active
-
-2018-12-12 - 1.2.1-beta
------------------------
-
-`Read the Docs 1.2.1`_
-
-.. _`Read the Docs 1.2.1`: https://docs.adfinis-sygroup.ch/public/chirp-1.2.1/
-
-* Do not enable auto_stop_loop in ch_chirp_run
+* Some performance/build features missing
 
 Thanks
 ======
