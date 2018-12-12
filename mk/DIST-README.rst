@@ -8,7 +8,7 @@ Project home and documentation
 
 `Read the docs`_
 
-.. _`Read the docs`: http://1042.ch/chirp/
+.. _`Read the docs`: https://docs.adfinis-sygroup.ch/public/chirp-1.2.1/
 
 How to build and install
 ========================
