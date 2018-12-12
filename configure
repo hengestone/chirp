@@ -39,6 +39,10 @@ _abi_template = """
 </libs>
 """
 
+print(
+    "!! For development only, please use the tarball: "
+    "https://1042.ch/42/ganwell/chirp/\n"
+)
 
 def write_abi_check():
     """Write an abi check definition."""

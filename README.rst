@@ -75,6 +75,8 @@ Features
 Install
 =======
 
+Package-maintainers please use the tarball: https://1042.ch/42/ganwell/chirp/
+
 libchirp is distributed as an amalgamation (only needs make and compiler). See
 `DIST-README.rst`_. The information below applies to the git repository.
 
