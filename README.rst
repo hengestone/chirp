@@ -426,6 +426,10 @@ Changes
 2018-12-12 - 1.2.1-beta
 -----------------------
 
+`Read the Docs 1.2.1`_
+
+.. _`Read the Docs 1.2.1`: https://docs.adfinis-sygroup.ch/public/chirp-1.2.1/
+
 * Do not enable auto_stop_loop in ch_chirp_run
 
 Thanks
