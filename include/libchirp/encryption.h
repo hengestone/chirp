@@ -75,17 +75,8 @@ ch_en_set_manual_tls_init(void);
 //    Manually initialize LibreSSL or OpenSSL. Is a no-op if CH_WITHOUT_TLS is
 //    set.
 //
-//    By default chirp will initialize libressl or openssl on the first
-//    instance of chirp and cleanup libressl or openssl on the last instance of
-//    chirp. If for some reason the count of chirp instances can drop to zero
-//    sometimes and you do not want libressl or openssl to get uninitialized
-//    you can manually call :c:func:`ch_en_tls_init` before creating the first
-//    chirp instance and :c:func:`ch_en_tls_cleanup` after closing the last
-//    chirp instance.
-//
-//    You can also initialize libress or openssl yourself if you have to or not
-//    initialize it at all if your host application has already initialized
-//    libressl or openssl.
+//    You can also not initialize it at all if your host application has
+//    already initialized libressl or openssl.
 //
 
 #endif // ch_libchirp_encryption_h
