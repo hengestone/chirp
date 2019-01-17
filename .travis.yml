@@ -55,10 +55,10 @@ matrix:
       script: ./ci/alpine.sh
   allow_failures:
     - os: linux
+      env: CC=gcc CI_DISTRO=arch NO_MEMCHECK=True
+      services: docker
+      script: ./ci/arch.sh
+    - os: linux
       env: CC=gcc CI_DISTRO=arch
       services: docker
       script: ./ci/arch.sh
-#    - os: linux
-#      env: CC=gcc CI_DISTRO=alpine TLS=libressl
-#      services: docker
-#      script: ./ci/alpine.sh
