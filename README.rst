@@ -10,8 +10,8 @@ Message-passing for everyone
    :target: https://travis-ci.org/concretecloud/chirp
 .. |rtd| image:: https://1042.ch/ganwell/docs-master.svg
    :target: https://docs.adfinis-sygroup.ch/public/chirp/
-.. |mpl| image:: https://img.shields.io/badge/license-MPL%202.0-blue.svg
-   :target: http://mozilla.org/MPL/2.0/
+.. |AGPL-3.0-or-later| image:: https://img.shields.io/badge/AGPL-3.0-or-later%202.0-blue.svg
+   :target: https://spdx.org/licenses/AGPL-3.0-or-later.html
 .. |works| image:: https://img.shields.io/badge/hypothesis-works-blue.svg
    :target: http://hypothesis.works
 
@@ -460,14 +460,6 @@ For reviewing my pull requests:
 * Oliver Sauder @sliverc
 * David Vogt @winged
 * Tobias Rueetschi @keachi
-
-License
-=======
-
-libchirp is subject to the terms of the Mozilla Public License, v. 2.0. Creating
-a "Larger Work" under the GNU (Lesser) General Public License is explicitly
-allowed. Contributors to libchirp must agree to the Mozilla Public License, v.
-2.0.
 
 Contributing
 ============

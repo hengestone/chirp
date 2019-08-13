@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: chirp
+Upstream-Contact: Jean-Louis Fuchs <ganwell@fangorn.ch>
+Source: https://github.com/concretecloud/chirp
+
+Files: src/*
+Copyright: 2019 Jean-Louis Fuchs <ganwell@fangorn.ch>
+License: AGPL-3.0-or-later
+
+Files: src/mpack_test.*
+Copyright: 2015-2016 Nicholas Fraser
+License: MIT

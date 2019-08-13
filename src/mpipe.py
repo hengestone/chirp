@@ -1,4 +1,8 @@
-"" # noqa
+# SPDX-FileCopyrightText: 2019 Jean-Louis Fuchs <ganwell@fangorn.ch>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+
 """
 mpipe for chirp
 ===============
@@ -9,22 +13,23 @@ Mini RPC mostly used for testinng using hypothesis.
 """
 
 import ctypes
-from subprocess import Popen, PIPE, TimeoutExpired
-import sys
 import os
 import signal
+import sys
 import time
+from contextlib import contextmanager
+from subprocess import PIPE, Popen, TimeoutExpired
+
 try:
     import umsgpack
 except ImportError:
     import msgpack as umsgpack
-from contextlib import contextmanager
 
 mc = os.environ.get("MPP_MC")
 
 
 @contextmanager
-def open_and_close(args : list):
+def open_and_close(args: list):
     """Open a subprocess for sending message-pack messages in a context.
 
     After the context it will send a close message: (0,).
@@ -34,7 +39,7 @@ def open_and_close(args : list):
     close(proc)
 
 
-def open(args : list) -> Popen:
+def open(args: list) -> Popen:
     """Open a subprocess for sending message-pack messages."""
     if os.environ.get("MPP_RR") == "True":
         proc = Popen(["rr"] + args, stdin=PIPE, stdout=PIPE)
@@ -48,10 +53,11 @@ def open(args : list) -> Popen:
                 "--errors-for-leak-kinds=all",
                 "--error-exitcode=1",
                 "--suppressions=%s" % mc,
-            ] + args,
+            ]
+            + args,
             stdin=PIPE,
             stdout=PIPE,
-            preexec_fn=os.setsid
+            preexec_fn=os.setsid,
         )
     else:
         proc = Popen(args, stdin=PIPE, stdout=PIPE, preexec_fn=os.setsid)
@@ -59,7 +65,7 @@ def open(args : list) -> Popen:
     return proc
 
 
-def close(proc : Popen):
+def close(proc: Popen):
     """Close the subprocess."""
     write(proc, (0,))
     try:
@@ -75,7 +81,7 @@ def close(proc : Popen):
         raise  # Its a bug when the process doesn't complete
 
 
-def write(proc : Popen, data):
+def write(proc: Popen, data):
     """Write message to the process."""
     if proc._mpipe_last == "write":
         raise RuntimeError("Consecutive write not allowed in rpc_mode")
@@ -87,43 +93,18 @@ def write(proc : Popen, data):
     proc.stdin.flush()
 
 
-def read(proc : Popen):
+def read(proc: Popen):
     """Read message from the process, returns None on failure."""
     if proc._mpipe_last == "read":
         raise RuntimeError("Consecutive read not allowed in rpc_mode")
     proc._mpipe_last = "read"
     size = proc.stdout.read(ctypes.sizeof(ctypes.c_size_t))
-    size = int.from_bytes(size,  sys.byteorder)
+    size = int.from_bytes(size, sys.byteorder)
     pack = proc.stdout.read(size)
     try:
         return umsgpack.loads(pack)
     except umsgpack.InsufficientDataException as e:
         if proc.poll() != 0:
-            raise RuntimeError(
-                "The process returned %d." % proc.returncode
-            ) from e
+            raise RuntimeError("The process returned %d." % proc.returncode) from e
         else:
             raise
-
-
-# MIT License
-#
-# Copyright (c) 2017 Jean-Louis Fuchs
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.

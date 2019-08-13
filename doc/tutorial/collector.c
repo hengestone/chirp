@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: David Vogt <david.vogt@adfinis-sygroup.ch>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // =============
 // The collector
 // =============

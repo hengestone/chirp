@@ -184,7 +184,7 @@ amalg: $(AMALB).c  ## Create amalgamation
 
 $(AMALB).c: $(LIB_CFILES) $(HEADERS) $(BUILD)/unifdef
 	$(V_E) GEN header.h
-	$(V_M)cp -f $(BASE)/mk/mpl-boilerplate $(BUILD)/header.h
+	$(V_M)cp -f $(BASE)/mk/lic-boilerplate $(BUILD)/header.h
 	$(V_M)echo // ================================ >> $(BUILD)/header.h
 	$(V_M)echo // libchirp $(VERSION_LONG) amalgamation >> $(BUILD)/header.h
 	$(V_M)echo // ================================ >> $(BUILD)/header.h
@@ -267,7 +267,7 @@ else
 	$(V_M)$(BUILD)/unifdef -x 2 -DCH_REMOVE_DEBUGDEFS \
 		-o $(DISTD)/libchirp-config.h $(BUILD)/libchirp-config.h
 endif
-	$(V_M)cp $(BASE)/LICENSE $(DISTD)
+	$(V_M)cp -r $(BASE)/LICENSE $(DISTD)
 	$(V_M)cp $(BASE)/src/chirp_etest.c $(DISTD)/chirp_test.c
 	$(V_M)cp $(BASE)/src/echo_etest.c $(DISTD)/echo_test.c
 	$(V_M)cp $(BASE)/src/send_etest.c $(DISTD)/send_test.c
